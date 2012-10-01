@@ -2,6 +2,10 @@
 
 __all__ = ('MongoModel',)
 
+from datetime import datetime
+
+from .connection import get_database
+
 
 class MongoModelMetaClass(type):
     """Define :class:`MongoModel`"""
@@ -27,6 +31,12 @@ class MongoModelMetaClass(type):
         if not getattr(meta, 'collection', None) and bases != (object,):
             raise AttributeError(
                 "'{0}' must have a 'collection'".format(new_class.__name__))
+
+        # All models also need a database. This is easier to handle than
+        # the collection, though. Only the name is needed here. If no
+        # name has been specified, the default is what should be used.
+        if not getattr(meta, 'database', None):
+            meta.database = 'default'
 
         # Parent classes may define their own Meta class, so subclasses
         # should inherit any of the settings they haven't overridden.
@@ -66,6 +76,62 @@ class MongoModel(object):
 
     class Meta:
         field_map = {'id': '_id'}
+
+    def __init__(self, **fields):
+        """Assigns all keyword arguments to the object's document.
+
+        :param **fields: Keyword arguments to add to the document.
+        :type **fields: **kwargs.
+        :raises: ConnectionError
+
+        .. versionadded:: 0.1.0
+        """
+
+        # Add the database
+        # This will raise ConnectionError if the database connection
+        # hasn't been made yet. If that's this case, calling this
+        # first will let us get out early.
+        self._meta.db = \
+            get_database(self._meta.database)[self._meta.collection]
+
+        # Add the fields to the document
+        for k, v in fields.items():
+            k = self._meta.field_map.get(k, k)
+            setattr(self, k, v)
+
+    def save(self, safe=False, upsert=False):
+        """Saves the object to the database.
+
+        When saving a new document, unless already provided, ``created``
+        will be added with the current datetime in UTC. ``modified``
+        will always be set with the current datetime in UTC.
+
+        :param safe: Whether to perform the save in safe mode.
+        :type safe: bool.
+        :param upsert: Whether to perform the save as an upsert.
+        :type upsert: bool.
+
+        .. versionadded:: 0.1.0
+        """
+
+        # Associate the current datetime (in UTC) with the created
+        # and modified fields.
+        now = datetime.utcnow()
+        if not (hasattr(self, 'id') and hasattr(self, 'created')):
+            self.created = now
+        self.modified = now
+
+        # _id should never be overwritten. In order to do that, it's a
+        # good idea to pop it out of the document. Popping it out of
+        # the real document could lead to bad things happening. Instead,
+        # capture a reference to the document and pop it out of that.
+        doc = self._meta.document
+        id = doc.pop('_id', None)
+        if upsert or id:
+            self._meta.db.update({'_id': id}, {'$set': doc}, safe=safe,
+                                 upsert=upsert)
+        else:
+            self.id = self._meta.db.insert(doc, safe=safe)
 
     def __delattr__(self, name):
         """Remove a key from the document"""
