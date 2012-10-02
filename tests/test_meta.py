@@ -31,6 +31,9 @@ class TestMetaClass(unittest.TestCase):
     def test_default_attributes(self):
         """Test that the default attributes are added."""
 
+        self.assertTrue(hasattr(TestModel1, 'MultipleDocumentsFound'))
+        self.assertTrue(hasattr(TestModel1, 'NoDocumentFound'))
+
         self.assertTrue(hasattr(TestModel1._meta, 'core_attributes'))
         self.assertTrue(hasattr(TestModel1._meta, 'document'))
 

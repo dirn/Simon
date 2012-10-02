@@ -5,6 +5,7 @@ __all__ = ('MongoModel',)
 from datetime import datetime
 
 from .connection import get_database
+from .exceptions import MultipleDocumentsFound, NoDocumentFound
 
 
 class MongoModelMetaClass(type):
@@ -37,6 +38,10 @@ class MongoModelMetaClass(type):
         # name has been specified, the default is what should be used.
         if not getattr(meta, 'database', None):
             meta.database = 'default'
+
+        # Associate the custom exceptions with the new class.
+        setattr(new_class, 'MultipleDocumentsFound', MultipleDocumentsFound)
+        setattr(new_class, 'NoDocumentFound', NoDocumentFound)
 
         # Parent classes may define their own Meta class, so subclasses
         # should inherit any of the settings they haven't overridden.
