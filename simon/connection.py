@@ -22,9 +22,9 @@ def connect(host='localhost', name=None, username=None, password=None,
     :type password: str.
     :param port: The port of the MongoDB host.
     :type port: int.
-    :param **kwargs: All other keyword arguments accepted by
-                     ``pymongo.connection.Connection``.
-    :type **kwargs: **kwargs.
+    :param kwargs: All other keyword arguments accepted by
+                   ``pymongo.connection.Connection``.
+    :type kwargs: kwargs.
     :returns: ``pymongo.database.Database`` -- the database.
     :raises: :class:`ConnectionError`
 
