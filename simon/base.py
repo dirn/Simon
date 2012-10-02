@@ -2,6 +2,7 @@
 
 __all__ = ('MongoModel',)
 
+from bson.objectid import ObjectId
 from datetime import datetime
 
 from .connection import get_database
@@ -97,6 +98,56 @@ class MongoModel(object):
         for k, v in fields.items():
             k = self._meta.field_map.get(k, k)
             setattr(self, k, v)
+
+    @classmethod
+    @requires_database
+    def get(cls, **fields):
+        """Gets a single document from the database.
+
+        This will find and return a single document matching the
+        query specified through ``**fields``. An exception will be
+        raised if any number of documents other than one is found.
+
+        :param fields: Keywords arguments specifying the query.
+        :type fields: kwargs.
+        :returns: :class:`~simon.MongoModel` -- object matching ``query``.
+        :raises: :class:`~simon.MongoModel.MultipleDocumentsFound`,
+                 :class:`~simon.MongoModel.NoDocumentFound`
+
+        .. versionadded:: 0.1.0
+        """
+
+        # Convert the field spec into a query by mapping any necessary
+        # fields.
+        query = {}
+        for k, v in fields.items():
+            k = cls._meta.field_map.get(k, k)
+            query[k] = v
+
+        # If querying by the _id, make sure it's an Object ID
+        if '_id' in query and not isinstance(query['_id'], ObjectId):
+            query['_id'] = ObjectId(query['_id'])
+
+        # Find all of the matching documents. find_one() could be used
+        # here instead, but that would return the *first* matching
+        # document, not the *only* matching document. In order to know
+        # if a number of documents other than one was found, find()
+        # and count() must be used instead. Because MongoDB uses
+        # cursors, not data needs to be transferred until the result
+        # set is sliced later on.
+        docs = cls._meta.db.find(query)
+        count = docs.count()
+        if not count:
+            raise cls.NoDocumentFound(
+                "'{0}' matching query does not exist.".format(cls.__name__))
+        elif count > 1:
+            raise cls.MultipleDocumentsFound(
+                '`get()` returned more than one "{0}". It returned {1}! The '
+                'document spec was: {2}'.format(
+                    cls.__name__, count, fields))
+
+        # Return an instantiated object for the retrieved document
+        return cls(**docs[0])
 
     @requires_database
     def save(self, safe=False, upsert=False):
