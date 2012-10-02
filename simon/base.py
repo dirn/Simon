@@ -5,7 +5,6 @@ __all__ = ('MongoModel',)
 from bson.objectid import ObjectId
 from datetime import datetime
 
-from .connection import get_database
 from .decorators import requires_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 
