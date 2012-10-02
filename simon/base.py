@@ -5,6 +5,7 @@ __all__ = ('MongoModel',)
 from datetime import datetime
 
 from .connection import get_database
+from .decorators import requires_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 
 
@@ -92,18 +93,12 @@ class MongoModel(object):
         .. versionadded:: 0.1.0
         """
 
-        # Add the database
-        # This will raise ConnectionError if the database connection
-        # hasn't been made yet. If that's this case, calling this
-        # first will let us get out early.
-        self._meta.db = \
-            get_database(self._meta.database)[self._meta.collection]
-
         # Add the fields to the document
         for k, v in fields.items():
             k = self._meta.field_map.get(k, k)
             setattr(self, k, v)
 
+    @requires_database
     def save(self, safe=False, upsert=False):
         """Saves the object to the database.
 
