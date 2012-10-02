@@ -133,7 +133,7 @@ class MongoModel(object):
         doc = self._meta.document
         id = doc.pop('_id', None)
         if upsert or id:
-            self._meta.db.update({'_id': id}, {'$set': doc}, safe=safe,
+            self._meta.db.update({'_id': id}, doc, safe=safe,
                                  upsert=upsert)
         else:
             self.id = self._meta.db.insert(doc, safe=safe)
