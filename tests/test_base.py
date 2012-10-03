@@ -3,7 +3,6 @@ import unittest
 from pymongo.collection import Collection
 
 from simon import MongoModel, connection
-from simon.decorators import requires_database
 
 
 class TestModel(MongoModel):
@@ -13,11 +12,9 @@ class TestModel(MongoModel):
         collection = 'test'
 
     @classmethod
-    @requires_database
     def dummy_class_method(cls):
         pass
 
-    @requires_database
     def dummy_method(cls):
         pass
 

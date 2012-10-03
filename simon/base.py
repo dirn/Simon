@@ -5,8 +5,20 @@ __all__ = ('MongoModel',)
 from bson.objectid import ObjectId
 from datetime import datetime
 
-from .decorators import requires_database
+from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
+
+
+class Property(property):
+    """Overrides the @property decorator
+
+    This is necessary for :class:`MongoModel` to be able to able to call
+    the collection methods from its ``_meta.db`` attribute. Without
+    this custom ``__get__()`` method, an AttributeError would be raised.
+    """
+
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
 
 
 class MongoModelMetaClass(type):
@@ -63,6 +75,15 @@ class MongoModelMetaClass(type):
         # from interfering with the real attributes of classes.
         meta.document = {}
 
+        # Associate the database collection with the new class. A
+        # lambda is used so that the collection reference isn't grabbed
+        # until it's actually needed. property by itself is not
+        # sufficient here. The custom Property subclass is needed in
+        # conjunction with classmethod in order to expose db as a
+        # property of the Meta class.
+        meta.db = Property(classmethod(
+            lambda cls: get_database(cls.database)[cls.collection]))
+
         # In order to allow __setattr__() to properly ignore real
         # attributes of the class when passing values through to the
         # core document, a list of the class's attributes needs to be
@@ -99,7 +120,6 @@ class MongoModel(object):
             setattr(self, k, v)
 
     @classmethod
-    @requires_database
     def get(cls, **fields):
         """Gets a single document from the database.
 
@@ -148,7 +168,6 @@ class MongoModel(object):
         # Return an instantiated object for the retrieved document
         return cls(**docs[0])
 
-    @requires_database
     def save(self, safe=False, upsert=False):
         """Saves the object to the database.
 
