@@ -107,7 +107,7 @@ class MongoModel(object):
         query specified through ``**fields``. An exception will be
         raised if any number of documents other than one is found.
 
-        :param fields: Keywords arguments specifying the query.
+        :param fields: Keyword arguments specifying the query.
         :type fields: kwargs.
         :returns: :class:`~simon.MongoModel` -- object matching ``query``.
         :raises: :class:`~simon.MongoModel.MultipleDocumentsFound`,
@@ -178,8 +178,7 @@ class MongoModel(object):
         doc = self._meta.document
         id = doc.pop('_id', None)
         if upsert or id:
-            self._meta.db.update({'_id': id}, doc, safe=safe,
-                                 upsert=upsert)
+            self._meta.db.update({'_id': id}, doc, safe=safe, upsert=upsert)
         else:
             self.id = self._meta.db.insert(doc, safe=safe)
 
