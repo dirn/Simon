@@ -119,6 +119,30 @@ class MongoModel(object):
             k = self._meta.field_map.get(k, k)
             setattr(self, k, v)
 
+    def delete(self, safe=False):
+        """Deletes a single document from the database.
+
+        This will delete the document associated with the instance
+        object. If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        :param safe: Whether to perform the delete in safe mode.
+        :type safe: bool.
+        :raises: :class:`TypeError`
+
+        .. versionadded:: 0.1.0
+        """
+
+        id = getattr(self, 'id', None)
+        if not id:
+            raise TypeError("The '{0}' object cannot be deleted because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        self._meta.db.remove({'_id': id}, safe=safe)
+        self._meta.document = {}
+
     @classmethod
     def get(cls, **fields):
         """Gets a single document from the database.
