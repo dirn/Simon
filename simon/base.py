@@ -200,6 +200,53 @@ class MongoModel(object):
         self._meta.db.remove({'_id': id}, safe=safe)
         self._meta.document = {}
 
+    def remove_fields(self, fields, safe=False):
+        """Removes the specified fields from the document.
+
+        The specified fields will be removed from the document in the
+        database as well as the object. This operation cannot be
+        undone.
+
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        updated.
+
+        :param fields: The names of the fields to remove.
+        :type fields: str, list, or tuple.
+        :param safe: Whether to perform the save in safe mode.
+        :type safe: bool.
+        :raises: :class:`TypeError`
+
+        .. versionadded:: 0.1.0
+        """
+
+        id = getattr(self, 'id', None)
+        if not id:
+            raise TypeError("The '{0}' object cannot be updated because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        # fields can contain a single item as a string. If it's not a
+        # list or tuple, make it one. Otherwise the generators below
+        # would iterate over each character in the string rather than
+        # treating it as a single item list.
+        if not isinstance(fields, (list, tuple)):
+            fields = (fields,)
+
+        doc = dict((k, 1) for k in fields)
+        self._meta.db.update({'_id': id}, {'$unset': doc}, safe=safe)
+
+        # The fields also need to be removed from the object
+        for field in fields:
+            try:
+                delattr(self, field)
+            except AttributeError:
+                # Silently handle attributes that don't exist
+                pass
+
     def save(self, safe=False, upsert=False):
         """Saves the object to the database.
 
