@@ -233,6 +233,62 @@ class MongoModel(object):
         else:
             self.id = self._meta.db.insert(doc, safe=safe)
 
+    def save_fields(self, fields, safe=False):
+        """Saves only the specified fields.
+
+        If only a select number of fields need to be updated, an atomic
+        update is preferred over a document replacement.
+        ``save_fields()`` takes either a single field name or a list of
+        field names to update.
+
+        All of the specified fields must exist or an
+        :class:`AttributeError` will be raised. To add a field to the
+        document with a blank value, make sure to assign it through
+        ``object.attribute = ''`` or something similar before calling
+        ``save_fields()``.
+
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        updated.
+
+        :param fields: The names of the fields to update.
+        :type fields: str, list, or tuple.
+        :param safe: Whether to perform the save in safe mode.
+        :type safe: bool.
+        :raises: :class:`AttributeError`, :class:`TypeError`
+
+        .. versionadded:: 0.1.0
+        """
+
+        # Make sure the document has already been saved
+        id = getattr(self, 'id', None)
+        if not id:
+            raise TypeError("The '{0}' object cannot be updated because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        # fields can contain a single item as a string. If it's not a
+        # list or tuple, make it one. Otherwise the generators below
+        # would iterate over each character in the string rather than
+        # treating it as a single item list.
+        if not isinstance(fields, (list, tuple)):
+            fields = (fields,)
+
+        # Failing to make sure all of the fields exist before saving
+        # them would result in assigning blank values to keys. In some
+        # cases this could result in unexpected documents being returned
+        # in queries.
+        if any(k not in self._meta.document for k in fields):
+            raise AttributeError("The '{0}' object does not have all of the "
+                                 "specified fields.".format(
+                                    self.__class__.__name__))
+
+        doc = dict((k, getattr(self, k)) for k in fields)
+        self._meta.db.update({'_id': id}, {'$set': doc}, safe=safe)
+
     def __delattr__(self, name):
         """Remove a key from the document"""
 
