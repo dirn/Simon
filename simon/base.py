@@ -185,8 +185,8 @@ class MongoModel(object):
                 "'{0}' matching query does not exist.".format(cls.__name__))
         elif count > 1:
             raise cls.MultipleDocumentsFound(
-                '`get()` returned more than one "{0}". It returned {1}! The '
-                'document spec was: {2}'.format(
+                '`get()` returned more than one "{0}". It returned {1}!'
+                ' The document spec was: {2}'.format(
                     cls.__name__, count, fields))
 
         # Return an instantiated object for the retrieved document
