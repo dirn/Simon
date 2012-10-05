@@ -120,7 +120,10 @@ class MongoModel(object):
             setattr(self, k, v)
 
     def delete(self, safe=False):
-        """Aliases :meth:`~simon.MongoModel.remove`."""
+        """Aliases :meth:`~simon.MongoModel.remove`.
+
+        .. versionadded:: 0.1.0
+        """
 
         self.remove(safe=safe)
 
