@@ -109,7 +109,7 @@ class MongoModel(object):
 
         :param **fields: Keyword arguments to add to the document.
         :type **fields: **kwargs.
-        :raises: ConnectionError
+        :raises: :class:`~simon.exceptions.ConnectionError`
 
         .. versionadded:: 0.1.0
         """
