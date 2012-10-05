@@ -120,28 +120,9 @@ class MongoModel(object):
             setattr(self, k, v)
 
     def delete(self, safe=False):
-        """Deletes a single document from the database.
+        """Aliases :meth:`~simon.MongoModel.remove`."""
 
-        This will delete the document associated with the instance
-        object. If the document does not have an ``_id``--this will
-        most likely indicate that the document has never been saved--
-        a :class:`TypeError` will be raised.
-
-        :param safe: Whether to perform the delete in safe mode.
-        :type safe: bool.
-        :raises: :class:`TypeError`
-
-        .. versionadded:: 0.1.0
-        """
-
-        id = getattr(self, 'id', None)
-        if not id:
-            raise TypeError("The '{0}' object cannot be deleted because its "
-                            "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
-
-        self._meta.db.remove({'_id': id}, safe=safe)
-        self._meta.document = {}
+        self.remove(safe=safe)
 
     @classmethod
     def get(cls, **fields):
@@ -191,6 +172,30 @@ class MongoModel(object):
 
         # Return an instantiated object for the retrieved document
         return cls(**docs[0])
+
+    def remove(self, safe=False):
+        """Removes a single document from the database.
+
+        This will remove the document associated with the instance
+        object. If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        :param safe: Whether to perform the removal in safe mode.
+        :type safe: bool.
+        :raises: :class:`TypeError`
+
+        .. versionadded:: 0.1.0
+        """
+
+        id = getattr(self, 'id', None)
+        if not id:
+            raise TypeError("The '{0}' object cannot be deleted because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        self._meta.db.remove({'_id': id}, safe=safe)
+        self._meta.document = {}
 
     def save(self, safe=False, upsert=False):
         """Saves the object to the database.
