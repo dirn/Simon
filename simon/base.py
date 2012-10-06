@@ -281,8 +281,28 @@ class MongoModel(object):
         # capture a reference to the document and pop it out of that.
         doc = self._meta.document.copy()
         id = doc.pop('_id', None)
+
         if upsert or id:
-            self._meta.db.update({'_id': id}, doc, safe=safe, upsert=upsert)
+            result = self._meta.db.update({'_id': id}, doc, safe=safe,
+                                          upsert=upsert)
+
+            # When upserting, the instance will need its _id. The way
+            # to obtain that varies based on whether or not the upsert
+            # happened in safe mode.
+            #
+            # When not in safe mode, the newly created document must be
+            # retrieved from the database. It can be obtained through
+            # a call to find_one() with the same query.
+            #
+            # When in safe mode, however, the database will return a
+            # document which includes the upserted _id and the
+            # updatedExisting field set to False.
+            if safe:
+                if not result.get('updatedExisting', True):
+                    self.id = result.get('upserted', None)
+            elif upsert:
+                doc = self._meta.db.find_one(doc, {'_id': 1})
+                self.id = doc['_id']
         else:
             self.id = self._meta.db.insert(doc, safe=safe)
 
