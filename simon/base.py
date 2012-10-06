@@ -279,7 +279,7 @@ class MongoModel(object):
         # good idea to pop it out of the document. Popping it out of
         # the real document could lead to bad things happening. Instead,
         # capture a reference to the document and pop it out of that.
-        doc = self._meta.document
+        doc = self._meta.document.copy()
         id = doc.pop('_id', None)
         if upsert or id:
             self._meta.db.update({'_id': id}, doc, safe=safe, upsert=upsert)
