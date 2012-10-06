@@ -72,8 +72,10 @@ class MongoModelMetaClass(type):
         # The document dictionary is used to contain the actual
         # document record that has been read from/will be written to
         # the collection. It is buried away inside of Meta to keep it
-        # from interfering with the real attributes of classes.
-        meta.document = {}
+        # from interfering with the real attributes of classes. It is
+        # set here to make sure the it always exists, but it isn't set
+        # as a dictionary until instantiation.
+        meta.document = None
 
         # Associate the database collection with the new class. A
         # lambda is used so that the collection reference isn't grabbed
@@ -113,6 +115,10 @@ class MongoModel(object):
 
         .. versionadded:: 0.1.0
         """
+
+        # Assign an empty dictionary _meta.document so that it can be
+        # used to store the real document's values
+        self._meta.document = {}
 
         # Add the fields to the document
         for k, v in fields.items():
