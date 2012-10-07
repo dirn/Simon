@@ -22,16 +22,22 @@ class TestModel(MongoModel):
 class TestDatabase(unittest.TestCase):
     """Test database interaction"""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.connection = connection.connect('localhost', name='test-simon')
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.connection.drop_database('test-simon')
+
     def setUp(self):
-        self.connection = connection.connect('localhost', name='test-simon')
-        self.database = self.connection['test-simon']
+        self.database = self.__class__.connection['test-simon']
         self.collection = self.database['test-simon']
 
         self._id = self.collection.insert({'a': 1, 'b': 2}, safe=True)
 
     def tearDown(self):
         self.database.drop_collection('test-simon')
-        self.connection.drop_database('test-simon')
 
     def test___init__(self):
         """Test the `__init__()` method."""
