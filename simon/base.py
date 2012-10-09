@@ -351,7 +351,7 @@ class MongoModel(object):
         if any(k not in self._document for k in fields):
             raise AttributeError("The '{0}' object does not have all of the "
                                  "specified fields.".format(
-                                    self.__class__.__name__))
+                                     self.__class__.__name__))
 
         doc = dict((k, getattr(self, k)) for k in fields)
         self._meta.db.update({'_id': id}, {'$set': doc}, safe=safe)
