@@ -7,6 +7,7 @@ from datetime import datetime
 
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
+from .query import QuerySet
 
 
 class Property(property):
@@ -126,6 +127,37 @@ class MongoModel(object):
         """
 
         self.remove(safe=safe)
+
+    @classmethod
+    def find(cls, **fields):
+        """Gets multiple documents from the database.
+
+        This will find a return multiple documents matching the query
+        specified through ``**fields``.
+
+        :param fields: Keyword arguments specifying the query.
+        :type fields: kwargs.
+        :returns: :class:`~simon.base.QuerySet` -- query set containing
+                  objects matching ``query``.
+
+        .. versionadded:: 0.1.0
+        """
+
+        # Conver the field spec into a query by mapping many necessary
+        # fields.
+        query = {}
+        for k, v in fields.items():
+            k = cls._meta.field_map.get(k, k)
+            query[k] = v
+
+        # If querying by the _id, make sure it's an Object ID
+        if '_id' in query and not isinstance(query['_id'], ObjectId):
+            query['_id'] = ObjectId(query['_id'])
+
+        # Find all of the matching documents.
+        docs = cls._meta.db.find(query)
+
+        return QuerySet(docs, cls)
 
     @classmethod
     def get(cls, **fields):
