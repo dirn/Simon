@@ -33,6 +33,10 @@ class MongoModelMetaClass(type):
         for k, v in attrs.items():
             setattr(new_class, k, v)
 
+        # Associate the custom exceptions with the new class.
+        setattr(new_class, 'MultipleDocumentsFound', MultipleDocumentsFound)
+        setattr(new_class, 'NoDocumentFound', NoDocumentFound)
+
         # Get the Meta class. It's at least attached to MongoModel,
         # so it will exist somewhere in the stack.
         meta = attrs.pop('Meta', None)
@@ -51,10 +55,6 @@ class MongoModelMetaClass(type):
         # name has been specified, the default is what should be used.
         if not getattr(meta, 'database', None):
             meta.database = 'default'
-
-        # Associate the custom exceptions with the new class.
-        setattr(new_class, 'MultipleDocumentsFound', MultipleDocumentsFound)
-        setattr(new_class, 'NoDocumentFound', NoDocumentFound)
 
         # Parent classes may define their own Meta class, so subclasses
         # should inherit any of the settings they haven't overridden.
