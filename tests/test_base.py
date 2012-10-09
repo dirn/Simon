@@ -48,7 +48,7 @@ class TestBase(unittest.TestCase):
 
         del m.a
         self.assertFalse(hasattr(m, 'a'))
-        self.assertFalse('a' in m._meta.document)
+        self.assertFalse('a' in m._document)
 
         with self.assertRaises(AttributeError):
             del m.attribute
@@ -71,22 +71,24 @@ class TestBase(unittest.TestCase):
         m = TestModel(**fields)
         self.assertTrue(all(getattr(m, k) == v for k, v in fields.items()))
 
+        self.assertTrue(isinstance(m._document, dict))
+
     def test_setattr(self):
         """Test the `__setattr__()` method."""
 
         m = TestModel(a=1)
-        self.assertFalse('b' in m._meta.document)
+        self.assertFalse('b' in m._document)
         with self.assertRaises(AttributeError):
             m.b
 
         m.b = 2
-        self.assertTrue('b' in m._meta.document)
+        self.assertTrue('b' in m._document)
         self.assertEqual(m.b, 2)
-        self.assertEqual(m.b, m._meta.document['b'])
+        self.assertEqual(m.b, m._document['b'])
 
         m.attribute = 3
         self.assertEqual(m.attribute, 3)
-        self.assertFalse('attribute' in m._meta.document)
+        self.assertFalse('attribute' in m._document)
 
         with self.assertRaises(AttributeError):
             m._meta = 'this better not work'

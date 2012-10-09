@@ -48,7 +48,7 @@ class TestDatabase(unittest.TestCase):
 
         for k, v in doc.items():
             self.assertTrue(hasattr(m, k))
-            self.assertEqual(m._meta.document[k], v)
+            self.assertEqual(m._document[k], v)
 
     def test_get(self):
         """Test the `get()` method."""
@@ -57,9 +57,9 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(m.id, self._id)
 
-        self.assertEqual(m._meta.document['_id'], self._id)
-        self.assertEqual(m._meta.document['a'], 1)
-        self.assertEqual(m._meta.document['b'], 2)
+        self.assertEqual(m._document['_id'], self._id)
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
 
     def test_get_multipledocumentsfound(self):
         """Test that `get()` raises `MultipleDocumentsFound`."""
@@ -113,8 +113,8 @@ class TestDatabase(unittest.TestCase):
 
         m.remove_fields(('a', 'b'), safe=True)
 
-        self.assertFalse('a' in m._meta.document)
-        self.assertFalse('b' in m._meta.document)
+        self.assertFalse('a' in m._document)
+        self.assertFalse('b' in m._document)
 
         doc = self.collection.find_one({'_id': self._id})
 
@@ -130,8 +130,8 @@ class TestDatabase(unittest.TestCase):
 
         m.remove_fields('b', safe=True)
 
-        self.assertTrue('a' in m._meta.document)
-        self.assertFalse('b' in m._meta.document)
+        self.assertTrue('a' in m._document)
+        self.assertFalse('b' in m._document)
 
         doc = self.collection.find_one({'_id': self._id})
 
@@ -151,8 +151,8 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        self.assertEqual(m._meta.document['a'], doc['a'])
-        self.assertEqual(m._meta.document['b'], doc['b'])
+        self.assertEqual(m._document['a'], doc['a'])
+        self.assertEqual(m._document['b'], doc['b'])
 
     def test_save_fields_one(self):
         """Test the `save_fields()` method for one field."""
@@ -167,8 +167,8 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        self.assertNotEqual(m._meta.document['a'], doc['a'])
-        self.assertEqual(m._meta.document['b'], doc['b'])
+        self.assertNotEqual(m._document['a'], doc['a'])
+        self.assertEqual(m._document['b'], doc['b'])
 
     def test_save_fields_typeerror(self):
         """Test that `save_fields()` raises `TypeError`."""
@@ -187,7 +187,7 @@ class TestDatabase(unittest.TestCase):
         doc = self.collection.find_one({'_id': m.id})
 
         self.assertEqual(m.id, doc['_id'])
-        self.assertEqual(sorted(m._meta.document), sorted(doc))
+        self.assertEqual(sorted(m._document), sorted(doc))
         self.assertTrue(hasattr(m, 'created'))
         self.assertTrue(hasattr(m, 'modified'))
 
@@ -204,7 +204,7 @@ class TestDatabase(unittest.TestCase):
         doc = self.collection.find_one({'_id': self._id})
 
         m = TestModel()
-        m._meta.document = doc.copy()
+        m._document = doc.copy()
 
         m.c = 3
         m.save(safe=True)
@@ -213,9 +213,9 @@ class TestDatabase(unittest.TestCase):
 
         for k, v in doc.items():
             if k != 'modified':
-                self.assertEqual(m._meta.document[k], v)
+                self.assertEqual(m._document[k], v)
             else:
-                self.assertNotEqual(m._meta.document[k], v)
+                self.assertNotEqual(m._document[k], v)
 
     def test_save_upsert(self):
         """Test the `save()` method for upserting documents."""

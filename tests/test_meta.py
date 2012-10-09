@@ -35,7 +35,6 @@ class TestMetaClass(unittest.TestCase):
         self.assertTrue(hasattr(TestModel1, 'NoDocumentFound'))
 
         self.assertTrue(hasattr(TestModel1._meta, 'core_attributes'))
-        self.assertTrue(hasattr(TestModel1._meta, 'document'))
 
     def test_extra_attributes(self):
         """Test that extra attributes are added to `_meta`."""

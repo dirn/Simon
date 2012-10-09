@@ -69,14 +69,6 @@ class MongoModelMetaClass(type):
         if not hasattr(meta, 'field_map'):
             meta.field_map = {'id': '_id'}
 
-        # The document dictionary is used to contain the actual
-        # document record that has been read from/will be written to
-        # the collection. It is buried away inside of Meta to keep it
-        # from interfering with the real attributes of classes. It is
-        # set here to make sure the it always exists, but it isn't set
-        # as a dictionary until instantiation.
-        meta.document = None
-
         # Associate the database collection with the new class. A
         # lambda is used so that the collection reference isn't grabbed
         # until it's actually needed. property by itself is not
@@ -89,8 +81,10 @@ class MongoModelMetaClass(type):
         # In order to allow __setattr__() to properly ignore real
         # attributes of the class when passing values through to the
         # core document, a list of the class's attributes needs to be
-        # stored.
-        meta.core_attributes = new_class.__dict__.keys()
+        # stored. At the time of instantiation, _document will be added
+        # to the class. By adding it to the list now, it doesn't need
+        # to be done each time a new list is instantiated.
+        meta.core_attributes = new_class.__dict__.keys() + ['_document']
 
         # Associate Meta with the new class.
         setattr(new_class, '_meta', meta)
@@ -116,9 +110,9 @@ class MongoModel(object):
         .. versionadded:: 0.1.0
         """
 
-        # Assign an empty dictionary _meta.document so that it can be
+        # Assign an empty dictionary to _document so that it can be
         # used to store the real document's values
-        self._meta.document = {}
+        self._document = {}
 
         # Add the fields to the document
         for k, v in fields.items():
@@ -204,7 +198,7 @@ class MongoModel(object):
                                 self.__class__.__name__, 'id'))
 
         self._meta.db.remove({'_id': id}, safe=safe)
-        self._meta.document = {}
+        self._document = {}
 
     def remove_fields(self, fields, safe=False):
         """Removes the specified fields from the document.
@@ -279,7 +273,7 @@ class MongoModel(object):
         # good idea to pop it out of the document. Popping it out of
         # the real document could lead to bad things happening. Instead,
         # capture a reference to the document and pop it out of that.
-        doc = self._meta.document.copy()
+        doc = self._document.copy()
         id = doc.pop('_id', None)
 
         if upsert or id:
@@ -354,7 +348,7 @@ class MongoModel(object):
         # them would result in assigning blank values to keys. In some
         # cases this could result in unexpected documents being returned
         # in queries.
-        if any(k not in self._meta.document for k in fields):
+        if any(k not in self._document for k in fields):
             raise AttributeError("The '{0}' object does not have all of the "
                                  "specified fields.".format(
                                     self.__class__.__name__))
@@ -370,8 +364,8 @@ class MongoModel(object):
         # key is used in case there is a different key used for the
         # document than for the object.
         key = self._meta.field_map.get(name, name)
-        if key in self._meta.document:
-            del self._meta.document[key]
+        if key in self._document:
+            del self._document[key]
             try:
                 delattr(self, name)
             except AttributeError:
@@ -394,10 +388,10 @@ class MongoModel(object):
 
         # If the attribute is a key in the document, use it.
         name = self._meta.field_map.get(name, name)
-        if not name in self._meta.document:
+        if not name in self._document:
             raise AttributeError("'{0}' object has no attribute '{1}'.".format(
                 self.__class__.__name__, name))
-        return self._meta.document[name]
+        return self._document[name]
 
     def __setattr__(self, name, value):
         """Set a document value"""
@@ -413,4 +407,4 @@ class MongoModel(object):
 
         if name not in self._meta.core_attributes:
             name = self._meta.field_map.get(name, name)
-            self._meta.document[name] = value
+            self._document[name] = value
