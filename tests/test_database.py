@@ -9,7 +9,10 @@ behavior is different for each mode. When that is the case, both modes
 will be tested.
 """
 
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 from simon import MongoModel, connection
 
