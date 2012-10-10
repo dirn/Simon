@@ -14,7 +14,7 @@ try:
 except ImportError:
     import unittest
 
-from simon import MongoModel, connection
+from simon import MongoModel, connection, query
 
 
 class TestModel(MongoModel):
@@ -244,3 +244,88 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(hasattr(m, 'modified'))
         self.assertEqual(m.a, 1)
         self.assertEqual(m.b, 2)
+
+
+class TestQuery(unittest.TestCase):
+    """Test :class:`~simon.query.QuerySet` functionality"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.connection = connection.connect('localhost', name='test-simon')
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.connection.drop_database('test-simon')
+
+    def setUp(self):
+        self.database = self.__class__.connection['test-simon']
+        self.collection = self.database['test-simon']
+
+        self._id1 = self.collection.insert({'a': 1, 'b': 2}, safe=True)
+        self._id2 = self.collection.insert({'a': 2, 'c': 1}, safe=True)
+        self._id3 = self.collection.insert({'b': 1, 'c': 2}, safe=True)
+
+        self.cursor = self.collection.find()
+        self.qs = query.QuerySet(cursor=self.cursor, cls=TestModel)
+
+    def tearDown(self):
+        self.database.drop_collection('test-simon')
+
+    def test_count(self):
+        """Test the `count()` method."""
+
+        self.assertEqual(self.qs.count(), self.cursor.count())
+        self.assertEqual(self.qs._count, self.cursor.count())
+
+    def test_distinct(self):
+        """Test the `distinct()` method."""
+
+        self.assertEqual(set(self.qs.distinct('a')), set([1, 2]))
+        self.assertEqual(set(self.qs.distinct('b')), set([1, 2]))
+        self.assertEqual(set(self.qs.distinct('c')), set([1, 2]))
+
+    def test_limit(self):
+        """Test the `limit()` method."""
+
+        self.qs._cls = None
+
+        limit1 = self.qs.limit(1)
+        limit2 = self.qs.limit(2)
+        limit3 = self.qs.limit(3)
+
+        self.assertEqual(limit1.count(), 1)
+        self.assertEqual(limit2.count(), 2)
+        self.assertEqual(limit3.count(), 3)
+
+        limit1._fill_to(2)
+        limit2._fill_to(2)
+        limit3._fill_to(2)
+
+        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
+        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
+        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
+
+        self.assertTrue(doc1 in limit1._items)
+        self.assertFalse(doc2 in limit1._items)
+        self.assertFalse(doc3 in limit1._items)
+
+        self.assertTrue(doc1 in limit2._items)
+        self.assertTrue(doc2 in limit2._items)
+        self.assertFalse(doc3 in limit2._items)
+
+        self.assertTrue(doc1 in limit3._items)
+        self.assertTrue(doc2 in limit3._items)
+        self.assertTrue(doc3 in limit3._items)
+
+    def test_limit_indexerror(self):
+        """Test that `limit()` raises `IndexError`."""
+
+        limit1 = self.qs.limit(1)
+        limit2 = self.qs.limit(2)
+
+        with self.assertRaises(IndexError):
+            limit1[1]
+        with self.assertRaises(IndexError):
+            limit1[2]
+        with self.assertRaises(IndexError):
+            limit2[2]
