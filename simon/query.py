@@ -181,7 +181,8 @@ class QuerySet(object):
             elif k >= self.count():
                 raise IndexError(
                     "No such item in QuerySet for '{0}' object".format(
-                        self._cls.__name__))
+                        self._cls.__name__ if self._cls else
+                        self.__class__.__name__))
 
             bound = k + 1
 
