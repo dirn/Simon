@@ -125,7 +125,7 @@ class QuerySet(object):
         return QuerySet(self._cursor.clone().sort(sorting), self._cls)
 
     def _fill_to(self, index):
-        """Buils the cache of documents retrieved from the cursor.
+        """Builds the cache of documents retrieved from the cursor.
 
         :class:`QuerySet` objects keep documents loaded from the
         cursor in an internal cache to avoid repetitive trips to the
