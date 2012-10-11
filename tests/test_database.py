@@ -371,3 +371,153 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(skip1.count(), 2)
         self.assertEqual(skip2.count(), 1)
         self.assertEqual(skip3.count(), 0)
+
+    def test_sort_single_ascending(self):
+        """Test the `sort()` method for a single ascending key."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        qs = self.qs.sort('a')
+
+        # Fill the result cache, using a bigger number to ensure
+        # everything gets loaded
+        qs._fill_to(3)
+
+        # Documents without the key should appear first, followed by
+        # documents with the key with its value in ascending order
+        self.assertEqual(qs[0]['_id'], self._id3)
+        self.assertEqual(qs[1]['_id'], self._id1)
+        self.assertEqual(qs[2]['_id'], self._id2)
+
+    def test_sort_single_descending(self):
+        """Test the `sort()` method for a single descending key."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        qs = self.qs.sort('-a')
+
+        # Fill the result cache, using a bigger number to ensure
+        # everything gets loaded
+        qs._fill_to(3)
+
+        # Documents with the key should appear first, with the value
+        # in descending order, following by documents without the key
+        self.assertEqual(qs[2]['_id'], self._id3)
+        self.assertEqual(qs[1]['_id'], self._id1)
+        self.assertEqual(qs[0]['_id'], self._id2)
+
+    def test_sort_multiple_ascending(self):
+        """Test the `sort()` method for multiple ascending keys."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        # In order to really test this, some new documents are needed
+        # because all current key/value combinations used are unique
+        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
+        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+
+        # The cursor is live, so it should pick up the new documents
+        qs = self.qs.sort('a', 'b')
+
+        # Fill the result cache, using a bigger number to ensure
+        # everything gets loaded
+        qs._fill_to(5)
+
+        # Documents will be sorted with both keys in ascending order.
+        # Any document without a key will appear before documents with
+        # that key
+        self.assertEqual(qs[0]['_id'], self._id3)
+        self.assertEqual(qs[1]['_id'], self._id5)
+        self.assertEqual(qs[2]['_id'], self._id4)
+        self.assertEqual(qs[3]['_id'], self._id1)
+        self.assertEqual(qs[4]['_id'], self._id2)
+
+    def test_sort_multiple_descending(self):
+        """Test the `sort()` method for multiple descending keys."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        # In order to really test this, some new documents are needed
+        # because all current key/value combinations used are unique
+        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
+        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+
+        # The cursor is live, so it should pick up the new documents
+        qs = self.qs.sort('-a', '-b')
+
+        # Fill the result cache, using a bigger number to ensure
+        # everything gets loaded
+        qs._fill_to(5)
+
+        # Documents will be sorted with both keys in descending order.
+        # Any document without a key will appear after documents with
+        # that key
+        self.assertEqual(qs[4]['_id'], self._id3)
+        self.assertEqual(qs[3]['_id'], self._id5)
+        self.assertEqual(qs[2]['_id'], self._id4)
+        self.assertEqual(qs[1]['_id'], self._id1)
+        self.assertEqual(qs[0]['_id'], self._id2)
+
+    def test_sort_multiple_ascending_then_descending(self):
+        """Test the `sort()` method for multiple keys ascending first."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        # In order to really test this, some new documents are needed
+        # because all current key/value combinations used are unique
+        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
+        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+
+        # The cursor is live, so it should pick up the new documents
+        qs = self.qs.sort('a', '-b')
+
+        # Fill the result cache, using a bigger number to ensure
+        # everything gets loaded
+        qs._fill_to(5)
+
+        # Documents will be sorted with both keys in ascending order.
+        # Any document without a key will appear before documents with
+        # that key
+        self.assertEqual(qs[0]['_id'], self._id5)
+        self.assertEqual(qs[1]['_id'], self._id3)
+        self.assertEqual(qs[2]['_id'], self._id1)
+        self.assertEqual(qs[3]['_id'], self._id4)
+        self.assertEqual(qs[4]['_id'], self._id2)
+
+    def test_sort_multiple_descending_then_ascending(self):
+        """Test the `sort()` method for multiple keys descending first."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        # In order to really test this, some new documents are needed
+        # because all current key/value combinations used are unique
+        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
+        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+
+        # The cursor is live, so it should pick up the new documents
+        qs = self.qs.sort('-a', 'b')
+
+        # Fill the result cache, using a bigger number to ensure
+        # everything gets loaded
+        qs._fill_to(5)
+
+        # Documents will be sorted with both keys in descending order.
+        # Any document without a key will appear after documents with
+        # that key
+        self.assertEqual(qs[4]['_id'], self._id5)
+        self.assertEqual(qs[3]['_id'], self._id3)
+        self.assertEqual(qs[2]['_id'], self._id1)
+        self.assertEqual(qs[1]['_id'], self._id4)
+        self.assertEqual(qs[0]['_id'], self._id2)
