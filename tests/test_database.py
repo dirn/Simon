@@ -287,16 +287,15 @@ class TestQuery(unittest.TestCase):
     def test_limit(self):
         """Test the `limit()` method."""
 
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
         self.qs._cls = None
 
         limit1 = self.qs.limit(1)
         limit2 = self.qs.limit(2)
         limit3 = self.qs.limit(3)
 
-        self.assertEqual(limit1.count(), 1)
-        self.assertEqual(limit2.count(), 2)
-        self.assertEqual(limit3.count(), 3)
-
+        # Fill the result caches
         limit1._fill_to(2)
         limit2._fill_to(2)
         limit3._fill_to(2)
@@ -316,6 +315,17 @@ class TestQuery(unittest.TestCase):
         self.assertTrue(doc1 in limit3._items)
         self.assertTrue(doc2 in limit3._items)
         self.assertTrue(doc3 in limit3._items)
+
+    def test_limit_count(self):
+        """Test that `limit()` method correctly handles counts."""
+
+        limit1 = self.qs.limit(1)
+        limit2 = self.qs.limit(2)
+        limit3 = self.qs.limit(3)
+
+        self.assertEqual(limit1.count(), 1)
+        self.assertEqual(limit2.count(), 2)
+        self.assertEqual(limit3.count(), 3)
 
     def test_limit_indexerror(self):
         """Test that `limit()` raises `IndexError`."""
