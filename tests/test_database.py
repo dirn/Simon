@@ -295,10 +295,11 @@ class TestQuery(unittest.TestCase):
         limit2 = self.qs.limit(2)
         limit3 = self.qs.limit(3)
 
-        # Fill the result caches
-        limit1._fill_to(2)
-        limit2._fill_to(2)
-        limit3._fill_to(2)
+        # Fill the result caches, using a bigger number to ensure
+        # everything gets loaded
+        limit1._fill_to(3)
+        limit2._fill_to(3)
+        limit3._fill_to(3)
 
         doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
         doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
@@ -317,7 +318,7 @@ class TestQuery(unittest.TestCase):
         self.assertTrue(doc3 in limit3._items)
 
     def test_limit_count(self):
-        """Test that `limit()` method correctly handles counts."""
+        """Test that `limit()` correctly handles counts."""
 
         limit1 = self.qs.limit(1)
         limit2 = self.qs.limit(2)
@@ -327,15 +328,5 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(limit2.count(), 2)
         self.assertEqual(limit3.count(), 3)
 
-    def test_limit_indexerror(self):
-        """Test that `limit()` raises `IndexError`."""
 
-        limit1 = self.qs.limit(1)
-        limit2 = self.qs.limit(2)
 
-        with self.assertRaises(IndexError):
-            limit1[1]
-        with self.assertRaises(IndexError):
-            limit1[2]
-        with self.assertRaises(IndexError):
-            limit2[2]
