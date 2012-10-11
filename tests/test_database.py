@@ -521,3 +521,61 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(qs[2]['_id'], self._id1)
         self.assertEqual(qs[1]['_id'], self._id4)
         self.assertEqual(qs[0]['_id'], self._id2)
+
+    def test__fill_to(self):
+        """Test the `_fill_to()` method."""
+
+        self.qs._cls = None
+
+        # Fill the whole result cache and make sure that all documents
+        # are loaded and in the correct order
+        self.qs._fill_to(2)
+
+        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
+        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
+        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
+
+        self.assertTrue(doc1 in self.qs._items)
+        self.assertTrue(doc2 in self.qs._items)
+        self.assertTrue(doc3 in self.qs._items)
+
+    def test__fill_to_indexes(self):
+        """Test that `_fill_to()` property fills to the specified index."""
+
+        self.qs._cls = None
+
+        docs = [{'_id': self._id1, 'a': 1, 'b': 2},
+                {'_id': self._id2, 'a': 2, 'c': 1},
+                {'_id': self._id3, 'b': 1, 'c': 2}]
+
+        for x in xrange(3):
+            self.qs._fill_to(x)
+            self.assertEqual(self.qs._items[x], docs[x])
+            self.assertEqual(len(self.qs._items), x + 1)
+
+    def test__fill_to_overfill(self):
+        ("Test that `_fill_to()` correctly handles indexes greater than"
+         " the maximum index of the result cache.")
+
+        # count() will always be 1 greater than the last index
+        self.qs._fill_to(self.qs.count())
+
+        # 3 is being used here because if will fail if the total number
+        # of documents is changed, whereas using 3 above wouldn't
+        # necessarily lead to problems
+        self.assertEqual(len(self.qs._items), 3)
+
+    def test__fill_to_twice(self):
+        """Test that `_fill_to()` can be called multiple times."""
+
+        self.qs._fill_to(0)
+        self.assertEqual(len(self.qs._items), 1)
+
+        self.qs._fill_to(0)
+        self.assertEqual(len(self.qs._items), 1)
+
+        self.qs._fill_to(self.qs.count())
+        self.assertEqual(len(self.qs._items), self.qs._count)
+
+        self.qs._fill_to(self.qs._count)
+        self.assertEqual(len(self.qs._items), self.qs._count)
