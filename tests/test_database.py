@@ -328,5 +328,46 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(limit2.count(), 2)
         self.assertEqual(limit3.count(), 3)
 
+    def test_skip(self):
+        """Test the `skip()` method."""
 
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
 
+        skip1 = self.qs.skip(1)
+        skip2 = self.qs.skip(2)
+        skip3 = self.qs.skip(3)
+
+        # Fill the result caches, using a bigger number to ensure
+        # everything gets loaded
+        skip1._fill_to(3)
+        skip2._fill_to(3)
+        skip3._fill_to(3)
+
+        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
+        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
+        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
+
+        self.assertFalse(doc1 in skip1._items)
+        self.assertTrue(doc2 in skip1._items)
+        self.assertTrue(doc3 in skip1._items)
+
+        self.assertFalse(doc1 in skip2._items)
+        self.assertFalse(doc2 in skip2._items)
+        self.assertTrue(doc3 in skip2._items)
+
+        self.assertFalse(doc1 in skip3._items)
+        self.assertFalse(doc2 in skip3._items)
+        self.assertFalse(doc3 in skip3._items)
+
+    def test_skip_count(self):
+        """Test that `skip()` correctly handles counts."""
+
+        skip1 = self.qs.skip(1)
+        skip2 = self.qs.skip(2)
+        skip3 = self.qs.skip(3)
+
+        self.assertEqual(skip1.count(), 2)
+        self.assertEqual(skip2.count(), 1)
+        self.assertEqual(skip3.count(), 0)
