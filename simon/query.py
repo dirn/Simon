@@ -157,6 +157,11 @@ class QuerySet(object):
                     item = self._cls(**item)
                 self._items.append(item)
         except StopIteration:
+            # This should never happen because of the check at the top
+            # of this method, but it's here just in case something
+            # crazy happens, like a document is added to the cursor
+            # (since new documents can suddenly appear in a cursor)
+            # during iteration
             pass
 
     def __getitem__(self, k):
