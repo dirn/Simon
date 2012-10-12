@@ -14,6 +14,8 @@ try:
 except ImportError:
     import unittest
 
+import collections
+
 from simon import MongoModel, connection, query
 
 
@@ -676,3 +678,28 @@ class TestQuery(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             self.qs[-1]
+
+    def test___iter__(self):
+        """Test the `__iter__()` method."""
+
+        self.assertTrue(isinstance(self.qs.__iter__(), collections.Iterable))
+
+    def test___iter___fills_cache(self):
+        """Test that `__iter__()` fills the result cache."""
+
+        self.assertEqual(len(self.qs._items), 0)
+
+        for x in self.qs:
+            pass
+
+        self.assertEqual(len(self.qs._items), 3)
+
+    def test__iter___fills_cache_partial(self):
+        """Test that `__iter__()` fills the rest of the result cache."""
+
+        self.qs[0]
+
+        for x in self.qs:
+            pass
+
+        self.assertEqual(len(self.qs._items), 3)
