@@ -601,3 +601,78 @@ class TestQuery(unittest.TestCase):
 
         self.qs._fill_to(self.qs._count)
         self.assertEqual(len(self.qs._items), self.qs._count)
+
+    def test___getitem__(self):
+        """Test the `__getitem__()` method."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        docs = [{'_id': self._id1, 'a': 1, 'b': 2},
+                {'_id': self._id2, 'a': 2, 'c': 1},
+                {'_id': self._id3, 'b': 1, 'c': 2}]
+
+        for x in xrange(3):
+            self.assertEqual(self.qs[x], docs[x])
+            self.assertEqual(self.qs[x], self.qs._items[x])
+
+    def test___getitem___slice(self):
+        """Test the `__getitem__()` method with slices."""
+
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
+        self.qs._cls = None
+
+        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
+        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
+        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
+
+        slice1 = self.qs[1:]
+        slice2 = self.qs[:1]
+        slice3 = self.qs[1:2]
+        slice4 = self.qs[::2]
+        slice5 = self.qs[1::2]
+        slice6 = self.qs[::]
+
+        self.assertEqual(len(slice1), 2)
+        self.assertFalse(doc1 in slice1)
+        self.assertTrue(doc2 in slice1)
+        self.assertTrue(doc3 in slice1)
+
+        self.assertEqual(len(slice2), 1)
+        self.assertTrue(doc1 in slice2)
+        self.assertFalse(doc2 in slice2)
+        self.assertFalse(doc2 in slice2)
+
+        self.assertEqual(len(slice3), 1)
+        self.assertFalse(doc1 in slice3)
+        self.assertTrue(doc2 in slice3)
+        self.assertFalse(doc3 in slice3)
+
+        self.assertEqual(len(slice4), 2)
+        self.assertTrue(doc1 in slice4)
+        self.assertFalse(doc2 in slice4)
+        self.assertTrue(doc3 in slice4)
+
+        self.assertEqual(len(slice5), 1)
+        self.assertFalse(doc1 in slice5)
+        self.assertTrue(doc2 in slice5)
+        self.assertFalse(doc3 in slice5)
+
+        self.assertEqual(len(slice6), 3)
+        self.assertTrue(doc1 in slice6)
+        self.assertTrue(doc2 in slice6)
+        self.assertTrue(doc3 in slice6)
+
+    def test___getitem___indexerror(self):
+        """Test that `__getitem__()` raises `IndexError`."""
+
+        with self.assertRaises(IndexError):
+            self.qs[3]
+
+    def test___getitem___typeerror(self):
+        """Test that `__getitem__()` raises `TypeError`."""
+
+        with self.assertRaises(TypeError):
+            self.qs[-1]
