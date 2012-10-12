@@ -688,6 +688,7 @@ class TestQuery(unittest.TestCase):
     def test___iter___fills_cache(self):
         """Test that `__iter__()` fills the result cache."""
 
+        # Sanity check
         self.assertEqual(len(self.qs._items), 0)
 
         for x in self.qs:
@@ -698,6 +699,7 @@ class TestQuery(unittest.TestCase):
     def test__iter___fills_cache_partial(self):
         """Test that `__iter__()` fills the rest of the result cache."""
 
+        # Put a record into the result cache
         self.qs[0]
 
         for x in self.qs:
