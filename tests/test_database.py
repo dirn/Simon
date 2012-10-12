@@ -539,9 +539,31 @@ class TestQuery(unittest.TestCase):
         self.assertTrue(doc2 in self.qs._items)
         self.assertTrue(doc3 in self.qs._items)
 
+    def test__fill_to_as_documents(self):
+        """Test that `_fill_to()` stores documents."""
+
+        # When no class is associated with the QuerySet, documents
+        # should be used
+        self.qs._cls = None
+
+        self.qs._fill_to(3)
+
+        for x in xrange(3):
+            self.assertTrue(isinstance(self.qs._items[x], dict))
+
+    def test__fill_to_as_model(self):
+        """Test that `_fill_to()` stores model instances."""
+
+        self.qs._fill_to(3)
+
+        for x in xrange(3):
+            self.assertTrue(isinstance(self.qs._items[x], TestModel))
+
     def test__fill_to_indexes(self):
         """Test that `_fill_to()` property fills to the specified index."""
 
+        # Disable the model class associated with the model so that
+        # the result cache can be compared directly to dictionaries
         self.qs._cls = None
 
         docs = [{'_id': self._id1, 'a': 1, 'b': 2},
