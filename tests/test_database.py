@@ -15,6 +15,7 @@ except ImportError:
     import unittest
 
 import collections
+import mock
 
 from simon import MongoModel, connection, query
 
@@ -703,3 +704,15 @@ class TestQuery(unittest.TestCase):
             pass
 
         self.assertEqual(len(self.qs._items), 3)
+
+    def test___len__(self):
+        """Test the `__len__()` method."""
+
+        # Mock __len__() to make sure it's called for len()
+        with mock.patch('simon.query.QuerySet.__len__') as mock_len:
+            mock_len.return_value = 1
+
+            self.assertEqual(len(self.qs), 1)
+
+        # Also test the real value
+        self.assertEqual(len(self.qs), 3)
