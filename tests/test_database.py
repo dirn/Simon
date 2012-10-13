@@ -301,6 +301,29 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m.a, 1)
         self.assertEqual(m.b, 2)
 
+    def test_update(self):
+        """Test the `update()` method."""
+
+        m = TestModel.get(id=self._id)
+
+        m.update(a=2, b=3)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m.a, doc['a'])
+        self.assertEqual(doc['a'], 2)
+
+        self.assertEqual(m.b, doc['b'])
+        self.assertEqual(doc['b'], 3)
+
+    def test_update_typeerror(self):
+        """Test that `update()` raises `TypeError`."""
+
+        m = TestModel()
+
+        with self.assertRaises(TypeError):
+            m.update(a=1)
+
 
 class TestQuery(unittest.TestCase):
     """Test :class:`~simon.query.QuerySet` functionality"""

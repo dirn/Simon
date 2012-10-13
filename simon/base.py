@@ -458,6 +458,52 @@ class MongoModel(object):
         doc = dict((k, getattr(self, k)) for k in fields)
         self._meta.db.update({'_id': id}, {'$set': doc}, safe=safe)
 
+    def update(self, safe=False, **fields):
+        """Performs an atomic update.
+
+        If only a select number of fields need to be updated, an atomic
+        update is preferred over a document replacement.
+        ``update()`` takes a series of fields and values through its
+        keyword arguments. This fields will be updated both in the
+        database and on the instance.
+
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        updated.
+
+        :param safe: Whether to perform the save in safe mode.
+        :type safe: bool.
+        :param fields: Names of the fields to save.
+        :type fields: list or tuple.
+        :raises: :class:`TypeError`
+
+        .. versionadded:: 0.1.0
+        """
+
+        id = getattr(self, 'id', None)
+        if not id:
+            raise TypeError("The '{0}' object cannot be updated because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        self._meta.db.update({'_id': id}, {'$set': fields}, safe=safe)
+
+        # After updating the document in the database, the instance
+        # needs to be updated as well. Depending on the size of the
+        # document, it may be time consuming to reload the entire thing.
+        # Fortunately there is a way to just load the fields that have
+        # been updated. Build a dictionary containing the keys of the
+        # fields that need to be reloaded and retrieve them from the
+        # database. Then apply the new values to the instance
+        fields = dict((k, 1) for k in fields.keys())
+        doc = self._meta.db.find_one({'_id': id}, fields)
+
+        for k, v in doc.items():
+            setattr(self, k, v)
+
     def __delattr__(self, name):
         """Remove a key from the document"""
 
