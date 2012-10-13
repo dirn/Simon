@@ -81,6 +81,59 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(TestModel.NoDocumentFound):
             TestModel.get(a=2)
 
+    def test_increment(self):
+        """Test the `increment()` method."""
+
+        m = TestModel.get(id=self._id)
+
+        m.increment('a', safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m.a, doc['a'])
+        self.assertEqual(doc['a'], 2)
+
+        m.increment('b', 2, safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m.b, doc['b'])
+        self.assertEqual(doc['b'], 4)
+
+        # And some sanity checks just to make sure a wasn't changed
+        self.assertEqual(m.a, doc['a'])
+        self.assertEqual(doc['a'], 2)
+
+    def test_increment_kwargs(self):
+        """Test the `increment()` method with **kwargs."""
+
+        m = TestModel.get(id=self._id)
+
+        m.increment(a=1, b=5)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m.a, doc['a'])
+        self.assertEqual(doc['a'], 2)
+        self.assertEqual(m.b, doc['b'])
+        self.assertEqual(doc['b'], 7)
+
+    def test_increment_typeerror(self):
+        """Test that `increment()` raises `TypeError`."""
+
+        m = TestModel(a=1)
+
+        with self.assertRaises(TypeError):
+            m.increment('a')
+
+    def test_increment_valueerror(self):
+        """Test that `increment()` raises `ValueError`."""
+
+        m = TestModel.get(id=self._id)
+
+        with self.assertRaises(ValueError):
+            m.increment()
+
     def test_remove(self):
         """Test the `remove()` method."""
 

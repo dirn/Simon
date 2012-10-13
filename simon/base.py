@@ -208,6 +208,69 @@ class MongoModel(object):
         # Return an instantiated object for the retrieved document
         return cls(**docs[0])
 
+    def increment(self, field=None, value=1, safe=False, **fields):
+        """Performs an atomic increment.
+
+        This can be used to update a single field::
+
+            obj.increment(field, value)
+
+        or to update multiple fields at a time::
+
+            obj.increment(field1=value1, field2=value2)
+
+        Note that the latter does **not** set the values of the fields,
+        but rather specifies the values they should be incremented by.
+
+        :param field: Name of the field to increment.
+        :type field: str.
+        :param value: Value to increment ``field`` by.
+        :type value: int.
+        :param safe: Whether to perform the update in safe mode.
+        :type safe: bool.
+        :param fields: Keyword arguments specifying fields and increment
+                       values.
+        :type fields: kwargs.
+        :raises: :class:`TypeError`, :class:`ValueError`
+
+        .. versionadded:: 0.1.0
+        """
+
+        id = getattr(self, 'id', None)
+        if not id:
+            raise TypeError("The '{0}' object cannot be updated because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        # There needs to be something to update
+        if field is None and not fields:
+            raise ValueError('No fields have been specified.')
+
+        update = {}
+
+        # Both the field/value parameters and **fields can be used for
+        # the update, so build a dictionary containing all of the fields
+        # to increment and the value to increment each by
+        if field is not None:
+            update[field] = value
+        for k, v in fields.items():
+            update[k] = v
+
+        self._meta.db.update({'_id': id}, {'$inc': update}, safe=safe)
+
+        # After updating the document in the database, the instance
+        # needs to be updated as well. Depending on the size of the
+        # document, it may be time consuming to reload the entire thing.
+        # Fortunately there is a way to just load the fields that have
+        # been updated. Build a dictionary containing the keys of the
+        # fields that need to be reloaded and retrieve them from the
+        # database. Then apply the new values to the instance
+        fields = dict((k, 1) for k in update.keys())
+        doc = self._meta.db.find_one({'_id': id}, fields)
+
+        for k, v in doc.items():
+            setattr(self, k, v)
+
     def remove(self, safe=False):
         """Removes a single document from the database.
 
