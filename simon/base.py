@@ -222,6 +222,13 @@ class MongoModel(object):
         Note that the latter does **not** set the values of the fields,
         but rather specifies the values they should be incremented by.
 
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        If no fields are indicated--either through ``field`` or through
+        ``**fields``, a :class:`ValueError` will be raised.
+
         :param field: Name of the field to increment.
         :type field: str.
         :param value: Value to increment ``field`` by.
