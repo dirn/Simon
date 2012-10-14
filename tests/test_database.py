@@ -134,6 +134,45 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.increment()
 
+    def test_raw_update(self):
+        """Test the `raw_update()` method."""
+
+        m = TestModel(id=self._id)
+
+        m.raw_update({'a': 2, 'b': 3})
+
+        self.assertEqual(m.a, 2)
+        self.assertEqual(m.b, 3)
+
+    def test_raw_update_typeerror(self):
+        """Test that `raw_update()` raises `TypeError`."""
+
+        m = TestModel()
+
+        with self.assertRaises(TypeError):
+            m.raw_update({'a': 1})
+
+    def test_raw_update_upsert(self):
+        """Test the `raw_update()` method for upserting documents."""
+
+        m = TestModel()
+        m.raw_update({'a': 1, 'b': 2}, safe=True, upsert=True)
+
+        self.assertTrue(hasattr(m, 'id'))
+        self.assertEqual(m.a, 1)
+        self.assertEqual(m.b, 2)
+
+    def test_raw_update_upsert_unsafe(self):
+        ("Test the `raw_update()` method for upserting documents not in "
+         "safe mode.")
+
+        m = TestModel()
+        m.raw_update({'a': 1, 'b': 2}, safe=False, upsert=True)
+
+        self.assertTrue(hasattr(m, 'id'))
+        self.assertEqual(m.a, 1)
+        self.assertEqual(m.b, 2)
+
     def test_remove(self):
         """Test the `remove()` method."""
 

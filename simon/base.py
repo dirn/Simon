@@ -278,6 +278,76 @@ class MongoModel(object):
         for k, v in doc.items():
             setattr(self, k, v)
 
+    def raw_update(self, fields, safe=False, upsert=False):
+        """Performs an update using a raw document.
+
+        This method should be used carefully as it will perform the
+        update exactly, potentially performing a full document
+        replacement.
+
+        Also, for simple updates, it is preferred to use the
+        :meth:`~simon.MongoModel.save` or
+        :meth:`~simon.MongoModel.update` methods as they will usually
+        result in less data being transferred back from the database.
+
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        updated.
+
+        :param fields: The document to save to the database.
+        :type fields: dict.
+        :param safe: Whether to perform the save in safe mode.
+        :type safe: bool.
+        :param upsert: Whether to perform the update as an upsert.
+        :type upsert: bool.
+        :raises: :class:`TypeError`
+
+        .. versionadded:: 0.1.0
+        """
+
+        id = getattr(self, 'id', None)
+        if not (id or upsert):
+            raise TypeError("The '{0}' object cannot be updated because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        result = self._meta.db.update({'_id': id}, fields, safe=safe,
+                                   upsert=upsert)
+
+        # When upserting, the instance will need its _id. The way
+        # to obtain that varies based on whether or not the upsert
+        # happened in safe mode.
+        #
+        # When not in safe mode, the newly created document must be
+        # retrieved from the database. It can be obtained through
+        # a call to find_one() with the same query.
+        #
+        # When in safe mode, however, the database will return a
+        # document which includes the upserted _id and the
+        # updatedExisting field set to False.
+        #
+        # At the same time, the entire document needs to be reloaded
+        # in order to update the existence. When performing an unsafe
+        # upsert, the document needs to be retrieved in order to get the
+        # _id. Rather than only getting the one field, the whole
+        # document can be requested to avoid two trips to the database.
+        doc = None
+        if safe:
+            if not result.get('updatedExisting', True):
+                self.id = result.get('upserted', None)
+        elif upsert:
+            doc = self._meta.db.find_one(fields)
+            self.id = doc['_id']
+
+        if not doc:
+            doc = self._meta.db.find_one({'_id': self.id})
+
+        for k, v in doc.items():
+            setattr(self, k, v)
+
     def remove(self, safe=False):
         """Removes a single document from the database.
 
