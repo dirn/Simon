@@ -114,7 +114,7 @@ def get_database(name):
     """
 
     if name not in __databases__:
-        raise ConnectionError("There is no connection for database '{0}'."
+        raise ConnectionError("There is no connection for database '{0}'. "
                               "Use `simon.connection.connect()` to connect "
                               "to it.".format(name))
     return __databases__[name]
