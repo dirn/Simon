@@ -3,7 +3,6 @@ try:
 except ImportError:
     import unittest
 
-from pymongo.collection import Collection
 
 from simon import MongoModel, connection
 
@@ -19,19 +18,14 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         connection.connect(name='test')
 
-    def test_class_db(self):
-        ("Test that the `db` attribute is associated with the class "
-         "and is of the right type.")
+    def test_db(self):
+        ("Test that the `db` attribute is associated with classes and "
+         "instances.")
 
         self.assertTrue(hasattr(TestModel._meta, 'db'))
 
-    def test_db(self):
-        ("Test that the `db` attribute is associated with the instance "
-         "and is of the right type.")
-
         m = TestModel()
         self.assertTrue(hasattr(m._meta, 'db'))
-        self.assertTrue(isinstance(m._meta.db, Collection))
 
     def test_delattr(self):
         """Test the `__delattr__()` method."""
