@@ -339,7 +339,9 @@ class MongoModel(object):
         #
         # When not in safe mode, the newly created document must be
         # retrieved from the database. It can be obtained through
-        # a call to find_one() with the same query.
+        # a call to find_one() with the same query. A sort needs
+        # to be provided to make sure the newest document comes
+        # back first.
         #
         # When in safe mode, however, the database will return a
         # document which includes the upserted _id and the
@@ -355,7 +357,7 @@ class MongoModel(object):
             if not result.get('updatedExisting', True):
                 self.id = result.get('upserted', None)
         elif upsert:
-            doc = self._meta.db.find_one(fields)
+            doc = self._meta.db.find_one(fields, sort=[('_id', -1)])
             self.id = doc['_id']
 
         if not doc:
@@ -450,7 +452,9 @@ class MongoModel(object):
             #
             # When not in safe mode, the newly created document must be
             # retrieved from the database. It can be obtained through
-            # a call to find_one() with the same query.
+            # a call to find_one() with the same query. A sort needs
+            # to be provided to make sure the newest document comes
+            # back first.
             #
             # When in safe mode, however, the database will return a
             # document which includes the upserted _id and the
@@ -459,7 +463,8 @@ class MongoModel(object):
                 if not result.get('updatedExisting', True):
                     self.id = result.get('upserted', None)
             elif upsert:
-                doc = self._meta.db.find_one(doc, {'_id': 1})
+                doc = self._meta.db.find_one(doc, {'_id': 1},
+                                             sort=[('_id', -1)])
                 self.id = doc['_id']
         else:
             self.id = self._meta.db.insert(doc, safe=safe)
