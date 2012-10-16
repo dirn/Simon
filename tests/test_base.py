@@ -15,8 +15,9 @@ class TestModel(MongoModel):
 
 
 class TestBase(unittest.TestCase):
-    def setUp(self):
         connection.connect(name='test')
+    @classmethod
+    def setUpClass(self):
 
     def test_db(self):
         ("Test that the `db` attribute is associated with classes and "
