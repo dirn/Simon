@@ -16,6 +16,7 @@ except ImportError:
 
 import collections
 import mock
+from pymongo.collection import Collection
 
 from simon import MongoModel, connection, query
 
@@ -55,6 +56,15 @@ class TestDatabase(unittest.TestCase):
         for k, v in doc.items():
             self.assertTrue(hasattr(m, k))
             self.assertEqual(m._document[k], v)
+
+    def test_db_attribute(self):
+        ("Test that the `db` attribute of classes and instances is the "
+         "right type.")
+
+        self.assertTrue(isinstance(TestModel._meta.db, Collection))
+
+        m = TestModel()
+        self.assertTrue(isinstance(m._meta.db, Collection))
 
     def test_get(self):
         """Test the `get()` method."""
