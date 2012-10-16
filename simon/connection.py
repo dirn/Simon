@@ -88,7 +88,7 @@ def connect(host='localhost', name=None, username=None, password=None,
         connection_class = ReplicaSetConnection
         settings['host_or_uri'] = settings.pop('host')
         settings.pop('port', None)
-        settings.pop('replaceSet', None)
+        settings.pop('replicaSet', None)
     else:
         connection_class = Connection
 
