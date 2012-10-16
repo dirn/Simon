@@ -5,7 +5,7 @@ from pymongo import Connection, ReplicaSetConnection, uri_parser
 from .exceptions import ConnectionError
 
 
-__databases__ = {}
+__databases__ = None
 
 
 def connect(host='localhost', name=None, username=None, password=None,
@@ -97,6 +97,10 @@ def connect(host='localhost', name=None, username=None, password=None,
             "Cannot connection to database '{0}':\n{1}".format(host, e))
 
     __databases__['default'] = db = connection[name]
+    global __databases__
+    if not isinstance(__databases__, dict):
+        __databases__ = {}
+
     if username and password:
         db.authenticate(username, password)
 
