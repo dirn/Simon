@@ -14,13 +14,6 @@ class TestModel(MongoModel):
     class Meta:
         collection = 'test'
 
-    @classmethod
-    def dummy_class_method(cls):
-        pass
-
-    def dummy_method(cls):
-        pass
-
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -30,7 +23,6 @@ class TestBase(unittest.TestCase):
         ("Test that the `db` attribute is associated with the class "
          "and is of the right type.")
 
-        TestModel.dummy_class_method()
         self.assertTrue(hasattr(TestModel._meta, 'db'))
 
     def test_db(self):
@@ -38,7 +30,6 @@ class TestBase(unittest.TestCase):
          "and is of the right type.")
 
         m = TestModel()
-        m.dummy_method()
         self.assertTrue(hasattr(m._meta, 'db'))
         self.assertTrue(isinstance(m._meta.db, Collection))
 
