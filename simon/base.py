@@ -121,12 +121,28 @@ class MongoModel(object):
             setattr(self, k, v)
 
     def delete(self, safe=False):
-        """Aliases :meth:`~simon.MongoModel.remove`.
+        """Deletes a single document from the database.
+
+        This will delete the document associated with the instance
+        object. If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        :param safe: Whether to perform the delete in safe mode.
+        :type safe: bool.
+        :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0
         """
 
-        self.remove(safe=safe)
+        id = getattr(self, 'id', None)
+        if not id:
+            raise TypeError("The '{0}' object cannot be deleted because its "
+                            "'{1}' attribute has not been set.".format(
+                                self.__class__.__name__, 'id'))
+
+        self._meta.db.remove({'_id': id}, safe=safe)
+        self._document = {}
 
     @classmethod
     def find(cls, **fields):
@@ -347,30 +363,6 @@ class MongoModel(object):
 
         for k, v in doc.items():
             setattr(self, k, v)
-
-    def remove(self, safe=False):
-        """Removes a single document from the database.
-
-        This will remove the document associated with the instance
-        object. If the document does not have an ``_id``--this will
-        most likely indicate that the document has never been saved--
-        a :class:`TypeError` will be raised.
-
-        :param safe: Whether to perform the removal in safe mode.
-        :type safe: bool.
-        :raises: :class:`TypeError`
-
-        .. versionadded:: 0.1.0
-        """
-
-        id = getattr(self, 'id', None)
-        if not id:
-            raise TypeError("The '{0}' object cannot be deleted because its "
-                            "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
-
-        self._meta.db.remove({'_id': id}, safe=safe)
-        self._document = {}
 
     def remove_fields(self, fields, safe=False):
         """Removes the specified fields from the document.

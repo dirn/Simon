@@ -66,6 +66,27 @@ class TestDatabase(unittest.TestCase):
         m = TestModel()
         self.assertTrue(isinstance(m._meta.db, Collection))
 
+    def test_delete(self):
+        """Test the `delete()` method."""
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        m = TestModel(**doc)
+
+        m.delete(safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertIsNone(doc)
+
+    def test_delete_typeerror(self):
+        """Test that `delete()` raises `TypeError`."""
+
+        m = TestModel(a=1, b=2)
+
+        with self.assertRaises(TypeError):
+            m.delete()
+
     def test_get(self):
         """Test the `get()` method."""
 
@@ -182,27 +203,6 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(hasattr(m, 'id'))
         self.assertEqual(m.a, 1)
         self.assertEqual(m.b, 2)
-
-    def test_remove(self):
-        """Test the `remove()` method."""
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        m = TestModel(**doc)
-
-        m.remove(safe=True)
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertIsNone(doc)
-
-    def test_remove_typeerror(self):
-        """Test that `remove()` raises `TypeError`."""
-
-        m = TestModel(a=1, b=2)
-
-        with self.assertRaises(TypeError):
-            m.remove()
 
     def test_remove_fields_typeerror(self):
         """Test that `remove_fields()` raises `TypeError`."""
