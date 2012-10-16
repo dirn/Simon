@@ -186,23 +186,37 @@ class TestDatabase(unittest.TestCase):
     def test_raw_update_upsert(self):
         """Test the `raw_update()` method for upserting documents."""
 
-        m = TestModel()
-        m.raw_update({'a': 1, 'b': 2}, safe=True, upsert=True)
+        # Insert the same document over and over in a loop to make sure
+        # that a different _id is provided for each document
+        previous_id = None
+        for x in xrange(10):
+            m = TestModel()
+            m.raw_update({'a': 1, 'b': 2}, safe=True, upsert=True)
 
-        self.assertTrue(hasattr(m, 'id'))
-        self.assertEqual(m.a, 1)
-        self.assertEqual(m.b, 2)
+            self.assertTrue(hasattr(m, 'id'))
+            self.assertNotEqual(m.id, previous_id)
+            self.assertEqual(m.a, 1)
+            self.assertEqual(m.b, 2)
+
+            previous_id = m.id
 
     def test_raw_update_upsert_unsafe(self):
         ("Test the `raw_update()` method for upserting documents not in "
          "safe mode.")
 
-        m = TestModel()
-        m.raw_update({'a': 1, 'b': 2}, safe=False, upsert=True)
+        # Insert the same document over and over in a loop to make sure
+        # that a different _id is provided for each document
+        previous_id = None
+        for x in xrange(10):
+            m = TestModel()
+            m.raw_update({'a': 1, 'b': 2}, safe=False, upsert=True)
 
-        self.assertTrue(hasattr(m, 'id'))
-        self.assertEqual(m.a, 1)
-        self.assertEqual(m.b, 2)
+            self.assertTrue(hasattr(m, 'id'))
+            self.assertNotEqual(m.id, previous_id)
+            self.assertEqual(m.a, 1)
+            self.assertEqual(m.b, 2)
+
+            previous_id = m.id
 
     def test_remove_fields_typeerror(self):
         """Test that `remove_fields()` raises `TypeError`."""
@@ -328,27 +342,41 @@ class TestDatabase(unittest.TestCase):
     def test_save_upsert(self):
         """Test the `save()` method for upserting documents."""
 
-        m = TestModel(a=1, b=2)
-        m.save(safe=True, upsert=True)
+        # Insert the same document over and over in a loop to make sure
+        # that a different _id is provided for each document
+        previous_id = None
+        for x in xrange(10):
+            m = TestModel(a=1, b=2)
+            m.save(safe=True, upsert=True)
 
-        self.assertTrue(hasattr(m, 'id'))
-        self.assertTrue(hasattr(m, 'created'))
-        self.assertTrue(hasattr(m, 'modified'))
-        self.assertEqual(m.a, 1)
-        self.assertEqual(m.b, 2)
+            self.assertTrue(hasattr(m, 'id'))
+            self.assertNotEqual(m.id, previous_id)
+            self.assertTrue(hasattr(m, 'created'))
+            self.assertTrue(hasattr(m, 'modified'))
+            self.assertEqual(m.a, 1)
+            self.assertEqual(m.b, 2)
+
+            previous_id = m.id
 
     def test_save_upsert_unsafe(self):
         ("Test the `save()` method for upserting documents not in safe "
          "mode.")
 
-        m = TestModel(a=1, b=2)
-        m.save(safe=False, upsert=True)
+        # Insert the same document over and over in a loop to make sure
+        # that a different _id is provided for each document
+        previous_id = None
+        for x in xrange(10):
+            m = TestModel(a=1, b=2)
+            m.save(safe=False, upsert=True)
 
-        self.assertTrue(hasattr(m, 'id'))
-        self.assertTrue(hasattr(m, 'created'))
-        self.assertTrue(hasattr(m, 'modified'))
-        self.assertEqual(m.a, 1)
-        self.assertEqual(m.b, 2)
+            self.assertTrue(hasattr(m, 'id'))
+            self.assertNotEqual(m.id, previous_id)
+            self.assertTrue(hasattr(m, 'created'))
+            self.assertTrue(hasattr(m, 'modified'))
+            self.assertEqual(m.a, 1)
+            self.assertEqual(m.b, 2)
+
+            previous_id = m.id
 
     def test_update(self):
         """Test the `update()` method."""
