@@ -9,7 +9,7 @@ __databases__ = None
 
 
 def connect(host='localhost', name=None, username=None, password=None,
-            port=None, **kwargs):
+            port=None, alias=None, **kwargs):
     """Connects to a database.
 
     :param host: The name of the MongoDB host.
@@ -22,6 +22,9 @@ def connect(host='localhost', name=None, username=None, password=None,
     :type password: str.
     :param port: The port of the MongoDB host.
     :type port: int.
+    :param alias: An alias to use for accessing the database. If no
+                  value is provided, ``name`` will be used.
+    :type alias: str.
     :param kwargs: All other keyword arguments accepted by
                    ``pymongo.connection.Connection``.
     :type kwargs: kwargs.
@@ -70,6 +73,9 @@ def connect(host='localhost', name=None, username=None, password=None,
         raise ConnectionError('No database name was provided. '
                               'Make sure to append it to the host URI.')
 
+    if alias is None:
+        alias = name
+
     # I can't connect to 2.3 with these keys set. I need to explore
     # this further to understand when they should be set and when they
     # shouldn't.
@@ -96,10 +102,15 @@ def connect(host='localhost', name=None, username=None, password=None,
         raise ConnectionError(
             "Cannot connection to database '{0}':\n{1}".format(host, e))
 
-    __databases__['default'] = db = connection[name]
+    # Make sure that __databases__ is a dict before using it
     global __databases__
     if not isinstance(__databases__, dict):
         __databases__ = {}
+
+    # Capture the database and store it in __databases__ under its alias
+    __databases__[alias] = db = connection[name]
+    if 'default' not in __databases__:
+        __databases__['default'] = db
 
     if username and password:
         db.authenticate(username, password)
