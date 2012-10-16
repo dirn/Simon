@@ -315,7 +315,7 @@ class MongoModel(object):
                                 self.__class__.__name__, 'id'))
 
         result = self._meta.db.update({'_id': id}, fields, safe=safe,
-                                   upsert=upsert)
+                                      upsert=upsert)
 
         # When upserting, the instance will need its _id. The way
         # to obtain that varies based on whether or not the upsert
