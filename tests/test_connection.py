@@ -17,50 +17,64 @@ class TestConnection(unittest.TestCase):
     """Test database connections"""
 
     def setUp(self):
+        connection.__connections__ = None
         connection.__databases__ = None
 
     def test_connect(self):
         """Test the `connect()` method."""
 
-        with mock.patch('simon.connection.Connection') as mock_conn:
+        with mock.patch('simon.connection._get_connection') as mock_conn:
             connection.connect(name='test')
 
-            mock_conn.assert_called_with(host='localhost', port=None)
+            mock_conn.assert_called_with(host='localhost', port=None,
+                                         name='test', username=None,
+                                         password=None)
 
-        with mock.patch('simon.connection.Connection') as mock_conn:
+        with mock.patch('simon.connection._get_connection') as mock_conn:
             connection.connect(name='test', alias='test2')
 
-            mock_conn.assert_called_with(host='localhost', port=None)
+            mock_conn.assert_called_with(host='localhost', port=None,
+                                         name='test', username=None,
+                                         password=None)
 
-        with mock.patch('simon.connection.Connection') as mock_conn:
+        with mock.patch('simon.connection._get_connection') as mock_conn:
             connection.connect(host='someotherhost', name='test3', port=1234)
 
-            mock_conn.assert_called_with(host='someotherhost', port=1234)
+            mock_conn.assert_called_with(host='someotherhost', port=1234,
+                                         name='test3', username=None,
+                                         password=None)
 
-        with mock.patch('simon.connection.Connection') as mock_conn:
+        with mock.patch('simon.connection._get_connection') as mock_conn:
             connection.connect(host='simon.mongo.com', name='simon',
                                port=27017, username='simon',
                                password='simon')
 
-            mock_conn.assert_called_with(host='simon.mongo.com', port=27017)
+            mock_conn.assert_called_with(host='simon.mongo.com', port=27017,
+                                         name='simon', username='simon',
+                                         password='simon')
 
-        with mock.patch('simon.connection.Connection') as mock_conn:
+        with mock.patch('simon.connection._get_connection') as mock_conn:
             url = 'mongodb://simon:simon@simon.mongo.com:27017/simon'
             connection.connect(host=url, alias='remote_uri')
 
-            mock_conn.assert_called_with(host=url, port=None)
+            mock_conn.assert_called_with(host=url, port=None, name=None,
+                                         username=None, password=None)
 
-        with mock.patch('simon.connection.ReplicaSetConnection') as mock_conn:
+        with mock.patch('simon.connection._get_connection') as mock_conn:
             url = 'mongodb://simon:simon@simon.m0.mongo.com:27017/simon-rs'
             connection.connect(host=url, replicaSet=True, alias='replica1')
 
-            mock_conn.assert_called_with(host_or_uri=url)
+            mock_conn.assert_called_with(host=url, port=None, name=None,
+                                         username=None, password=None,
+                                         replicaSet=True)
 
-        with mock.patch('simon.connection.ReplicaSetConnection') as mock_conn:
+        with mock.patch('simon.connection._get_connection') as mock_conn:
             url = 'mongodb://simon:simon@simon.m0.mongo.com:27017,simon.m1.mongo.com:27017/simon-rs'
             connection.connect(host=url, replicaSet=True, alias='replica2')
 
-            mock_conn.assert_called_with(host_or_uri=url)
+            mock_conn.assert_called_with(host=url, port=None, name=None,
+                                         username=None, password=None,
+                                         replicaSet=True)
 
         self.assertTrue('test' in connection.__databases__)
         self.assertTrue('test2' in connection.__databases__)
@@ -74,6 +88,8 @@ class TestConnection(unittest.TestCase):
 
         self.assertEqual(connection.__databases__['test'],
                          connection.__databases__['default'])
+        self.assertNotEqual(connection.__databases__['test'],
+                            connection.__databases__['test2'])
 
     def test_get_database(self):
         """Test the `get_database() method."""
