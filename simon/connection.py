@@ -61,7 +61,6 @@ def connect(host='localhost', name=None, username=None, password=None,
             'name': name,
             'username': username,
             'password': password,
-            'port': pieces.get(port, None),
         })
 
         # If connecting to a replica set, set a flag because a
