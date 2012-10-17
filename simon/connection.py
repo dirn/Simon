@@ -64,7 +64,7 @@ def connect(host='localhost', name=None, username=None, password=None,
         })
 
         # If connecting to a replica set, set a flag because a
-        # ReplicateSetConnection will be needed instead of a Connection.
+        # ReplicaSetConnection will be needed instead of a Connection.
         if 'replicaSet' in host:
             settings['replicaSet'] = True
 
