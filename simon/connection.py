@@ -13,7 +13,7 @@ def connect(host='localhost', name=None, username=None, password=None,
             port=None, alias=None, **kwargs):
     """Connects to a database.
 
-    :param host: The name of the MongoDB host.
+    :param host: Hostname, IP address, or MongoDB URI of the host.
     :type host: str.
     :param name: The name of the MongoDB database.
     :type host: str.
@@ -27,9 +27,9 @@ def connect(host='localhost', name=None, username=None, password=None,
                   value is provided, ``name`` will be used.
     :type alias: str.
     :param kwargs: All other keyword arguments accepted by
-                   ``pymongo.connection.Connection``.
+                   :class:`pymongo.connection.Connection`.
     :type kwargs: kwargs.
-    :returns: ``pymongo.database.Database`` -- the database.
+    :returns: :class:`pymongo.database.Database` -- the database.
     :raises: :class:`ConnectionError`
 
     .. versionadded:: 0.1.0
@@ -47,24 +47,15 @@ def connect(host='localhost', name=None, username=None, password=None,
     # Extend the settings with all other keyword arguments
     settings.update(kwargs)
 
-    connection = _get_connection(**settings)
+    # Get replicaSet out of **kwargs because it can be passed in as its
+    # own parameter
+    connection, parsed_settings = _get_connection(
+        host=host, port=port, replica_set=kwargs.pop('replicaSet', False),
+        **kwargs)
+    if parsed_settings:
+        settings.update(parsed_settings)
 
-    # If a URI has been given for host, parse it and update the settings
-    if '://' in host:
-        pieces = uri_parser.parse_uri(host)
-
-        # For certain settings not found in the URI, the values can
-        # be obtained from the arguments passed in to the method.
-        name = pieces.get('database', name)
-        username = pieces.get('username', username)
-        password = pieces.get('password', password)
-
-        # Update the initial settings with those from the URI.
-        settings.update({
-            'name': name,
-            'username': username,
-            'password': password,
-        })
+    name = settings.get('name', None)
 
     if name is None:
         raise ConnectionError('No database name was provided. '
@@ -93,19 +84,69 @@ def connect(host='localhost', name=None, username=None, password=None,
     return connection
 
 
-def _get_connection(**settings):
+def _get_connection(host, port, replica_set=False, **kwargs):
     """Gets the connection to the database.
 
-    This is where the actual work happens.
+    This will create a connection to a new MongoDB server and store it
+    internally for later use. If a server is requested that
+    ``_get_connection()`` has seen before, the stored connection will be
+    used.
+
+    If the ``host`` is actually a MongoDB URI, the username, password,
+    and database name will be parsed from the URI and returned as the
+    second part of the ``tuple`` returned by this method.
+
+    :param host: Hostname, IP address, or MongoDB URI of the host.
+    :type host: str.
+    :param port: The port of the MongoDB host.
+    :type port: int.
+    :param replica_set: Whether to connect to a replica set
+    :type replica_set: bool.
+    :param kwargs: All other keyword arguments accepted by
+                   :class:`pymongo.connection.Connection`.
+    :type kwargs: kwargs.
+    :returns: tuple -- a pair of values containing a
+                       :class:`pymongo.Connection` and any settings
+                       parsed when a URI is provided.
 
     .. versionadded:: 0.1.0
     """
 
-    # If host is already a connection, get out early
-    if isinstance(settings['host'], (Connection, ReplicaSetConnection)):
-        return settings['host']
+    parsed_settings = {}
 
-    host, port = settings.get('host'), settings.get('port', None)
+    # If host is already a connection, get out
+    if hasattr(host, 'database_names'):
+        return host, parsed_settings
+
+    # If a URI has been given for host, parse it and get the settings
+    if '://' in host:
+        pieces = uri_parser.parse_uri(host)
+
+        name = pieces.get('database', None)
+        username = pieces.get('username', None)
+        password = pieces.get('password', None)
+
+        # Only update the settings if values were from in the URI
+        if name is not None:
+            parsed_settings['name'] = name
+        if username is not None:
+            parsed_settings['username'] = username
+        if password is not None:
+            parsed_settings['password'] = password
+
+        # Check for a replica set
+        if 'replicaSet' in host:
+            replica_set = True
+
+        # Check the list of nodes in the parsed URI. More than one
+        # means there's a replica set
+        if 'nodelist' in pieces:
+            number_of_nodes = len(pieces['nodelist'])
+            if number_of_nodes > 1:
+                replica_set = True
+            elif number_of_nodes == 1:
+                # If there was only one, get the updated host and port
+                host, port = pieces['nodelist'][0]
 
     # For the purpose of building this key, use the default port
     # instead of no port so that calls explicity requesting the default
@@ -117,26 +158,13 @@ def _get_connection(**settings):
         __connections__ = {}
 
     if connection_key not in __connections__:
-        # If connecting to a replica set, set a flag because a
-        # ReplicaSetConnection will be needed instead of a Connection.
-        if 'replicaSet' in host:
-            settings['replicaSet'] = True
-
-        # I can't connect to 2.3 with these keys set. I need to explore
-        # this further to understand when they should be set and when they
-        # shouldn't.
-        settings.pop('name', None)
-        settings.pop('username', None)
-        settings.pop('password', None)
-
         # If using a replica set, prepare the settings and class name
-        if settings.get('replicaSet', False):
+        if replica_set:
             connection_class = ReplicaSetConnection
-            settings['host_or_uri'] = settings.pop('host')
-            settings.pop('port', None)
-            settings.pop('replicaSet', None)
+            settings = {'host_or_uri': host}
         else:
             connection_class = Connection
+            settings = {'host': host, 'port': port}
 
         # Open a connection to the database and try to connect to it
         try:
@@ -145,9 +173,11 @@ def _get_connection(**settings):
             raise ConnectionError(
                 "Cannot connection to database '{0}':\n{1}".format(host, e))
 
+        # Store the connection in the dictionary for easier retrieval
+        # next time
         __connections__[connection_key] = connection
 
-    return __connections__[connection_key]
+    return __connections__[connection_key], parsed_settings
 
 
 def get_database(name):
