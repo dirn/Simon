@@ -24,6 +24,7 @@ from simon import MongoModel, connection, query
 class TestModel(MongoModel):
     class Meta:
         collection = 'test-simon'
+        database = 'test-simon'
 
 
 class TestDatabase(unittest.TestCase):
