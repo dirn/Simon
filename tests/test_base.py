@@ -3,7 +3,6 @@ try:
 except ImportError:
     import unittest
 
-
 from simon import MongoModel, connection
 
 
