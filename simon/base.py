@@ -16,6 +16,8 @@ class Property(property):
     This is necessary for :class:`MongoModel` to be able to able to call
     the collection methods from its ``_meta.db`` attribute. Without
     this custom ``__get__()`` method, an AttributeError would be raised.
+
+    .. versionadded:: 0.1.0
     """
 
     def __get__(self, cls, owner):
@@ -23,7 +25,10 @@ class Property(property):
 
 
 class MongoModelMetaClass(type):
-    """Define :class:`MongoModel`"""
+    """Define :class:`MongoModel`
+
+    .. versionadded:: 0.1.0
+    """
 
     def __new__(cls, name, bases, attrs):
         module = attrs.pop('__module__')
@@ -94,7 +99,10 @@ class MongoModelMetaClass(type):
 
 
 class MongoModel(object):
-    """The base class for all Simon models"""
+    """The base class for all Simon models
+
+    .. versionadded:: 0.1.0
+    """
 
     __metaclass__ = MongoModelMetaClass
 

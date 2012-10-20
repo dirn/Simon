@@ -4,6 +4,8 @@
 class QuerySet(object):
     """A query set that wraps around MongoDB cursors and returns
     :class:`~simon.MongoModel` objects
+
+    .. versionadded:: 0.1.0
     """
 
     def __init__(self, cursor=None, cls=None):
