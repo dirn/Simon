@@ -204,7 +204,7 @@ class MongoModel(object):
         .. versionadded:: 0.1.0
         """
 
-        # Conver the field spec into a query by mapping many necessary
+        # Convert the field spec into a query by mapping any necessary
         # fields.
         query = {}
         for k, v in fields.items():
