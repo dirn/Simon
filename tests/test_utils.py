@@ -3,7 +3,7 @@ try:
 except ImportError:
     import unittest
 
-from simon.base import parse_kwargs
+from simon.utils import parse_kwargs
 
 
 class TestMisc(unittest.TestCase):
