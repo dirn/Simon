@@ -88,10 +88,57 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.delete()
 
+    def test_find(self):
+        """Test the `find()` method."""
+
+        qs = TestModel.find(id=self._id)
+
+        self.assertTrue(isinstance(qs, query.QuerySet))
+        self.assertEqual(qs.count(), 1)
+
+        m = qs[0]
+
+        self.assertTrue(isinstance(m, TestModel))
+
+        self.assertEqual(m.id, self._id)
+
+        self.assertEqual(m._document['_id'], self._id)
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
+
+    def test_find_id_string(self):
+        """Test the `find()` method with a string `_id`."""
+
+        qs = TestModel.find(id=str(self._id))
+
+        self.assertTrue(isinstance(qs, query.QuerySet))
+        self.assertEqual(qs.count(), 1)
+
+        m = qs[0]
+
+        self.assertTrue(isinstance(m, TestModel))
+
+        self.assertEqual(m.id, self._id)
+
+        self.assertEqual(m._document['_id'], self._id)
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
+
     def test_get(self):
         """Test the `get()` method."""
 
         m = TestModel.get(id=self._id)
+
+        self.assertEqual(m.id, self._id)
+
+        self.assertEqual(m._document['_id'], self._id)
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
+
+    def test_get_id_string(self):
+        """Test the `get()` method with a string `_id`."""
+
+        m = TestModel.get(id=str(self._id))
 
         self.assertEqual(m.id, self._id)
 
@@ -292,6 +339,16 @@ class TestDatabase(unittest.TestCase):
 
         self.assertNotEqual(m._document['a'], doc['a'])
         self.assertEqual(m._document['b'], doc['b'])
+
+    def test_save_fields_attributeerror(self):
+        """Test that `save_fields()` raises `AttributeError`."""
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        m = TestModel(**doc)
+
+        with self.assertRaises(AttributeError):
+            m.save_fields('field_that_doesnt_exist')
 
     def test_save_fields_typeerror(self):
         """Test that `save_fields()` raises `TypeError`."""
@@ -528,6 +585,15 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(skip1.count(), 2)
         self.assertEqual(skip2.count(), 1)
         self.assertEqual(skip3.count(), 0)
+
+    def test_sort(self):
+        """Test the `sort()` method."""
+
+        qs = self.qs.sort('id')
+
+        qs._fill_to(3)
+
+        self.assertTrue(qs[0].id < qs[1].id < qs[2].id)
 
     def test_sort_single_ascending(self):
         """Test the `sort()` method for a single ascending key."""

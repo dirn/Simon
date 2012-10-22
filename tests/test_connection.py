@@ -90,6 +90,15 @@ class TestConnection(unittest.TestCase):
         self.assertNotEqual(connection.__databases__['test'],
                             connection.__databases__['test2'])
 
+    def test_connect_connectionerror(self):
+        """Test that `connect()` raises `ConnectionError()`."""
+
+        with mock.patch('simon.connection._get_connection') as mock_method:
+            mock_method.return_value = ({'test': mock.Mock()}, {})
+
+            with self.assertRaises(connection.ConnectionError):
+                connection.connect()
+
     def test__get_connection(self):
         """Test the `_get_connection()` method."""
 
@@ -111,6 +120,16 @@ class TestConnection(unittest.TestCase):
             mock_conn.assert_called_with(host='localhost', port=None)
 
             self.assertEqual(len(connection.__connections__), 1)
+
+    def test__get_connection_with_connection(self):
+        """Test the `_get_connection()` method with a `Connection`."""
+
+        conn = mock.Mock()
+        conn.database_names = mock.Mock(return_value=True)
+
+        conn2, __ = connection._get_connection(host=conn, port=None)
+
+        self.assertEqual(conn, conn2)
 
     def test__get_connection_with_replica_set(self):
         """Test the `_get_connection()` method with replica sets."""
@@ -155,10 +174,26 @@ class TestConnection(unittest.TestCase):
             self.assertEqual(settings['username'], 'simonuser')
             self.assertEqual(settings['password'], 'simonpassword')
 
+            url4 = 'mongodb://simonuser:simonpassword@simon.m1.mongo.com:27017/simon-rsh?replicaSet=simon-rs'
+            conn, settings = connection._get_connection(host=url4, port=None,
+                                                        replica_set=False)
+
+            mock_conn.assert_called_with(host_or_uri='simon.m1.mongo.com')
+
+            self.assertEqual(settings['name'], 'simon-rsh')
+            self.assertEqual(settings['username'], 'simonuser')
+            self.assertEqual(settings['password'], 'simonpassword')
+
         self.assertTrue('simon.mongo.com:27017' in connection.__connections__)
         self.assertTrue('simon.m0.mongo.com:27017' in
                         connection.__connections__)
         self.assertTrue('{0}:27017'.format(url3) in connection.__connections__)
+
+    def test__get_connection_connectionerror(self):
+        """Test that `_get_connection()` raises `ConnectionError`."""
+
+        with self.assertRaises(connection.ConnectionError):
+            connection._get_connection(host='/dev/null', port=None)
 
     def test_get_database(self):
         """Test the `get_database() method."""

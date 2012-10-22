@@ -4,6 +4,7 @@ except ImportError:
     import unittest
 
 from simon import MongoModel
+from simon.base import MongoModelMetaClass
 
 
 class TestModel1(MongoModel):
@@ -16,6 +17,13 @@ class TestModel2(MongoModel):
     class Meta:
         collection = 'test2'
         field_map = {'python_key': 'mongo_key'}
+
+
+class TestModel3(object):
+    __metaclass__ = MongoModelMetaClass
+
+    class Meta:
+        collection = 'test3'
 
 
 class TestMetaClass(unittest.TestCase):
@@ -55,6 +63,15 @@ class TestMetaClass(unittest.TestCase):
             all(k in default for k in TestModel1._meta.field_map.keys()))
         self.assertTrue(
             all(k in TestModel1._meta.field_map for k in default.keys()))
+
+        # These tests check for the default that is also enforced
+        # through MongoModel
+        self.assertTrue(
+            all(default[k] == v for k, v in TestModel3._meta.field_map.items()))
+        self.assertTrue(
+            all(k in default for k in TestModel3._meta.field_map.keys()))
+        self.assertTrue(
+            all(k in TestModel3._meta.field_map for k in default.keys()))
 
         custom = {'python_key': 'mongo_key'}
         self.assertTrue(
