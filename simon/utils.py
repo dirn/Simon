@@ -1,6 +1,52 @@
 """Helper utilities"""
 
 
+def map_fields(cls, fields):
+    """Maps attribute names to document keys.
+
+    Attribute names will be mapped to document keys using
+    ``cls._meta.field_map``. If any of the attribute names contain
+    ``__``, :meth:`parse_kwargs` will be called and a second pass
+    through ``cls._meta.field_map`` will be performed.
+
+    The two-pass approach is used to allow for keys in embedded
+    documents to be mapped. Without the first pass, only keys of the
+    root document could be mapped. Without the second pass, only keys
+    that do not contain embedded document could be mapped.
+
+    .. versionadded:: 0.1.0
+    """
+
+    second_pass = False
+
+    # Map the attributes to their cooresponding document keys. If a __
+    # is encountered, a second pass will be needed after processing
+    # the keys through parse_kwargs()
+    mapped_fields = {}
+    for k, v in fields.items():
+        if '__' in k:
+            second_pass = True
+        # If the attribute contains __, use a . instead as this is the
+        # syntax for mapping embedded keys. If a . exists in the new
+        # key, second_pass should be set to True because parse_kwargs()
+        # should be run
+        k = cls._meta.field_map.get(k.replace('__', '.'), k)
+        if '.' in k:
+            second_pass = True
+        mapped_fields[k.replace('.', '__')] = v
+
+    if second_pass:
+        # At this point a second pass is needed,
+        fields = parse_kwargs(**mapped_fields)
+
+        mapped_fields = {}
+        for k, v in fields.items():
+            k = cls._meta.field_map.get(k, k)
+            mapped_fields[k] = v
+
+    return mapped_fields
+
+
 def parse_kwargs(**kwargs):
     """Parses embedded documents from dictionary keys.
 
