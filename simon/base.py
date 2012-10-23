@@ -8,6 +8,7 @@ from datetime import datetime
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import QuerySet
+from .utils import map_fields
 
 
 class Property(property):
@@ -123,9 +124,10 @@ class MongoModel(object):
         # used to store the real document's values
         self._document = {}
 
+        fields = map_fields(self.__class__, fields)
+
         # Add the fields to the document
         for k, v in fields.items():
-            k = self._meta.field_map.get(k, k)
             setattr(self, k, v)
 
     def delete(self, safe=False):
@@ -167,12 +169,7 @@ class MongoModel(object):
         .. versionadded:: 0.1.0
         """
 
-        # Convert the field spec into a query by mapping any necessary
-        # fields.
-        query = {}
-        for k, v in fields.items():
-            k = cls._meta.field_map.get(k, k)
-            query[k] = v
+        query = map_fields(cls, fields)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query and not isinstance(query['_id'], ObjectId):
@@ -202,10 +199,7 @@ class MongoModel(object):
 
         # Convert the field spec into a query by mapping any necessary
         # fields.
-        query = {}
-        for k, v in fields.items():
-            k = cls._meta.field_map.get(k, k)
-            query[k] = v
+        query = map_fields(cls, fields)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query and not isinstance(query['_id'], ObjectId):
