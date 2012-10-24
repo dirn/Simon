@@ -1,5 +1,9 @@
 """Helper utilities"""
 
+__all__ = ('map_fields', 'parse_kwargs', 'update_nested_keys')
+
+import collections
+
 
 def map_fields(cls, fields):
     """Maps attribute names to document keys.
@@ -94,3 +98,36 @@ def parse_kwargs(**kwargs):
             parsed_kwargs[k] = parse_kwargs(**v)
 
     return parsed_kwargs
+
+
+def update_nested_keys(original, updates):
+    """Updates keys within nested dictionaries.
+
+    This method simulates merging two dictionaries. It allows specific
+    keys within a dictionary or nested dictionary without overwriting
+    the the entire dictionary.
+
+    :param original: The original dictionary to be updates.
+    :type original: dict.
+    :param updates: The dictionary with updates to apply.
+    :type updates: dict.
+    :returns: dict -- the updated dictionary.
+    :raises: :class:`TypeError`
+
+    .. versionadded:: 0.1.0
+    """
+
+    # Based on http://stackoverflow.com/questions/3232943/
+
+    if not (isinstance(original, collections.Mapping) and
+            isinstance(updates, collections.Mapping)):
+        raise TypeError('The values for both `original` and `updates` must be '
+                        '`dict`s.')
+
+    for k, v in updates.items():
+        if isinstance(v, collections.Mapping):
+            updated = update_nested_keys(original.get(k, {}), v)
+            original[k] = updated
+        else:
+            original[k] = updates[k]
+    return original

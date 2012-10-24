@@ -4,7 +4,7 @@ except ImportError:
     import unittest
 
 from simon import MongoModel
-from simon.utils import map_fields, parse_kwargs
+from simon.utils import map_fields, parse_kwargs, update_nested_keys
 
 
 class TestModel(MongoModel):
@@ -103,3 +103,55 @@ class TestUtils(unittest.TestCase):
         expected = {'__a': 1, 'a__': 2, '__a__': 3}
         actual = parse_kwargs(__a=1, a__=2, __a__=3)
         self.assertEqual(actual, expected)
+
+    def test_update_nested_keys(self):
+        """Test the `update_nested_values()` method."""
+
+        original = {'a': 1}
+        changes = {'a': 2}
+        expected = {'a': 2}
+        actual = update_nested_keys(original, changes)
+        self.assertEqual(actual, expected)
+
+        original = {'a': 1}
+        changes = {'b': 2}
+        expected = {'a': 1, 'b': 2}
+        actual = update_nested_keys(original, changes)
+        self.assertEqual(actual, expected)
+
+        original = {'a': {'b': 1}}
+        changes = {'a': {'b': 2}}
+        expected = {'a': {'b': 2}}
+        actual = update_nested_keys(original, changes)
+        self.assertEqual(actual, expected)
+
+        original = {'a': 1, 'b': 2}
+        changes = {'a': 3}
+        expected = {'a': 3, 'b': 2}
+        actual = update_nested_keys(original, changes)
+        self.assertEqual(actual, expected)
+
+        original = {'a': {'b': 1, 'c': 2}}
+        changes = {'a': {'c': 3}}
+        expected = {'a': {'b': 1, 'c': 3}}
+        actual = update_nested_keys(original, changes)
+        self.assertEqual(actual, expected)
+
+        original = {'a': {'b': 1, 'c': {'d': {'e': {'f': 2}}}}}
+        changes = {'a': {'c': {'d': {'e': 3, 'g': 4}}, 'h': 5}, 'i': 6}
+        expected = {'a': {'b': 1, 'c': {'d': {'e': 3, 'g': 4}}, 'h': 5},
+                    'i': 6}
+        actual = update_nested_keys(original, changes)
+        self.assertEqual(actual, expected)
+
+    def test_update_nested_keys_typeerror(self):
+        """Test that `update_nested_keys()` raises `TypeError`."""
+
+        with self.assertRaises(TypeError):
+            update_nested_keys(1, {'a': 1})
+
+        with self.assertRaises(TypeError):
+            update_nested_keys({'a': 1}, 1)
+
+        with self.assertRaises(TypeError):
+            update_nested_keys(1, 1)
