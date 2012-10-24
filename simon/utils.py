@@ -14,6 +14,13 @@ def map_fields(cls, fields):
     root document could be mapped. Without the second pass, only keys
     that do not contain embedded document could be mapped.
 
+    :param cls: A subclass of :class:`~simon.MongoModel`.
+    :type cls: type.
+    :param fields: Key/value pairs to be used for queries.
+    :type fields: dict.
+    :returns: dict -- key/value pairs renamed based on `cls`'s
+              `field_map` mapping.
+
     .. versionadded:: 0.1.0
     """
 
@@ -53,6 +60,11 @@ def parse_kwargs(**kwargs):
     This takes a kwargs dictionary whose keys contain ``__`` and convert
     them to a new dictionary with new keys created by splitting the
     originals on the ``__``.
+
+    :param kwargs: Keyword arguments to parse.
+    :type kwargs: kwargs.
+    :returns: dict -- dictionary with nested keys generated from the
+              names of the arguments.
 
     .. versionadded:: 0.1.0
     """
