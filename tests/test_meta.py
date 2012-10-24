@@ -58,7 +58,8 @@ class TestMetaClass(unittest.TestCase):
 
         default = {'id': '_id'}
         self.assertTrue(
-            all(default[k] == v for k, v in TestModel1._meta.field_map.items()))
+            all(default[k] == v for k, v in
+                TestModel1._meta.field_map.items()))
         self.assertTrue(
             all(k in default for k in TestModel1._meta.field_map.keys()))
         self.assertTrue(
@@ -67,7 +68,8 @@ class TestMetaClass(unittest.TestCase):
         # These tests check for the default that is also enforced
         # through MongoModel
         self.assertTrue(
-            all(default[k] == v for k, v in TestModel3._meta.field_map.items()))
+            all(default[k] == v for k, v in
+                TestModel3._meta.field_map.items()))
         self.assertTrue(
             all(k in default for k in TestModel3._meta.field_map.keys()))
         self.assertTrue(

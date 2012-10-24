@@ -10,7 +10,8 @@ from simon.utils import map_fields, parse_kwargs
 class TestModel(MongoModel):
     class Meta:
         collection = 'test'
-        field_map = {'b': 'c', 'd.e': 'f.e', 'g.h': 'i.j', 'x': 'z.x', 'y': 'z.y'}
+        field_map = {'b': 'c', 'd.e': 'f.e', 'g.h': 'i.j', 'x': 'z.x',
+                     'y': 'z.y'}
 
 
 class TestUtils(unittest.TestCase):
