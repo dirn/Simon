@@ -188,7 +188,7 @@ class TestDatabase(unittest.TestCase):
 
         m = TestModel.get(id=self._id)
 
-        m.increment(a=1, b=5)
+        m.increment(a=1, b=5, safe=True)
 
         doc = self.collection.find_one({'_id': self._id})
 
