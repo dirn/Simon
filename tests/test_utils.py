@@ -42,6 +42,34 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'x': 1, 'y': 2})
         self.assertEqual(actual, expected)
 
+    def test_map_fields_flattened_keys(self):
+        """Test the `map_fields()` method with `flatten_keys` set."""
+
+        expected = {'a': 1}
+        actual = map_fields(TestModel, {'a': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': 1, 'c': 2}
+        actual = map_fields(TestModel, {'a': 1, 'b': 2}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a.b': 1}
+        actual = map_fields(TestModel, {'a__b': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a.b.c': 1}
+        actual = map_fields(TestModel, {'a__b__c': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a.b': 1, 'a.c': 2}
+        actual = map_fields(TestModel, {'a__b': 1, 'a__c': 2},
+                            flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'f.e': 1}
+        actual = map_fields(TestModel, {'d__e': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_second_pass(self):
         """Test the `map_fields()` method with a second pass."""
 

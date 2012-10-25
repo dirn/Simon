@@ -5,7 +5,7 @@ __all__ = ('map_fields', 'parse_kwargs', 'update_nested_keys')
 import collections
 
 
-def map_fields(cls, fields):
+def map_fields(cls, fields, flatten_keys=False):
     """Maps attribute names to document keys.
 
     Attribute names will be mapped to document keys using
@@ -18,10 +18,16 @@ def map_fields(cls, fields):
     root document could be mapped. Without the second pass, only keys
     that do not contain embedded document could be mapped.
 
+    If ``flatten_keys`` is set, all keys will be kept at the top level
+    of the result dictionary, using a ``.`` to separate each part of a
+    key. When this happens, the second pass will be omitted.
+
     :param cls: A subclass of :class:`~simon.MongoModel`.
     :type cls: type.
     :param fields: Key/value pairs to be used for queries.
     :type fields: dict.
+    :param flatten_keys: Whether to allow the nested keys to be nested.
+    :type flatten_keys: bool.
     :returns: dict -- key/value pairs renamed based on ``cls``'s
               ``field_map`` mapping.
 
@@ -46,7 +52,14 @@ def map_fields(cls, fields):
             second_pass = True
         mapped_fields[k.replace('.', '__')] = v
 
-    if second_pass:
+    if flatten_keys:
+        # Flattened keys are not nested and are written out with .s as
+        # the delimiter between each level
+        fields = {}
+        for k, v in mapped_fields.items():
+            fields[k.replace('__', '.')] = v
+        mapped_fields = fields
+    elif second_pass:
         # At this point a second pass is needed, put the fields through
         # the kwarg parser and then see if any of the top level fields
         # need to be mapped
