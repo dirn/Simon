@@ -22,8 +22,8 @@ def map_fields(cls, fields):
     :type cls: type.
     :param fields: Key/value pairs to be used for queries.
     :type fields: dict.
-    :returns: dict -- key/value pairs renamed based on `cls`'s
-              `field_map` mapping.
+    :returns: dict -- key/value pairs renamed based on ``cls``'s
+              ``field_map`` mapping.
 
     .. versionadded:: 0.1.0
     """
