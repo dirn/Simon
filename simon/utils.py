@@ -47,7 +47,9 @@ def map_fields(cls, fields):
         mapped_fields[k.replace('.', '__')] = v
 
     if second_pass:
-        # At this point a second pass is needed,
+        # At this point a second pass is needed, put the fields through
+        # the kwarg parser and then see if any of the top level fields
+        # need to be mapped
         fields = parse_kwargs(**mapped_fields)
 
         mapped_fields = {}
