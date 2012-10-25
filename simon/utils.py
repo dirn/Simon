@@ -57,7 +57,18 @@ def map_fields(cls, fields, flatten_keys=False):
         # the delimiter between each level
         fields = {}
         for k, v in mapped_fields.items():
-            fields[k.replace('__', '.')] = v
+            # A __ at either the beginning or end of a key name should
+            # not be replaced by a ., to prevent this from happening,
+            # the replacement should only happen on the characters
+            # between the first and last ones.
+            #
+            # If a key is only one character long, there is obviously
+            # no chance of a __ and therefore no need to process the
+            # key. It's important to check for this because k[0] and
+            # k[-1] would both return the single character.
+            if len(k) > 1:
+                k = ''.join([k[0], k[1:-1].replace('__', '.'), k[-1]])
+            fields[k] = v
         mapped_fields = fields
     elif second_pass:
         # At this point a second pass is needed, put the fields through

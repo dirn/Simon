@@ -22,6 +22,18 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'a': 1})
         self.assertEqual(actual, expected)
 
+        expected = {'__a': 1}
+        actual = map_fields(TestModel, {'__a': 1})
+        self.assertEqual(actual, expected)
+
+        expected = {'a__': 1}
+        actual = map_fields(TestModel, {'a__': 1})
+        self.assertEqual(actual, expected)
+
+        expected = {'__a__': 1}
+        actual = map_fields(TestModel, {'__a__': 1})
+        self.assertEqual(actual, expected)
+
         expected = {'c': 1}
         actual = map_fields(TestModel, {'b': 1})
         self.assertEqual(actual, expected)
@@ -47,6 +59,18 @@ class TestUtils(unittest.TestCase):
 
         expected = {'a': 1}
         actual = map_fields(TestModel, {'a': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'__a': 1}
+        actual = map_fields(TestModel, {'__a': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a__': 1}
+        actual = map_fields(TestModel, {'a__': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'__a__': 1}
+        actual = map_fields(TestModel, {'__a__': 1}, flatten_keys=True)
         self.assertEqual(actual, expected)
 
         expected = {'a': 1, 'c': 2}
