@@ -25,6 +25,7 @@ class TestModel(MongoModel):
     class Meta:
         collection = 'test-simon'
         database = 'test-simon'
+        field_map = {'id': '_id', 'fake': 'real'}
 
 
 class TestDatabase(unittest.TestCase):
@@ -182,6 +183,34 @@ class TestDatabase(unittest.TestCase):
         # And some sanity checks just to make sure a wasn't changed
         self.assertEqual(m.a, doc['a'])
         self.assertEqual(doc['a'], 2)
+
+    def test_increment_embedded_document(self):
+        """Test the `increment()` method with an embedded document."""
+
+        id = self.collection.insert({'a': {'b': 1, 'c': 2}})
+
+        m = TestModel.get(id=id)
+
+        m.increment(a__c=3, safe=True)
+
+        doc = self.collection.find_one({'_id': id})
+
+        self.assertEqual(m.a['b'], doc['a']['b'])
+        self.assertEqual(m.a['c'], doc['a']['c'])
+        self.assertEqual(doc['a']['b'], 1)
+        self.assertEqual(doc['a']['c'], 5)
+
+    def test_increment_field_map(self):
+        """Test the `increment()` method a name in `field_map`."""
+
+        m = TestModel.get(id=self._id)
+
+        m.increment(fake=2, safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m.fake, doc['real'])
+        self.assertEqual(doc['real'], 2)
 
     def test_increment_kwargs(self):
         """Test the `increment()` method with **kwargs."""

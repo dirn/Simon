@@ -8,7 +8,7 @@ from datetime import datetime
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import QuerySet
-from .utils import map_fields
+from .utils import map_fields, update_nested_keys
 
 
 class Property(property):
@@ -281,6 +281,8 @@ class MongoModel(object):
         for k, v in fields.items():
             update[k] = v
 
+        update = map_fields(self.__class__, update, flatten_keys=True)
+
         self._meta.db.update({'_id': id}, {'$inc': update}, safe=safe)
 
         # After updating the document in the database, the instance
@@ -292,6 +294,8 @@ class MongoModel(object):
         # database. Then apply the new values to the instance
         fields = dict((k, 1) for k in update.keys())
         doc = self._meta.db.find_one({'_id': id}, fields)
+
+        doc = update_nested_keys(self._document, doc)
 
         for k, v in doc.items():
             setattr(self, k, v)
