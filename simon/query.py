@@ -206,13 +206,13 @@ class QuerySet(object):
         .. versionadded:: 0.1.0
         """
 
-        if not len(self._items) == self.count():
-            # Because count() has been called, _count can be used to
-            # avoid the overhead of calling a function
-            self._fill_to(self._count - 1)
+        for x in xrange(0, self.count()):
+            # Fetch the document from the cursor if it hasn't already
+            # been loaded
+            if len(self._items) <= x:
+                self._fill_to(x)
 
-        for item in self._items:
-            yield item
+            yield self._items[x]
 
     def __len__(self):
         """Gets the length of the :class:`QuerySet`.
