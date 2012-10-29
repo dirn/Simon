@@ -315,6 +315,44 @@ class TestDatabase(unittest.TestCase):
         self.assertFalse('a' in doc)
         self.assertFalse('b' in doc)
 
+    def test_remove_fields_nested_multiple(self):
+        """Test the `remove_fields()` method with nested fields."""
+
+        m = TestModel.get(id=self._id)
+        m.c = {'d': 1, 'e': 2}
+        m.save()
+
+        m.remove_fields(('b', 'c__e'), safe=True)
+
+        self.assertTrue('a' in m._document)
+        self.assertFalse('b' in m._document)
+        self.assertTrue('c' in m._document)
+        self.assertTrue('d' in m._document['c'])
+        self.assertFalse('e' in m._document['c'])
+
+        self.assertTrue('a' in m._document)
+        self.assertFalse('b' in m._document)
+        self.assertTrue('c' in m._document)
+
+    def test_remove_fields_nested_one(self):
+        """Test the `remove_fields()` method with nested fields."""
+
+        m = TestModel.get(id=self._id)
+        m.c = {'d': 1, 'e': 2}
+        m.save()
+
+        m.remove_fields('c__e', safe=True)
+
+        self.assertTrue('a' in m._document)
+        self.assertTrue('b' in m._document)
+        self.assertTrue('c' in m._document)
+        self.assertTrue('d' in m._document['c'])
+        self.assertFalse('e' in m._document['c'])
+
+        self.assertTrue('a' in m._document)
+        self.assertTrue('b' in m._document)
+        self.assertTrue('c' in m._document)
+
     def test_remove_fields_one(self):
         """Test the `remove_fields()` method for one field."""
 

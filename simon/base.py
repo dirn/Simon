@@ -8,7 +8,7 @@ from datetime import datetime
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import QuerySet
-from .utils import map_fields, update_nested_keys
+from .utils import map_fields, remove_nested_key, update_nested_keys
 
 
 class Property(property):
@@ -408,16 +408,25 @@ class MongoModel(object):
         if not isinstance(fields, (list, tuple)):
             fields = (fields,)
 
-        doc = dict((k, 1) for k in fields)
-        self._meta.db.update({'_id': id}, {'$unset': doc}, safe=safe)
+        update = dict((k, 1) for k in fields)
+        update = map_fields(self.__class__, update, flatten_keys=True)
+
+        self._meta.db.update({'_id': id}, {'$unset': update}, safe=safe)
 
         # The fields also need to be removed from the object
-        for field in fields:
-            try:
-                delattr(self, field)
-            except AttributeError:
-                # Silently handle attributes that don't exist
-                pass
+        for k, v in update.items():
+            if '.' in k:
+                # If the key contains a ., it is pointing to an embedded
+                # document, so remove the nested key from the
+                # dictionary; there is no attribute to remove from the
+                # instance
+                self._document = remove_nested_key(self._document, k)
+            else:
+                try:
+                    delattr(self, k)
+                except AttributeError:
+                    # Silently handle attributes that don't exist
+                    pass
 
     def save(self, safe=False, upsert=False):
         """Saves the object to the database.
