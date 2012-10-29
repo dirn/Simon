@@ -201,7 +201,7 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(doc['a']['c'], 5)
 
     def test_increment_field_map(self):
-        """Test the `increment()` method a name in `field_map`."""
+        """Test the `increment()` method with a name in `field_map`."""
 
         m = TestModel.get(id=self._id)
 
