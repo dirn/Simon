@@ -4,7 +4,8 @@ except ImportError:
     import unittest
 
 from simon import MongoModel
-from simon.utils import map_fields, parse_kwargs, update_nested_keys
+from simon.utils import (map_fields, parse_kwargs, remove_nested_key,
+                         update_nested_keys)
 
 
 class TestModel(MongoModel):
@@ -155,6 +156,52 @@ class TestUtils(unittest.TestCase):
         expected = {'__a': 1, 'a__': 2, '__a__': 3}
         actual = parse_kwargs(__a=1, a__=2, __a__=3)
         self.assertEqual(actual, expected)
+
+    def test_remove_nested_key(self):
+        """Test the `remove_nested_key()` method."""
+
+        original = {'a': 1}
+        expected = {}
+        actual = remove_nested_key(original, 'a')
+        self.assertEqual(actual, expected)
+
+        original = {'a': 1, 'b': 2}
+        expected = {'b': 2}
+        actual = remove_nested_key(original, 'a')
+        self.assertEqual(actual, expected)
+
+        original = {'a': 1, 'b': {'c': 2, 'd': 3}}
+        expected = {'a': 1}
+        actual = remove_nested_key(original, 'b')
+        self.assertEqual(actual, expected)
+
+        original = {'a': 1, 'b': {'c': 2, 'd': 3}}
+        expected = {'a': 1, 'b': {'c': 2}}
+        actual = remove_nested_key(original, 'b.d')
+        self.assertEqual(actual, expected)
+
+        original = {'a': 1, 'b': {'c': 2, 'd': 3}}
+        expected = {'a': 1, 'b': {}}
+        actual = remove_nested_key(original, 'b.c')
+        actual = remove_nested_key(original, 'b.d')
+        self.assertEqual(actual, expected)
+
+    def test_remove_nested_key_keyerror(self):
+        """Test that `remove_nested_key()` raises `KeyError`."""
+
+        original = {'a': 1}
+        with self.assertRaises(KeyError):
+            remove_nested_key(original, 'b')
+
+        original = {'a': 1, 'b': {'c': 2}}
+        with self.assertRaises(KeyError):
+            remove_nested_key(original, 'b.d')
+
+    def test_remove_nested_key_typeerror(self):
+        """Test that `remove_nested_key()` raises `TypeError`."""
+
+        with self.assertRaises(TypeError):
+            remove_nested_key(1, 'a')
 
     def test_update_nested_keys(self):
         """Test the `update_nested_values()` method."""

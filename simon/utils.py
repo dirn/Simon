@@ -126,6 +126,45 @@ def parse_kwargs(**kwargs):
     return parsed_kwargs
 
 
+def remove_nested_key(original, key):
+    """Removes keys within a nested dictionary.
+
+    This method can remove a key from within a nested dictionary. Nested
+    keys should be specified using a ``.`` as the delimiter. If no
+    delimiter is found, the key will be removed from the root
+    dictionary.
+
+    If ``original`` is not a dictionary, a :class:`TypeError` will be
+    raised. If ``key`` doesn't exist in ``original``, a
+    :class:`KeyError` will be raised.
+
+    :param original: The original dictionary to be updated.
+    :type original: dict.
+    :param key: The key to be removed.
+    :type key: str.
+    :returns: dict -- the updated dictionary
+    :raises: :class:`TypeError`, :class:`KeyError`
+
+    .. versionadded:: 0.1.0
+    """
+
+    if not isinstance(original, collections.Mapping):
+        raise TypeError('`original` must be a `dict`.')
+
+    if '.' in key:
+        # If the key contains a . it is considered nested. Split the key
+        # into two parts. Using the first, find the key that matches the
+        # first part, pass it and the second part of the original key to
+        # the function recursively
+        parts = key.split('.', 1)
+        original[parts[0]] = remove_nested_key(original[parts[0]], parts[1])
+    else:
+        # When there is no ., remove the key
+        del original[key]
+
+    return original
+
+
 def update_nested_keys(original, updates):
     """Updates keys within nested dictionaries.
 
