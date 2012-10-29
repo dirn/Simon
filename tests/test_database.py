@@ -381,6 +381,19 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.remove_fields('a')
 
+    def test_save_field_map(self):
+        """Test the `save()` method with a name in `field_map`."""
+
+        m = TestModel(fake=1)
+        m.save(safe=True)
+
+        doc = self.collection.find_one({'_id': m.id})
+
+        self.assertEqual(m.id, doc['_id'])
+        self.assertEqual(m.fake, doc['real'])
+        self.assertTrue('real' in doc)
+        self.assertFalse('fake' in doc)
+
     def test_save_fields_multiple(self):
         """Test the `save_fields()` method for multiple fields."""
 

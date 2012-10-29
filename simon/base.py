@@ -462,6 +462,8 @@ class MongoModel(object):
         doc = self._document.copy()
         id = doc.pop('_id', None)
 
+        doc = map_fields(self.__class__, doc)
+
         if upsert or id:
             result = self._meta.db.update({'_id': id}, doc, safe=safe,
                                           upsert=upsert)
