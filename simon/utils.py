@@ -133,7 +133,10 @@ def update_nested_keys(original, updates):
     keys within a dictionary or nested dictionary without overwriting
     the the entire dictionary.
 
-    :param original: The original dictionary to be updates.
+    If either ``original`` or ``updates`` is not a dictionary, a
+    :class:`TypeError` will be raised.
+
+    :param original: The original dictionary to be updated.
     :type original: dict.
     :param updates: The dictionary with updates to apply.
     :type updates: dict.
