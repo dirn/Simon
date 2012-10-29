@@ -307,6 +307,9 @@ class TestDatabase(unittest.TestCase):
         self.assertFalse('a' in m._document)
         self.assertFalse('b' in m._document)
 
+        self.assertFalse(hasattr(m, 'a'))
+        self.assertFalse(hasattr(m, 'b'))
+
         doc = self.collection.find_one({'_id': self._id})
 
         self.assertFalse('a' in doc)
@@ -323,6 +326,9 @@ class TestDatabase(unittest.TestCase):
 
         self.assertTrue('a' in m._document)
         self.assertFalse('b' in m._document)
+
+        self.assertTrue(hasattr(m, 'a'))
+        self.assertFalse(hasattr(m, 'b'))
 
         doc = self.collection.find_one({'_id': self._id})
 
