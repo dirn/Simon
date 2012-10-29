@@ -295,14 +295,6 @@ class TestDatabase(unittest.TestCase):
 
             previous_id = m.id
 
-    def test_remove_fields_typeerror(self):
-        """Test that `remove_fields()` raises `TypeError`."""
-
-        m = TestModel(a=1, b=2)
-
-        with self.assertRaises(TypeError):
-            m.remove_fields('a')
-
     def test_remove_fields_multiple(self):
         """Test the `remove_fields()` method for multiple fields."""
 
@@ -336,6 +328,14 @@ class TestDatabase(unittest.TestCase):
 
         self.assertTrue('a' in doc)
         self.assertFalse('b' in doc)
+
+    def test_remove_fields_typeerror(self):
+        """Test that `remove_fields()` raises `TypeError`."""
+
+        m = TestModel(a=1, b=2)
+
+        with self.assertRaises(TypeError):
+            m.remove_fields('a')
 
     def test_save_fields_multiple(self):
         """Test the `save_fields()` method for multiple fields."""
