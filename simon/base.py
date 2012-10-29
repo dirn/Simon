@@ -444,8 +444,13 @@ class MongoModel(object):
         """
 
         # Associate the current datetime (in UTC) with the created
-        # and modified fields.
+        # and modified fields. While Python can store datetimes with
+        # microseconds, BSON only supports milliseconds. Rather than
+        # having different data at the time of save, drop the precision
+        # from the Python datetime before associating it with the
+        # instance.
         now = datetime.utcnow()
+        now = now.replace(microsecond=(now.microsecond / 1000 * 1000))
         if not (hasattr(self, 'id') and hasattr(self, 'created')):
             self.created = now
         self.modified = now

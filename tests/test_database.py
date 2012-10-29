@@ -440,7 +440,7 @@ class TestDatabase(unittest.TestCase):
         doc = self.collection.find_one({'_id': m.id})
 
         self.assertEqual(m.id, doc['_id'])
-        self.assertEqual(sorted(m._document), sorted(doc))
+        self.assertEqual(m._document, doc)
         self.assertTrue(hasattr(m, 'created'))
         self.assertTrue(hasattr(m, 'modified'))
 
