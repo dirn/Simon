@@ -1,6 +1,7 @@
 """Helper utilities"""
 
-__all__ = ('map_fields', 'parse_kwargs', 'update_nested_keys')
+__all__ = ('map_fields', 'parse_kwargs', 'remove_nested_key',
+           'update_nested_keys')
 
 import collections
 
