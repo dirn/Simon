@@ -266,7 +266,7 @@ class TestDatabase(unittest.TestCase):
         # Insert the same document over and over in a loop to make sure
         # that a different _id is provided for each document
         previous_id = None
-        for x in xrange(10):
+        for x in range(10):
             m = TestModel()
             m.raw_update({'a': 1, 'b': 2}, safe=True, upsert=True)
 
@@ -284,7 +284,7 @@ class TestDatabase(unittest.TestCase):
         # Insert the same document over and over in a loop to make sure
         # that a different _id is provided for each document
         previous_id = None
-        for x in xrange(10):
+        for x in range(10):
             m = TestModel()
             m.raw_update({'a': 1, 'b': 2}, safe=False, upsert=True)
 
@@ -489,7 +489,7 @@ class TestDatabase(unittest.TestCase):
         # Insert the same document over and over in a loop to make sure
         # that a different _id is provided for each document
         previous_id = None
-        for x in xrange(10):
+        for x in range(10):
             m = TestModel(a=1, b=2)
             m.save(safe=True, upsert=True)
 
@@ -509,7 +509,7 @@ class TestDatabase(unittest.TestCase):
         # Insert the same document over and over in a loop to make sure
         # that a different _id is provided for each document
         previous_id = None
-        for x in xrange(10):
+        for x in range(10):
             m = TestModel(a=1, b=2)
             m.save(safe=False, upsert=True)
 
@@ -857,7 +857,7 @@ class TestQuery(unittest.TestCase):
 
         self.qs._fill_to(3)
 
-        for x in xrange(3):
+        for x in range(3):
             self.assertTrue(isinstance(self.qs._items[x], dict))
 
     def test__fill_to_as_model(self):
@@ -865,7 +865,7 @@ class TestQuery(unittest.TestCase):
 
         self.qs._fill_to(3)
 
-        for x in xrange(3):
+        for x in range(3):
             self.assertTrue(isinstance(self.qs._items[x], TestModel))
 
     def test__fill_to_indexes(self):
@@ -879,7 +879,7 @@ class TestQuery(unittest.TestCase):
                 {'_id': self._id2, 'a': 2, 'c': 1},
                 {'_id': self._id3, 'b': 1, 'c': 2}]
 
-        for x in xrange(3):
+        for x in range(3):
             self.qs._fill_to(x)
             self.assertEqual(self.qs._items[x], docs[x])
             self.assertEqual(len(self.qs._items), x + 1)
@@ -922,7 +922,7 @@ class TestQuery(unittest.TestCase):
                 {'_id': self._id2, 'a': 2, 'c': 1},
                 {'_id': self._id3, 'b': 1, 'c': 2}]
 
-        for x in xrange(3):
+        for x in range(3):
             self.assertEqual(self.qs[x], docs[x])
             self.assertEqual(self.qs[x], self.qs._items[x])
 

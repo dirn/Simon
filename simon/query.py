@@ -206,7 +206,7 @@ class QuerySet(object):
         .. versionadded:: 0.1.0
         """
 
-        for x in xrange(0, self.count()):
+        for x in range(0, self.count()):
             # Fetch the document from the cursor if it hasn't already
             # been loaded
             if len(self._items) <= x:
