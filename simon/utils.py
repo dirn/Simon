@@ -1,9 +1,48 @@
 """Helper utilities"""
 
-__all__ = ('map_fields', 'parse_kwargs', 'remove_nested_key',
-           'update_nested_keys')
+__all__ = ('get_nested_key', 'map_fields', 'parse_kwargs',
+           'remove_nested_key', 'update_nested_keys')
 
 import collections
+
+
+def get_nested_key(values, key):
+    """Gets a value for a nested dictionary key.
+
+    This method can be used to retrieve the value nested within a
+    dictionary. The entire path should be provided as the value for
+    ``key``, using a ``.`` as the delimiter
+    (e.g., ``'path.to.the.key``').
+
+    If ``key`` does not exist in ``values``, :class:`KeyError` will be
+    raised. The exception will be raised in the reverse order of the
+    recursion so that the original value is used.
+
+    :param values: The dictionary.
+    :type values: dict.
+    :param key': The path of the nested key.
+    :type key: str.
+    :returns: The value associated with the nested key.
+    :raises: :class:`KeyError`
+
+    .. versionadded:: 0.1.0
+    """
+
+    # If key exists in values, return its value, otherwise recurse
+    # through key and values until either key is found or there is no
+    # key left to try
+    if key in values:
+        return values[key]
+
+    keys = key.split('.', 1)
+    if not (len(keys) == 2 and keys[0] in values and
+            isinstance(values[keys[0]], collections.Mapping)):
+        raise KeyError(key)
+
+    try:
+        return get_nested_key(values[keys[0]], keys[1])
+    except KeyError:
+        raise KeyError(key)
 
 
 def map_fields(cls, fields, flatten_keys=False):

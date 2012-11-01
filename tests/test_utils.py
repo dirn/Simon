@@ -4,8 +4,8 @@ except ImportError:
     import unittest
 
 from simon import MongoModel
-from simon.utils import (map_fields, parse_kwargs, remove_nested_key,
-                         update_nested_keys)
+from simon.utils import (get_nested_key, map_fields, parse_kwargs,
+                         remove_nested_key, update_nested_keys)
 
 
 class TestModel(MongoModel):
@@ -16,6 +16,48 @@ class TestModel(MongoModel):
 
 
 class TestUtils(unittest.TestCase):
+    def test_get_nested_key(self):
+        """Test the `get_nested_key()` method."""
+
+        expected = 1
+        actual = get_nested_key({'a': 1}, 'a')
+        self.assertEqual(actual, expected)
+
+        expected = 1
+        actual = get_nested_key({'a': 1, 'b': 2}, 'a')
+        self.assertEqual(actual, expected)
+
+        expected = 1
+        actual = get_nested_key({'a': {'b': 1}}, 'a.b')
+        self.assertEqual(actual, expected)
+
+        expected = 1
+        actual = get_nested_key({'a': {'b': 1, 'c': 2}, 'd': 3}, 'a.b')
+        self.assertEqual(actual, expected)
+
+        expected = 1
+        actual = get_nested_key({'a': {'b': {'c': {'d': 1}}}}, 'a.b.c.d')
+        self.assertEqual(actual, expected)
+
+    def test_get_nested_key_keyerror(self):
+        """Test that `get_nested_key()` raises `KeyError`."""
+
+        with self.assertRaises(KeyError):
+            get_nested_key({}, 'a')
+
+        with self.assertRaises(KeyError):
+            get_nested_key({'a': 1}, 'b')
+
+        with self.assertRaises(KeyError):
+            get_nested_key({'a': {'b': 1}}, 'c')
+
+        with self.assertRaises(KeyError):
+            get_nested_key({'a': {'b': 1}}, 'a.c')
+
+        # And once more with a key that's more nested than the dict
+        with self.assertRaises(KeyError):
+            get_nested_key({'a': {'b': 1}}, 'a.b.c')
+
     def test_map_fields(self):
         """Test the `map_fields()` method."""
 
