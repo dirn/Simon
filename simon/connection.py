@@ -50,7 +50,7 @@ def connect(host='localhost', name=None, username=None, password=None,
     # Get replicaSet out of **kwargs because it can be passed in as its
     # own parameter
     connection, parsed_settings = _get_connection(
-        host=host, port=port, replica_set=kwargs.pop('replicaSet', False),
+        host=host, port=port, replica_set=kwargs.pop('replicaSet', None),
         **kwargs)
     if parsed_settings:
         settings.update(parsed_settings)
@@ -84,7 +84,7 @@ def connect(host='localhost', name=None, username=None, password=None,
     return connection
 
 
-def _get_connection(host, port, replica_set=False, **kwargs):
+def _get_connection(host, port, replica_set=None, **kwargs):
     """Gets the connection to the database.
 
     This will create a connection to a new MongoDB server and store it
@@ -100,8 +100,8 @@ def _get_connection(host, port, replica_set=False, **kwargs):
     :type host: str.
     :param port: The port of the MongoDB host.
     :type port: int.
-    :param replica_set: Whether to connect to a replica set
-    :type replica_set: bool.
+    :param replica_set: Name of the replica set when connecting to one
+    :type replica_set: str.
     :param kwargs: All other keyword arguments accepted by
                    :class:`pymongo.connection.Connection`.
     :type kwargs: kwargs.
@@ -135,23 +135,26 @@ def _get_connection(host, port, replica_set=False, **kwargs):
             parsed_settings['password'] = password
 
         # Check for a replica set
-        if 'replicaSet' in host:
-            replica_set = True
+        if 'replicaset' in pieces['options']:
+            replica_set = pieces['options']['replicaset']
 
-        # Check the list of nodes in the parsed URI. More than one
-        # means there's a replica set
-        if 'nodelist' in pieces:
-            number_of_nodes = len(pieces['nodelist'])
-            if number_of_nodes > 1:
-                replica_set = True
-            elif number_of_nodes == 1:
-                # If there was only one, get the updated host and port
-                host, port = pieces['nodelist'][0]
+        # Check the list of nodes in the parsed URI. If there was only
+        # one, get the updated host and port
+        if 'nodelist' in pieces and len(pieces['nodelist']) == 1:
+            host, port = pieces['nodelist'][0]
 
     # For the purpose of building this key, use the default port
     # instead of no port so that calls explicity requesting the default
-    # port won't be treated as different than calls not requesting one
-    connection_key = '{0}:{1}'.format(host, port or 27017)
+    # port won't be treated as different than calls not requesting one.
+    # When a replica set is behind used however, use the host string
+    # with the name of the replica set
+    #
+    # NOTE: I can foresee a problem here if there are two replica sets
+    # running on the same host with the same name on different ports.
+    # I'll look into that more when I have a better way to test
+    # replica sets than I currently do.
+    connection_key = '{0}:{1}'.format(host, replica_set if replica_set else
+                                      (port or 27017))
 
     global __connections__
     if not isinstance(__connections__, dict):
@@ -161,7 +164,7 @@ def _get_connection(host, port, replica_set=False, **kwargs):
         # If using a replica set, prepare the settings and class name
         if replica_set:
             connection_class = ReplicaSetConnection
-            settings = {'host_or_uri': host}
+            settings = {'hosts_or_uri': host, 'replicaSet': replica_set}
         else:
             connection_class = Connection
             settings = {'host': host, 'port': port}

@@ -26,24 +26,24 @@ class TestConnection(unittest.TestCase):
             mock_method.return_value = ({'test': mock.Mock()}, {})
             connection.connect(name='test')
             mock_method.assert_called_with(host='localhost', port=None,
-                                           replica_set=False)
+                                           replica_set=None)
 
             mock_method.return_value = ({'test': mock.Mock()}, {})
             connection.connect(name='test', alias='test2')
             mock_method.assert_called_with(host='localhost', port=None,
-                                           replica_set=False)
+                                           replica_set=None)
 
             mock_method.return_value = ({'test3': mock.Mock()}, {})
             connection.connect(host='someotherhost', name='test3', port=1234)
             mock_method.assert_called_with(host='someotherhost', port=1234,
-                                           replica_set=False)
+                                           replica_set=None)
 
             mock_method.return_value = ({'simon': mock.Mock()}, {})
             connection.connect(host='simon.mongo.com', name='simon',
                                port=27017, username='simon',
                                password='simon')
             mock_method.assert_called_with(host='simon.mongo.com', port=27017,
-                                           replica_set=False)
+                                           replica_set=None)
 
             mock_method.return_value = ({'simon': mock.Mock()}, {
                 'name': 'simon',
@@ -53,7 +53,7 @@ class TestConnection(unittest.TestCase):
             url = 'mongodb://simon:simon@simon.mongo.com:27017/simon'
             connection.connect(host=url, alias='remote_uri')
             mock_method.assert_called_with(host=url, port=None,
-                                           replica_set=False)
+                                           replica_set=None)
 
             mock_method.return_value = ({'simon-rs': mock.Mock()}, {
                 'name': 'simon-rs',
@@ -61,9 +61,10 @@ class TestConnection(unittest.TestCase):
                 'password': 'simon',
             })
             url = 'mongodb://simon:simon@simon.m0.mongo.com:27017/simon-rs'
-            connection.connect(host=url, replicaSet=True, alias='replica1')
+            connection.connect(host=url, replicaSet='simonrs',
+                               alias='replica1')
             mock_method.assert_called_with(host=url, port=None,
-                                           replica_set=True)
+                                           replica_set='simonrs')
 
             mock_method.return_value = ({'simon-rs': mock.Mock()}, {
                 'name': 'simon-rs',
@@ -71,9 +72,10 @@ class TestConnection(unittest.TestCase):
                 'password': 'simon',
             })
             url = 'mongodb://simon:simon@simon.m0.mongo.com:27017,simon.m1.mongo.com:27017/simon-rs'
-            connection.connect(host=url, replicaSet=True, alias='replica2')
+            connection.connect(host=url, replicaSet='simonrs',
+                               alias='replica2')
             mock_method.assert_called_with(host=url, port=None,
-                                           replica_set=True)
+                                           replica_set='simonrs')
 
         self.assertTrue('test' in connection.__databases__)
         self.assertTrue('test2' in connection.__databases__)
@@ -104,7 +106,7 @@ class TestConnection(unittest.TestCase):
 
         with mock.patch('simon.connection.Connection') as mock_conn:
             connection._get_connection(host='localhost', port=None,
-                                       replica_set=False)
+                                       replica_set=None)
 
             mock_conn.assert_called_with(host='localhost', port=None)
 
@@ -115,7 +117,7 @@ class TestConnection(unittest.TestCase):
             # so mock_conn() should still have the same call parameters
             # and the length of __connections should be 1
             connection._get_connection(host='localhost', port=27017,
-                                       replica_set=False)
+                                       replica_set=None)
 
             mock_conn.assert_called_with(host='localhost', port=None)
 
@@ -136,8 +138,9 @@ class TestConnection(unittest.TestCase):
 
         with mock.patch('simon.connection.ReplicaSetConnection') as mock_conn:
             connection._get_connection(host='localhost', port=None,
-                                       replica_set=True)
-            mock_conn.assert_called_with(host_or_uri='localhost')
+                                       replica_set='simonrs')
+            mock_conn.assert_called_with(hosts_or_uri='localhost',
+                                         replicaSet='simonrs')
 
     def test__get_connection_with_uri(self):
         """Test the `_get_connection()` method with URIs."""
@@ -145,7 +148,7 @@ class TestConnection(unittest.TestCase):
         with mock.patch('simon.connection.Connection') as mock_conn:
             url1 = 'mongodb://simonuser:simonpassword@simon.mongo.com:27017/simon'
             conn, settings = connection._get_connection(host=url1, port=None,
-                                                        replica_set=False)
+                                                        replica_set=None)
 
             mock_conn.assert_called_with(host='simon.mongo.com', port=27017)
 
@@ -156,9 +159,10 @@ class TestConnection(unittest.TestCase):
         with mock.patch('simon.connection.ReplicaSetConnection') as mock_conn:
             url2 = 'mongodb://simonuser:simonpassword@simon.m0.mongo.com:27017/simon-rs'
             conn, settings = connection._get_connection(host=url2, port=None,
-                                                        replica_set=True)
+                                                        replica_set='simonrs')
 
-            mock_conn.assert_called_with(host_or_uri='simon.m0.mongo.com')
+            mock_conn.assert_called_with(hosts_or_uri='simon.m0.mongo.com',
+                                         replicaSet='simonrs')
 
             self.assertEqual(settings['name'], 'simon-rs')
             self.assertEqual(settings['username'], 'simonuser')
@@ -166,9 +170,10 @@ class TestConnection(unittest.TestCase):
 
             url3 = 'mongodb://simonuser:simonpassword@simon.m0.mongo.com:27017,simon.m1.mongo.com:27017/simon-rs'
             conn, settings = connection._get_connection(host=url3, port=None,
-                                                        replica_set=True)
+                                                        replica_set='simonrs')
 
-            mock_conn.assert_called_with(host_or_uri=url3)
+            mock_conn.assert_called_with(hosts_or_uri=url3,
+                                         replicaSet='simonrs')
 
             self.assertEqual(settings['name'], 'simon-rs')
             self.assertEqual(settings['username'], 'simonuser')
@@ -176,18 +181,20 @@ class TestConnection(unittest.TestCase):
 
             url4 = 'mongodb://simonuser:simonpassword@simon.m1.mongo.com:27017/simon-rsh?replicaSet=simon-rs'
             conn, settings = connection._get_connection(host=url4, port=None,
-                                                        replica_set=False)
+                                                        replica_set=None)
 
-            mock_conn.assert_called_with(host_or_uri='simon.m1.mongo.com')
+            mock_conn.assert_called_with(hosts_or_uri='simon.m1.mongo.com',
+                                         replicaSet='simon-rs')
 
             self.assertEqual(settings['name'], 'simon-rsh')
             self.assertEqual(settings['username'], 'simonuser')
             self.assertEqual(settings['password'], 'simonpassword')
 
         self.assertTrue('simon.mongo.com:27017' in connection.__connections__)
-        self.assertTrue('simon.m0.mongo.com:27017' in
+        self.assertTrue('simon.m0.mongo.com:simonrs' in
                         connection.__connections__)
-        self.assertTrue('{0}:27017'.format(url3) in connection.__connections__)
+        self.assertTrue('{0}:simonrs'.format(url3) in
+                        connection.__connections__)
 
     def test__get_connection_connectionerror(self):
         """Test that `_get_connection()` raises `ConnectionError`."""
