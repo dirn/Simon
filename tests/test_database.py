@@ -565,6 +565,33 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m.b, doc['b'])
         self.assertEqual(doc['b'], 3)
 
+    def test_update_field_map(self):
+        """Test the `update()` method with a name in `field_map`."""
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        m = TestModel(**doc)
+
+        m.update(fake=1, safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m.fake, doc['real'])
+        self.assertEqual(doc['real'], 1)
+
+    def test_update_nested_field(self):
+        """Test the `update()` method with a nested field."""
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        m = TestModel(**doc)
+
+        m.update(c__d=1, safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m._document['c'], doc['c'])
+
     def test_update_typeerror(self):
         """Test that `update()` raises `TypeError`."""
 

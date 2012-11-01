@@ -584,7 +584,9 @@ class MongoModel(object):
                             "'{1}' attribute has not been set.".format(
                                 self.__class__.__name__, 'id'))
 
-        self._meta.db.update({'_id': id}, {'$set': fields}, safe=safe)
+        update = map_fields(self.__class__, fields, flatten_keys=True)
+
+        self._meta.db.update({'_id': id}, {'$set': update}, safe=safe)
 
         # After updating the document in the database, the instance
         # needs to be updated as well. Depending on the size of the
@@ -593,8 +595,10 @@ class MongoModel(object):
         # been updated. Build a dictionary containing the keys of the
         # fields that need to be reloaded and retrieve them from the
         # database. Then apply the new values to the instance
-        fields = dict((k, 1) for k in fields.keys())
+        fields = dict((k, 1) for k in update.keys())
         doc = self._meta.db.find_one({'_id': id}, fields)
+
+        doc = update_nested_keys(self._document, doc)
 
         for k, v in doc.items():
             setattr(self, k, v)
