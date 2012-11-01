@@ -623,6 +623,23 @@ class MongoModel(object):
         if name in self.__dict__:
             return self.__dict__[name]
 
+        # The first thing to look for is nested keys
+        if '__' in name or '.' in name:
+            if '__' in name:
+                # map_fields() requires a dict, so make a simple one and
+                # then capture the first (only) key in the resulting
+                # dict
+                mapped_name = map_fields(self.__class__, {name: 1},
+                                         flatten_keys=True)
+                mapped_name = mapped_name.keys()[0]
+            else:
+                mapped_name = name
+            try:
+                return get_nested_key(self._document, mapped_name)
+            except AttributeError:
+                # Give it a go the normal way
+                pass
+
         # If the attribute is a key in the document, use it.
         name = self._meta.field_map.get(name, name)
         if not name in self._document:

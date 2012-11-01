@@ -57,11 +57,21 @@ class TestBase(unittest.TestCase):
     def test_getattr(self):
         """Test the `__getattr__()` method."""
 
-        m = TestModel(a=1)
+        m = TestModel()
+
+        m._document['a'] = 1
         self.assertEqual(m.a, 1)
 
         with self.assertRaises(AttributeError):
             m.b
+
+        m._document['c'] = {'d': 1}
+        self.assertEqual(m.c, {'d': 1})
+        self.assertEqual(m.c__d, 1)
+        self.assertEqual(getattr(m, 'c.d'), 1)
+
+        with self.assertRaises(KeyError):
+            m.c__e
 
         self.assertEqual(m.attribute, 2)
 
