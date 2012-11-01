@@ -437,7 +437,6 @@ class TestDatabase(unittest.TestCase):
         doc = self.collection.find_one({'_id': self._id})
 
         self.assertEqual(m._document['c'], doc['c'])
-        self.assertEqual(m._document['c']['d'], doc['c']['d'])
 
     def test_save_fields_one(self):
         """Test the `save_fields()` method for one field."""
