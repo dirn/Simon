@@ -8,7 +8,8 @@ from datetime import datetime
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import QuerySet
-from .utils import map_fields, remove_nested_key, update_nested_keys
+from .utils import (get_nested_key, map_fields,
+                    remove_nested_key, update_nested_keys)
 
 
 class Property(property):
