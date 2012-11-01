@@ -536,17 +536,22 @@ class MongoModel(object):
         if not isinstance(fields, (list, tuple)):
             fields = (fields,)
 
+        update = dict((k, 1) for k in fields)
+        update = map_fields(self.__class__, update, flatten_keys=True)
+
         # Failing to make sure all of the fields exist before saving
         # them would result in assigning blank values to keys. In some
         # cases this could result in unexpected documents being returned
         # in queries.
-        if any(k not in self._document for k in fields):
+        try:
+            update = dict((k, get_nested_key(self._document, k)) for
+                          k, v in update.items())
+        except KeyError:
             raise AttributeError("The '{0}' object does not have all of the "
                                  "specified fields.".format(
                                      self.__class__.__name__))
 
-        doc = dict((k, getattr(self, k)) for k in fields)
-        self._meta.db.update({'_id': id}, {'$set': doc}, safe=safe)
+        self._meta.db.update({'_id': id}, {'$set': update}, safe=safe)
 
     def update(self, safe=False, **fields):
         """Performs an atomic update.

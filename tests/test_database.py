@@ -394,6 +394,20 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue('real' in doc)
         self.assertFalse('fake' in doc)
 
+    def test_save_fields_field_map(self):
+        """Test the `save_fields()` method with a name in `field_map`."""
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        m = TestModel(**doc)
+
+        m.fake = 1
+        m.save_fields('fake', safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m._document['real'], doc['real'])
+
     def test_save_fields_multiple(self):
         """Test the `save_fields()` method for multiple fields."""
 
@@ -409,6 +423,21 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(m._document['a'], doc['a'])
         self.assertEqual(m._document['b'], doc['b'])
+
+    def test_save_fields_nested_field(self):
+        """Test the `save_fields()` method with a nested field."""
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        m = TestModel(**doc)
+
+        m.c = {'d': 1}
+        m.save_fields('c__d', safe=True)
+
+        doc = self.collection.find_one({'_id': self._id})
+
+        self.assertEqual(m._document['c'], doc['c'])
+        self.assertEqual(m._document['c']['d'], doc['c']['d'])
 
     def test_save_fields_one(self):
         """Test the `save_fields()` method for one field."""
