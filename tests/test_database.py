@@ -555,7 +555,7 @@ class TestDatabase(unittest.TestCase):
 
         m = TestModel.get(id=self._id)
 
-        m.update(a=2, b=3)
+        m.update(a=2, b=3, safe=True)
 
         doc = self.collection.find_one({'_id': self._id})
 
