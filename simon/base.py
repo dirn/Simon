@@ -109,7 +109,17 @@ class MongoModel(object):
     __metaclass__ = MongoModelMetaClass
 
     class Meta:
-        field_map = {'id': '_id'}
+        """Default settings for a :class:`~simon.MongoModel`.
+
+        :param collection: Name of the collection in the database.
+        :type collection: str.
+        :param database: (optional) Alias of the database.
+        :type database: str.
+        :param field_map: (optional) Map defining aliases for document keys.
+        :type field_map: dict.
+
+        .. versionadded:: 0.1.0
+        """
 
     def __init__(self, **fields):
         """Assigns all keyword arguments to the object's document.
@@ -232,11 +242,11 @@ class MongoModel(object):
 
         This can be used to update a single field::
 
-            obj.increment(field, value)
+            >>> obj.increment(field, value)
 
         or to update multiple fields at a time::
 
-            obj.increment(field1=value1, field2=value2)
+            >>> obj.increment(field1=value1, field2=value2)
 
         Note that the latter does **not** set the values of the fields,
         but rather specifies the values they should be incremented by.

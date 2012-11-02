@@ -104,7 +104,7 @@ class QuerySet(object):
         :type keys: args.
         :returns: :class:`QuerySet` -- the sorted documents.
 
-        .. versionadded: 0.1.0
+        .. versionadded:: 0.1.0
         """
 
         # Build the list of sorting (key, direction) pairs. If the
