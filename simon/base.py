@@ -72,10 +72,14 @@ class MongoModelMetaClass(type):
                 if not hasattr(meta, k):
                     setattr(meta, k, v)
 
-        # All models need the ability to map document keys to the
-        # Python names. If no map has been provided, use the default.
+        # All models need the ability to map document keys to different
+        # attribute names. If no map has been provided, add a
+        # placeholder. If map_id has not been set to False, add a map
+        # from id to _id.
         if not hasattr(meta, 'field_map'):
-            meta.field_map = {'id': '_id'}
+            meta.field_map = {}
+        if getattr(meta, 'map_id', True) and 'id' not in meta.field_map:
+            meta.field_map['id'] = '_id'
 
         # Associate the database collection with the new class. A
         # lambda is used so that the collection reference isn't grabbed
@@ -117,6 +121,9 @@ class MongoModel(object):
         :type database: str.
         :param field_map: (optional) Map defining aliases for document keys.
         :type field_map: dict.
+        :param map_id: (optional) If ``False`` won't include
+                       ``{'id': '_id'}`` in ``field_map``.
+        :type map_id: bool.
 
         .. versionadded:: 0.1.0
         """

@@ -24,6 +24,8 @@ class TestModel3(object):
 
     class Meta:
         collection = 'test3'
+        field_map = {'python_key': 'mongo_key'}
+        map_id = False
 
 
 class TestMetaClass(unittest.TestCase):
@@ -57,28 +59,12 @@ class TestMetaClass(unittest.TestCase):
         """Test the `_meta.field_map` attribute."""
 
         default = {'id': '_id'}
-        self.assertTrue(
-            all(default[k] == v for k, v in
-                TestModel1._meta.field_map.items()))
-        self.assertTrue(
-            all(k in default for k in TestModel1._meta.field_map.keys()))
-        self.assertTrue(
-            all(k in TestModel1._meta.field_map for k in default.keys()))
+        self.assertEqual(default, TestModel1._meta.field_map)
 
-        # These tests check for the default that is also enforced
-        # through MongoModel
-        self.assertTrue(
-            all(default[k] == v for k, v in
-                TestModel3._meta.field_map.items()))
-        self.assertTrue(
-            all(k in default for k in TestModel3._meta.field_map.keys()))
-        self.assertTrue(
-            all(k in TestModel3._meta.field_map for k in default.keys()))
+        # This test checks for the default being added by the meta class
+        custom = {'id': '_id', 'python_key': 'mongo_key'}
+        self.assertEqual(custom, TestModel2._meta.field_map)
 
+        # This test checks the behavior when map_id is False
         custom = {'python_key': 'mongo_key'}
-        self.assertTrue(
-            all(custom[k] == v for k, v in TestModel2._meta.field_map.items()))
-        self.assertTrue(
-            all(k in custom for k in TestModel2._meta.field_map.keys()))
-        self.assertTrue(
-            all(k in TestModel2._meta.field_map for k in custom.keys()))
+        self.assertEqual(custom, TestModel3._meta.field_map)
