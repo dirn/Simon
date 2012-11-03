@@ -18,6 +18,7 @@ class TestModel2(MongoModel):
         auto_timestamp = False
         collection = 'test2'
         field_map = {'python_key': 'mongo_key'}
+        safe = True
 
 
 class TestModel3(object):
@@ -28,6 +29,7 @@ class TestModel3(object):
         collection = 'test3'
         field_map = {'python_key': 'mongo_key'}
         map_id = False
+        safe = False
 
 
 class TestMetaClass(unittest.TestCase):
@@ -81,3 +83,10 @@ class TestMetaClass(unittest.TestCase):
         # This test checks the behavior when map_id is False
         custom = {'python_key': 'mongo_key'}
         self.assertEqual(custom, TestModel3._meta.field_map)
+
+    def test_safe(self):
+        """Test the `_meta.safe` attribute."""
+
+        self.assertFalse(TestModel1._meta.safe)
+        self.assertTrue(TestModel2._meta.safe)
+        self.assertFalse(TestModel3._meta.safe)

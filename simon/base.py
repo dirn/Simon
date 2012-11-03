@@ -86,6 +86,11 @@ class MongoModelMetaClass(type):
         if not hasattr(meta, 'auto_timestamp'):
             meta.auto_timestamp = True
 
+        # Find out whether or not the model should always perform writes
+        # in safe mode
+        if not hasattr(meta, 'safe'):
+            meta.safe = False
+
         # Associate the database collection with the new class. A
         # lambda is used so that the collection reference isn't grabbed
         # until it's actually needed. property by itself is not
@@ -133,6 +138,9 @@ class MongoModel(object):
         :param map_id: (optional) If ``False`` won't include
                        ``{'id': '_id'}`` in ``field_map``.
         :type map_id: bool.
+        :param safe: (optional) If ``True`` all writes will use safe
+                     mode.
+        :type safe: bool.
 
         .. versionadded:: 0.1.0
         """
@@ -178,7 +186,9 @@ class MongoModel(object):
                             "'{1}' attribute has not been set.".format(
                                 self.__class__.__name__, 'id'))
 
+        safe = safe or self._meta.safe
         self._meta.db.remove({'_id': id}, safe=safe)
+
         self._document = {}
 
     @classmethod
@@ -310,6 +320,7 @@ class MongoModel(object):
 
         update = map_fields(self.__class__, update, flatten_keys=True)
 
+        safe = safe or self._meta.safe
         self._meta.db.update({'_id': id}, {'$inc': update}, safe=safe)
 
         # After updating the document in the database, the instance
@@ -362,6 +373,8 @@ class MongoModel(object):
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
                                 self.__class__.__name__, 'id'))
+
+        safe = safe or self._meta.safe
 
         result = self._meta.db.update({'_id': id}, fields, safe=safe,
                                       upsert=upsert)
@@ -438,6 +451,7 @@ class MongoModel(object):
         update = dict((k, 1) for k in fields)
         update = map_fields(self.__class__, update, flatten_keys=True)
 
+        safe = safe or self._meta.safe
         self._meta.db.update({'_id': id}, {'$unset': update}, safe=safe)
 
         # The fields also need to be removed from the object
@@ -492,6 +506,8 @@ class MongoModel(object):
         id = doc.pop('_id', None)
 
         doc = map_fields(self.__class__, doc)
+
+        safe = safe or self._meta.safe
 
         if upsert or id:
             result = self._meta.db.update({'_id': id}, doc, safe=safe,
@@ -579,6 +595,7 @@ class MongoModel(object):
                                  "specified fields.".format(
                                      self.__class__.__name__))
 
+        safe = safe or self._meta.safe
         self._meta.db.update({'_id': id}, {'$set': update}, safe=safe)
 
     def update(self, safe=False, **fields):
@@ -614,6 +631,7 @@ class MongoModel(object):
 
         update = map_fields(self.__class__, fields, flatten_keys=True)
 
+        safe = safe or self._meta.safe
         self._meta.db.update({'_id': id}, {'$set': update}, safe=safe)
 
         # After updating the document in the database, the instance
