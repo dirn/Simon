@@ -15,6 +15,7 @@ class TestModel1(MongoModel):
 
 class TestModel2(MongoModel):
     class Meta:
+        auto_timestamp = False
         collection = 'test2'
         field_map = {'python_key': 'mongo_key'}
 
@@ -23,12 +24,24 @@ class TestModel3(object):
     __metaclass__ = MongoModelMetaClass
 
     class Meta:
+        auto_timestamp = True
         collection = 'test3'
         field_map = {'python_key': 'mongo_key'}
         map_id = False
 
 
 class TestMetaClass(unittest.TestCase):
+    def test_auto_timestamp(self):
+        """Test the `_meta.auto_timestamp` attribute."""
+
+        # Test the default behavior
+        self.assertTrue(hasattr(TestModel1._meta, 'auto_timestamp'))
+        self.assertTrue(TestModel1._meta.auto_timestamp)
+
+        # Test the explicit behavior, just as a sanity check
+        self.assertFalse(TestModel2._meta.auto_timestamp)
+        self.assertTrue(TestModel3._meta.auto_timestamp)
+
     def test_collection(self):
         """Test the `_meta.collection` attribute."""
 

@@ -15,17 +15,25 @@ except ImportError:
     import unittest
 
 import collections
+from datetime import datetime
 import mock
 from pymongo.collection import Collection
 
 from simon import MongoModel, connection, query
 
 
-class TestModel(MongoModel):
+class TestModel1(MongoModel):
     class Meta:
         collection = 'test-simon'
         database = 'test-simon'
         field_map = {'id': '_id', 'fake': 'real'}
+
+
+class TestModel2(MongoModel):
+    class Meta:
+        auto_timestamp = False
+        collection = 'test-simon'
+        database = 'test-simon'
 
 
 class TestDatabase(unittest.TestCase):
@@ -53,7 +61,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         for k, v in doc.items():
             self.assertTrue(hasattr(m, k))
@@ -63,9 +71,9 @@ class TestDatabase(unittest.TestCase):
         ("Test that the `db` attribute of classes and instances is the "
          "right type.")
 
-        self.assertTrue(isinstance(TestModel._meta.db, Collection))
+        self.assertTrue(isinstance(TestModel1._meta.db, Collection))
 
-        m = TestModel()
+        m = TestModel1()
         self.assertTrue(isinstance(m._meta.db, Collection))
 
     def test_delete(self):
@@ -73,7 +81,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.delete(safe=True)
 
@@ -84,7 +92,7 @@ class TestDatabase(unittest.TestCase):
     def test_delete_typeerror(self):
         """Test that `delete()` raises `TypeError`."""
 
-        m = TestModel(a=1, b=2)
+        m = TestModel1(a=1, b=2)
 
         with self.assertRaises(TypeError):
             m.delete()
@@ -92,14 +100,14 @@ class TestDatabase(unittest.TestCase):
     def test_find(self):
         """Test the `find()` method."""
 
-        qs = TestModel.find(id=self._id)
+        qs = TestModel1.find(id=self._id)
 
         self.assertTrue(isinstance(qs, query.QuerySet))
         self.assertEqual(qs.count(), 1)
 
         m = qs[0]
 
-        self.assertTrue(isinstance(m, TestModel))
+        self.assertTrue(isinstance(m, TestModel1))
 
         self.assertEqual(m.id, self._id)
 
@@ -110,14 +118,14 @@ class TestDatabase(unittest.TestCase):
     def test_find_id_string(self):
         """Test the `find()` method with a string `_id`."""
 
-        qs = TestModel.find(id=str(self._id))
+        qs = TestModel1.find(id=str(self._id))
 
         self.assertTrue(isinstance(qs, query.QuerySet))
         self.assertEqual(qs.count(), 1)
 
         m = qs[0]
 
-        self.assertTrue(isinstance(m, TestModel))
+        self.assertTrue(isinstance(m, TestModel1))
 
         self.assertEqual(m.id, self._id)
 
@@ -128,7 +136,7 @@ class TestDatabase(unittest.TestCase):
     def test_get(self):
         """Test the `get()` method."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
 
         self.assertEqual(m.id, self._id)
 
@@ -139,7 +147,7 @@ class TestDatabase(unittest.TestCase):
     def test_get_id_string(self):
         """Test the `get()` method with a string `_id`."""
 
-        m = TestModel.get(id=str(self._id))
+        m = TestModel1.get(id=str(self._id))
 
         self.assertEqual(m.id, self._id)
 
@@ -152,19 +160,19 @@ class TestDatabase(unittest.TestCase):
 
         self.collection.insert({'a': 1})
 
-        with self.assertRaises(TestModel.MultipleDocumentsFound):
-            TestModel.get(a=1)
+        with self.assertRaises(TestModel1.MultipleDocumentsFound):
+            TestModel1.get(a=1)
 
     def test_get_nodocumentfound(self):
         """Test that `get()` raises `NoDocumentFound`."""
 
-        with self.assertRaises(TestModel.NoDocumentFound):
-            TestModel.get(a=2)
+        with self.assertRaises(TestModel1.NoDocumentFound):
+            TestModel1.get(a=2)
 
     def test_increment(self):
         """Test the `increment()` method."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
 
         m.increment('a', safe=True)
 
@@ -189,7 +197,7 @@ class TestDatabase(unittest.TestCase):
 
         id = self.collection.insert({'a': {'b': 1, 'c': 2}})
 
-        m = TestModel.get(id=id)
+        m = TestModel1.get(id=id)
 
         m.increment(a__c=3, safe=True)
 
@@ -203,7 +211,7 @@ class TestDatabase(unittest.TestCase):
     def test_increment_field_map(self):
         """Test the `increment()` method with a name in `field_map`."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
 
         m.increment(fake=2, safe=True)
 
@@ -215,7 +223,7 @@ class TestDatabase(unittest.TestCase):
     def test_increment_kwargs(self):
         """Test the `increment()` method with **kwargs."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
 
         m.increment(a=1, b=5, safe=True)
 
@@ -229,7 +237,7 @@ class TestDatabase(unittest.TestCase):
     def test_increment_typeerror(self):
         """Test that `increment()` raises `TypeError`."""
 
-        m = TestModel(a=1)
+        m = TestModel1(a=1)
 
         with self.assertRaises(TypeError):
             m.increment('a')
@@ -237,7 +245,7 @@ class TestDatabase(unittest.TestCase):
     def test_increment_valueerror(self):
         """Test that `increment()` raises `ValueError`."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
 
         with self.assertRaises(ValueError):
             m.increment()
@@ -245,7 +253,7 @@ class TestDatabase(unittest.TestCase):
     def test_raw_update(self):
         """Test the `raw_update()` method."""
 
-        m = TestModel(id=self._id)
+        m = TestModel1(id=self._id)
 
         m.raw_update({'a': 2, 'b': 3})
 
@@ -255,7 +263,7 @@ class TestDatabase(unittest.TestCase):
     def test_raw_update_typeerror(self):
         """Test that `raw_update()` raises `TypeError`."""
 
-        m = TestModel()
+        m = TestModel1()
 
         with self.assertRaises(TypeError):
             m.raw_update({'a': 1})
@@ -267,7 +275,7 @@ class TestDatabase(unittest.TestCase):
         # that a different _id is provided for each document
         previous_id = None
         for x in range(10):
-            m = TestModel()
+            m = TestModel1()
             m.raw_update({'a': 1, 'b': 2}, safe=True, upsert=True)
 
             self.assertTrue(hasattr(m, 'id'))
@@ -285,7 +293,7 @@ class TestDatabase(unittest.TestCase):
         # that a different _id is provided for each document
         previous_id = None
         for x in range(10):
-            m = TestModel()
+            m = TestModel1()
             m.raw_update({'a': 1, 'b': 2}, safe=False, upsert=True)
 
             self.assertTrue(hasattr(m, 'id'))
@@ -300,7 +308,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.remove_fields(('a', 'b'), safe=True)
 
@@ -318,7 +326,7 @@ class TestDatabase(unittest.TestCase):
     def test_remove_fields_nested_multiple(self):
         """Test the `remove_fields()` method with nested fields."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
         m.c = {'d': 1, 'e': 2}
         m.save()
 
@@ -337,7 +345,7 @@ class TestDatabase(unittest.TestCase):
     def test_remove_fields_nested_one(self):
         """Test the `remove_fields()` method with nested fields."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
         m.c = {'d': 1, 'e': 2}
         m.save()
 
@@ -358,7 +366,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.remove_fields('b', safe=True)
 
@@ -376,7 +384,7 @@ class TestDatabase(unittest.TestCase):
     def test_remove_fields_typeerror(self):
         """Test that `remove_fields()` raises `TypeError`."""
 
-        m = TestModel(a=1, b=2)
+        m = TestModel1(a=1, b=2)
 
         with self.assertRaises(TypeError):
             m.remove_fields('a')
@@ -384,7 +392,7 @@ class TestDatabase(unittest.TestCase):
     def test_save_field_map(self):
         """Test the `save()` method with a name in `field_map`."""
 
-        m = TestModel(fake=1)
+        m = TestModel1(fake=1)
         m.save(safe=True)
 
         doc = self.collection.find_one({'_id': m.id})
@@ -399,7 +407,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.fake = 1
         m.save_fields('fake', safe=True)
@@ -413,7 +421,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.a = 3
         m.b = 4
@@ -429,7 +437,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.c = {'d': 1}
         m.save_fields('c__d', safe=True)
@@ -443,7 +451,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.a = 3
         m.b = 4
@@ -459,7 +467,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         with self.assertRaises(AttributeError):
             m.save_fields('field_that_doesnt_exist')
@@ -467,7 +475,7 @@ class TestDatabase(unittest.TestCase):
     def test_save_fields_typeerror(self):
         """Test that `save_fields()` raises `TypeError`."""
 
-        m = TestModel(a=1, b=2)
+        m = TestModel1(a=1, b=2)
 
         with self.assertRaises(TypeError):
             m.save_fields('a')
@@ -475,7 +483,7 @@ class TestDatabase(unittest.TestCase):
     def test_save_insert(self):
         """Test the `save()` method for new documents."""
 
-        m = TestModel(a=1, b=2)
+        m = TestModel1(a=1, b=2)
         m.save(safe=True)
 
         doc = self.collection.find_one({'_id': m.id})
@@ -484,6 +492,34 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m._document, doc)
         self.assertTrue(hasattr(m, 'created'))
         self.assertTrue(hasattr(m, 'modified'))
+
+    def test_save_timestamps(self):
+        """Test that `save()` properly handles adding timestamps."""
+
+        m1 = TestModel1(a=1)
+        m1.save(safe=True)
+
+        self.assertTrue(hasattr(m1, 'created'))
+        self.assertTrue(hasattr(m1, 'modified'))
+
+        self.assertTrue(isinstance(m1.created, datetime))
+        self.assertTrue(isinstance(m1.modified, datetime))
+
+        doc1 = self.collection.find_one({'_id': m1.id})
+
+        self.assertTrue('created' in doc1)
+        self.assertTrue('modified' in doc1)
+
+        m2 = TestModel2(a=1)
+        m2.save(safe=True)
+
+        self.assertFalse(hasattr(m2, 'created'))
+        self.assertFalse(hasattr(m2, 'modified'))
+
+        doc2 = self.collection.find_one({'_id': m2.id})
+
+        self.assertFalse('created' in doc2)
+        self.assertFalse('modified' in doc2)
 
     def test_save_update(self):
         """Test the `save()` method for existing documents."""
@@ -497,7 +533,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel()
+        m = TestModel1()
         m._document = doc.copy()
 
         m.c = 3
@@ -518,7 +554,7 @@ class TestDatabase(unittest.TestCase):
         # that a different _id is provided for each document
         previous_id = None
         for x in range(10):
-            m = TestModel(a=1, b=2)
+            m = TestModel1(a=1, b=2)
             m.save(safe=True, upsert=True)
 
             self.assertTrue(hasattr(m, 'id'))
@@ -538,7 +574,7 @@ class TestDatabase(unittest.TestCase):
         # that a different _id is provided for each document
         previous_id = None
         for x in range(10):
-            m = TestModel(a=1, b=2)
+            m = TestModel1(a=1, b=2)
             m.save(safe=False, upsert=True)
 
             self.assertTrue(hasattr(m, 'id'))
@@ -553,7 +589,7 @@ class TestDatabase(unittest.TestCase):
     def test_update(self):
         """Test the `update()` method."""
 
-        m = TestModel.get(id=self._id)
+        m = TestModel1.get(id=self._id)
 
         m.update(a=2, b=3, safe=True)
 
@@ -570,7 +606,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.update(fake=1, safe=True)
 
@@ -584,7 +620,7 @@ class TestDatabase(unittest.TestCase):
 
         doc = self.collection.find_one({'_id': self._id})
 
-        m = TestModel(**doc)
+        m = TestModel1(**doc)
 
         m.update(c__d=1, safe=True)
 
@@ -595,7 +631,7 @@ class TestDatabase(unittest.TestCase):
     def test_update_typeerror(self):
         """Test that `update()` raises `TypeError`."""
 
-        m = TestModel()
+        m = TestModel1()
 
         with self.assertRaises(TypeError):
             m.update(a=1)
@@ -621,7 +657,7 @@ class TestQuery(unittest.TestCase):
         self._id3 = self.collection.insert({'b': 1, 'c': 2}, safe=True)
 
         self.cursor = self.collection.find()
-        self.qs = query.QuerySet(cursor=self.cursor, cls=TestModel)
+        self.qs = query.QuerySet(cursor=self.cursor, cls=TestModel1)
 
     def tearDown(self):
         self.database.drop_collection('test-simon')
@@ -921,7 +957,7 @@ class TestQuery(unittest.TestCase):
         self.qs._fill_to(3)
 
         for x in range(3):
-            self.assertTrue(isinstance(self.qs._items[x], TestModel))
+            self.assertTrue(isinstance(self.qs._items[x], TestModel1))
 
     def test__fill_to_indexes(self):
         """Test that `_fill_to()` property fills to the specified index."""

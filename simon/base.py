@@ -81,6 +81,11 @@ class MongoModelMetaClass(type):
         if getattr(meta, 'map_id', True) and 'id' not in meta.field_map:
             meta.field_map['id'] = '_id'
 
+        # Find out whether or not to associate timestamps with documents
+        # when they are saved.
+        if not hasattr(meta, 'auto_timestamp'):
+            meta.auto_timestamp = True
+
         # Associate the database collection with the new class. A
         # lambda is used so that the collection reference isn't grabbed
         # until it's actually needed. property by itself is not
@@ -115,11 +120,15 @@ class MongoModel(object):
     class Meta:
         """Default settings for a :class:`~simon.MongoModel`.
 
+        :param auto_timestamp: (optional) If ``False`` ``created`` and
+                               ``modified`` fields won't be added.
+        :type auto_timestamp: bool.
         :param collection: Name of the collection in the database.
         :type collection: str.
         :param database: (optional) Alias of the database.
         :type database: str.
-        :param field_map: (optional) Map defining aliases for document keys.
+        :param field_map: (optional) Map defining aliases for document
+                          keys.
         :type field_map: dict.
         :param map_id: (optional) If ``False`` won't include
                        ``{'id': '_id'}`` in ``field_map``.
@@ -449,9 +458,10 @@ class MongoModel(object):
     def save(self, safe=False, upsert=False):
         """Saves the object to the database.
 
-        When saving a new document, unless already provided, ``created``
-        will be added with the current datetime in UTC. ``modified``
-        will always be set with the current datetime in UTC.
+        When saving a new document for a model with ``auto_timestamp``
+        set to ``True``, unless already provided, ``created`` will be
+        added with the current datetime in UTC. ``modified`` will
+        always be set with the current datetime in UTC.
 
         :param safe: Whether to perform the save in safe mode.
         :type safe: bool.
@@ -467,11 +477,12 @@ class MongoModel(object):
         # having different data at the time of save, drop the precision
         # from the Python datetime before associating it with the
         # instance.
-        now = datetime.utcnow()
-        now = now.replace(microsecond=(now.microsecond / 1000 * 1000))
-        if not (hasattr(self, 'id') and hasattr(self, 'created')):
-            self.created = now
-        self.modified = now
+        if self._meta.auto_timestamp:
+            now = datetime.utcnow()
+            now = now.replace(microsecond=(now.microsecond / 1000 * 1000))
+            if not (hasattr(self, 'id') and hasattr(self, 'created')):
+                self.created = now
+            self.modified = now
 
         # _id should never be overwritten. In order to do that, it's a
         # good idea to pop it out of the document. Popping it out of
