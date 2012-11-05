@@ -675,10 +675,6 @@ class MongoModel(object):
     def __getattr__(self, name):
         """Retrieve a value from the document"""
 
-        # If the attribute is a real attribute of the object, use it.
-        if name in self.__dict__:
-            return self.__dict__[name]
-
         # The first thing to look for is nested keys
         if '__' in name or '.' in name:
             if '__' in name:
