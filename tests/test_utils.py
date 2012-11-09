@@ -104,6 +104,11 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'a': 1}, with_comparisons=True)
         self.assertEqual(actual, expected)
 
+        expected = {'a': {'$all': [1, 2]}}
+        actual = map_fields(TestModel, {'a__all': [1, 2]},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
         expected = {'a': {'$gt': 1}}
         actual = map_fields(TestModel, {'a__gt': 1}, with_comparisons=True)
         self.assertEqual(actual, expected)
