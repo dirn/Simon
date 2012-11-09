@@ -45,7 +45,7 @@ def get_nested_key(values, key):
         raise KeyError(key)
 
 
-def map_fields(cls, fields, flatten_keys=False):
+def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     """Maps attribute names to document keys.
 
     Attribute names will be mapped to document keys using
@@ -58,6 +58,18 @@ def map_fields(cls, fields, flatten_keys=False):
     root document could be mapped. Without the second pass, only keys
     that do not contain embedded document could be mapped.
 
+    If ``with_comparisons`` is set, the following comparison operators
+    will be checked for and included in the result:
+
+    * ``gt`` the key's value is greater than the value given
+    * ``gte`` the key's value is greater than or equal to the value
+      given
+    * ``lt`` the key's value is less than the value given
+    * ``lte`` the key's value is less than or equal to the value given
+    * ``ne`` the key's value is not equal to the value given
+    * ``in`` the key's value is within a set of values
+    * ``nin`` the key's value is not winthin a set of values
+
     If ``flatten_keys`` is set, all keys will be kept at the top level
     of the result dictionary, using a ``.`` to separate each part of a
     key. When this happens, the second pass will be omitted.
@@ -66,6 +78,9 @@ def map_fields(cls, fields, flatten_keys=False):
     :type cls: type.
     :param fields: Key/value pairs to be used for queries.
     :type fields: dict.
+    :param with_comparisons: Whether or not to process comparison
+                             operators.
+    :type with_comparisons: bool.
     :param flatten_keys: Whether to allow the nested keys to be nested.
     :type flatten_keys: bool.
     :returns: dict -- key/value pairs renamed based on ``cls``'s
@@ -73,6 +88,25 @@ def map_fields(cls, fields, flatten_keys=False):
 
     .. versionadded:: 0.1.0
     """
+
+    if with_comparisons:
+        operators = ('exists', 'gt', 'gte', 'in', 'lt', 'lte', 'ne', 'nin')
+
+        for k, v in fields.items():
+            # To figure out if a key includes an operator, split it
+            # into two pieces. The first piece will be the actual key
+            # and the second will be the operator.
+            operator = k.rsplit('__', 1)
+
+            if len(operator) == 2:
+                if operator[1] in operators:
+                    # If there is an operator, add the actual key to
+                    # the fields dictionary, giving it a value that is
+                    # a dictionary using the MongoDB operator as its key
+                    # and remove the original key and operator
+                    # combination from the fields dictionary.
+                    fields[operator[0]] = {'${0}'.format(operator[1]): v}
+                    del fields[k]
 
     second_pass = False
 

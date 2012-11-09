@@ -97,6 +97,48 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'x': 1, 'y': 2})
         self.assertEqual(actual, expected)
 
+    def test_map_fields_comparison_operators(self):
+        """Test the `map_fields()` method with `with_comparisons` set."""
+
+        expected = {'a': 1}
+        actual = map_fields(TestModel, {'a': 1}, with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$gt': 1}}
+        actual = map_fields(TestModel, {'a__gt': 1}, with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$gte': 1}}
+        actual = map_fields(TestModel, {'a__gte': 1}, with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$lt': 1}}
+        actual = map_fields(TestModel, {'a__lt': 1}, with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$lte': 1}}
+        actual = map_fields(TestModel, {'a__lte': 1}, with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$ne': 1}}
+        actual = map_fields(TestModel, {'a__ne': 1}, with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$in': [1, 2]}}
+        actual = map_fields(TestModel, {'a__in': [1, 2]},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$nin': [1, 2]}}
+        actual = map_fields(TestModel, {'a__nin': [1, 2]},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$exists': True}}
+        actual = map_fields(TestModel, {'a__exists': True},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_flattened_keys(self):
         """Test the `map_fields()` method with `flatten_keys` set."""
 
@@ -135,6 +177,17 @@ class TestUtils(unittest.TestCase):
 
         expected = {'f.e': 1}
         actual = map_fields(TestModel, {'d__e': 1}, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        # Test some with with_comparisons set, too
+        expected = {'a.b.c': {'$gt': 1}}
+        actual = map_fields(TestModel, {'a__b__c__gt': 1}, flatten_keys=True,
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'f.e': {'$lt': 1}}
+        actual = map_fields(TestModel, {'d__e__lt': 1}, flatten_keys=True,
+                            with_comparisons=True)
         self.assertEqual(actual, expected)
 
     def test_map_fields_second_pass(self):

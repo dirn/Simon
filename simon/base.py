@@ -206,7 +206,7 @@ class MongoModel(object):
         .. versionadded:: 0.1.0
         """
 
-        query = map_fields(cls, fields)
+        query = map_fields(cls, fields, with_comparisons=True)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query and not isinstance(query['_id'], ObjectId):
@@ -236,7 +236,7 @@ class MongoModel(object):
 
         # Convert the field spec into a query by mapping any necessary
         # fields.
-        query = map_fields(cls, fields)
+        query = map_fields(cls, fields, with_comparisons=True)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query and not isinstance(query['_id'], ObjectId):
