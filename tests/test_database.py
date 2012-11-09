@@ -115,6 +115,15 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m._document['a'], 1)
         self.assertEqual(m._document['b'], 2)
 
+    def test_find_comparison(self):
+        """Test the `find()` method with comparison operators."""
+
+        qs = TestModel1.find(a__gt=1)
+        self.assertEqual(len(qs), 0)
+
+        qs = TestModel1.find(a__lte=1, b=2)
+        self.assertEqual(len(qs), 1)
+
     def test_find_id_string(self):
         """Test the `find()` method with a string `_id`."""
 
@@ -143,6 +152,15 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m._document['_id'], self._id)
         self.assertEqual(m._document['a'], 1)
         self.assertEqual(m._document['b'], 2)
+
+    def test_get_comparison(self):
+        """Test the `get()` method with comparison operators."""
+
+        with self.assertRaises(TestModel1.NoDocumentFound):
+            TestModel1.get(a__gt=1)
+
+        m = TestModel1.get(a__lte=1, b=2)
+        self.assertEqual(m.a, 1)
 
     def test_get_id_string(self):
         """Test the `get()` method with a string `_id`."""
