@@ -5,8 +5,8 @@ from pymongo import Connection, ReplicaSetConnection, uri_parser
 from .exceptions import ConnectionError
 
 
-__connections__ = None
-__databases__ = None
+_connections = None
+_databases = None
 
 
 def connect(host='localhost', name=None, username=None, password=None,
@@ -68,15 +68,15 @@ def connect(host='localhost', name=None, username=None, password=None,
     # against the database as well. Make sure to save a reference to
     # the database so it can be referenced later on.
 
-    # Make sure that __databases__ is a dict before using it
-    global __databases__
-    if not isinstance(__databases__, dict):
-        __databases__ = {}
+    # Make sure that _databases is a dict before using it
+    global _databases
+    if not isinstance(_databases, dict):
+        _databases = {}
 
-    # Capture the database and store it in __databases__ under its alias
-    __databases__[alias] = db = connection[name]
-    if 'default' not in __databases__:
-        __databases__['default'] = db
+    # Capture the database and store it in _databases under its alias
+    _databases[alias] = db = connection[name]
+    if 'default' not in _databases:
+        _databases['default'] = db
 
     if username and password:
         db.authenticate(username, password)
@@ -156,11 +156,11 @@ def _get_connection(host, port, replica_set=None, **kwargs):
     connection_key = '{0}:{1}'.format(host, replica_set if replica_set else
                                       (port or 27017))
 
-    global __connections__
-    if not isinstance(__connections__, dict):
-        __connections__ = {}
+    global _connections
+    if not isinstance(_connections, dict):
+        _connections = {}
 
-    if connection_key not in __connections__:
+    if connection_key not in _connections:
         # If using a replica set, prepare the settings and class name
         if replica_set:
             connection_class = ReplicaSetConnection
@@ -178,9 +178,9 @@ def _get_connection(host, port, replica_set=None, **kwargs):
 
         # Store the connection in the dictionary for easier retrieval
         # next time
-        __connections__[connection_key] = connection
+        _connections[connection_key] = connection
 
-    return __connections__[connection_key], parsed_settings
+    return _connections[connection_key], parsed_settings
 
 
 def get_database(name):
@@ -193,8 +193,8 @@ def get_database(name):
     .. versionadded:: 0.1.0
     """
 
-    if not (__databases__ and name in __databases__):
+    if not (_databases and name in _databases):
         raise ConnectionError("There is no connection for database '{0}'. "
                               "Use `simon.connection.connect()` to connect "
                               "to it.".format(name))
-    return __databases__[name]
+    return _databases[name]

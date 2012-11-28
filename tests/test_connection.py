@@ -16,8 +16,8 @@ class TestConnection(unittest.TestCase):
     def setUp(self):
         # Reset the cached connections and databases so the ones added
         # during one test don't affect another
-        connection.__connections__ = None
-        connection.__databases__ = None
+        connection._connections = None
+        connection._databases = None
 
     def test_connect(self):
         """Test the `connect()` method."""
@@ -77,20 +77,20 @@ class TestConnection(unittest.TestCase):
             mock_method.assert_called_with(host=url, port=None,
                                            replica_set='simonrs')
 
-        self.assertTrue('test' in connection.__databases__)
-        self.assertTrue('test2' in connection.__databases__)
-        self.assertTrue('test3' in connection.__databases__)
-        self.assertTrue('simon' in connection.__databases__)
-        self.assertTrue('remote_uri' in connection.__databases__)
-        self.assertTrue('replica1' in connection.__databases__)
-        self.assertTrue('replica2' in connection.__databases__)
+        self.assertTrue('test' in connection._databases)
+        self.assertTrue('test2' in connection._databases)
+        self.assertTrue('test3' in connection._databases)
+        self.assertTrue('simon' in connection._databases)
+        self.assertTrue('remote_uri' in connection._databases)
+        self.assertTrue('replica1' in connection._databases)
+        self.assertTrue('replica2' in connection._databases)
 
-        self.assertTrue('default' in connection.__databases__)
+        self.assertTrue('default' in connection._databases)
 
-        self.assertEqual(connection.__databases__['test'],
-                         connection.__databases__['default'])
-        self.assertNotEqual(connection.__databases__['test'],
-                            connection.__databases__['test2'])
+        self.assertEqual(connection._databases['test'],
+                         connection._databases['default'])
+        self.assertNotEqual(connection._databases['test'],
+                            connection._databases['test2'])
 
     def test_connect_connectionerror(self):
         """Test that `connect()` raises `ConnectionError()`."""
@@ -110,10 +110,10 @@ class TestConnection(unittest.TestCase):
 
             mock_conn.assert_called_with(host='localhost', port=None)
 
-            self.assertTrue('localhost:27017' in connection.__connections__)
+            self.assertTrue('localhost:27017' in connection._connections)
 
             # When calling _get_connection() the second time, the
-            # connection should be returned right from __connections__
+            # connection should be returned right from _connections
             # so mock_conn() should still have the same call parameters
             # and the length of __connections should be 1
             connection._get_connection(host='localhost', port=27017,
@@ -121,7 +121,7 @@ class TestConnection(unittest.TestCase):
 
             mock_conn.assert_called_with(host='localhost', port=None)
 
-            self.assertEqual(len(connection.__connections__), 1)
+            self.assertEqual(len(connection._connections), 1)
 
     def test__get_connection_with_connection(self):
         """Test the `_get_connection()` method with a `Connection`."""
@@ -190,11 +190,11 @@ class TestConnection(unittest.TestCase):
             self.assertEqual(settings['username'], 'simonuser')
             self.assertEqual(settings['password'], 'simonpassword')
 
-        self.assertTrue('simon.mongo.com:27017' in connection.__connections__)
+        self.assertTrue('simon.mongo.com:27017' in connection._connections)
         self.assertTrue('simon.m0.mongo.com:simonrs' in
-                        connection.__connections__)
+                        connection._connections)
         self.assertTrue('{0}:simonrs'.format(url3) in
-                        connection.__connections__)
+                        connection._connections)
 
     def test__get_connection_connectionerror(self):
         """Test that `_get_connection()` raises `ConnectionError`."""
@@ -205,7 +205,7 @@ class TestConnection(unittest.TestCase):
     def test_get_database(self):
         """Test the `get_database() method."""
 
-        connection.__databases__ = {'first': 1, 'second': 2}
+        connection._databases = {'first': 1, 'second': 2}
 
         self.assertEqual(connection.get_database('first'), 1)
         self.assertEqual(connection.get_database('second'), 2)
@@ -213,11 +213,11 @@ class TestConnection(unittest.TestCase):
     def test_get_database_connectionerror(self):
         """Test that `get_database()` raises `ConnectionError`."""
 
-        # First with an empty __databases__
+        # First with an empty _databases
         with self.assertRaises(connection.ConnectionError):
             connection.get_database('invalidnamethatdoesntexist')
 
-        # Then with __databases__
-        connection.__databases__ = {'first': 1, 'second': 2}
+        # Then with _databases
+        connection._databases = {'first': 1, 'second': 2}
         with self.assertRaises(connection.ConnectionError):
             connection.get_database('invalidnamethatdoesntexist')

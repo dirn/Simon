@@ -19,15 +19,15 @@ class TestBase(unittest.TestCase):
     def setUpClass(self):
         # Use a dummy connection so that these tests can be run even
         # when there is no MongoDB server. In order to do that, the
-        # connection module needs __databases__ to be a dictionary--
+        # connection module needs _databases to be a dictionary--
         # this would normally be done during the first call to
         # connect(), but there's no guarantee that will have happened--
         # and it needs the connection placed into it
-        if not isinstance(connection.__databases__, dict):
-            connection.__databases__ = {}
+        if not isinstance(connection._databases, dict):
+            connection._databases = {}
 
-        if 'test-simon-mock' not in connection.__databases__:
-            connection.__databases__['test-simon-mock'] = {
+        if 'test-simon-mock' not in connection._databases:
+            connection._databases['test-simon-mock'] = {
                 'test-simon': None,
             }
 
