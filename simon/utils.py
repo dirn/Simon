@@ -82,6 +82,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     * ``all`` the key's value matches all values in the given list
     * ``in`` the key's value matches a value in the given list
     * ``nin`` the key's value is not within the given list
+    * ``exists`` the the key exists
 
     If ``flatten_keys`` is set, all keys will be kept at the top level
     of the result dictionary, using a ``.`` to separate each part of a
