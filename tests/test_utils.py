@@ -218,6 +218,46 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'z__x': 1, 'z__y': 2})
         self.assertEqual(actual, expected)
 
+    def test_map_fields_with_and_and_or(self):
+        """Test the `map_fields()` method with `$and` and `$or`."""
+
+        # Each of the following tests should be tested for both $and
+        # and $or.
+
+        condition = {'$and': [{'a': 1}, {'b': 2}]}
+        expected = {'$and': [{'a': 1}, {'c': 2}]}
+        actual = map_fields(TestModel, condition, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        condition = {'$or': [{'a': 1}, {'b': 2}]}
+        expected = {'$or': [{'a': 1}, {'c': 2}]}
+        actual = map_fields(TestModel, condition, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        condition = {'$and': [{'a': 1, 'c': 2}, {'d.e': 3}]}
+        expected = {'$and': [{'a': 1, 'c': 2}, {'f.e': 3}]}
+        actual = map_fields(TestModel, condition, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        condition = {'$or': [{'a': 1, 'c': 2}, {'d.e': 3}]}
+        expected = {'$or': [{'a': 1, 'c': 2}, {'f.e': 3}]}
+        actual = map_fields(TestModel, condition, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        condition = {'$and': [{'a': 1}, {'g.h': 2},
+                              {'$or': [{'x': 3}, {'y': 4}]}]}
+        expected = {'$and': [{'a': 1}, {'i.j': 2},
+                             {'$or': [{'z.x': 3}, {'z.y': 4}]}]}
+        actual = map_fields(TestModel, condition, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+        condition = {'$or': [{'a': 1}, {'g.h': 2},
+                             {'$and': [{'x': 3}, {'y': 4}]}]}
+        expected = {'$or': [{'a': 1}, {'i.j': 2},
+                            {'$and': [{'z.x': 3}, {'z.y': 4}]}]}
+        actual = map_fields(TestModel, condition, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
     def test_parse_kwargs(self):
         """Test the `parse_kwargs()` method."""
 

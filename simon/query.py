@@ -1,5 +1,88 @@
 """A custom query set that wraps around MongoDB cursors"""
 
+__all__ = ('Q', 'QuerySet')
+
+
+class Q(object):
+    """A wrapper around a query condition to allow for logical ANDs and
+    ORs through ``&`` and ``|``, respectively.
+
+    .. versionadded:: 0.1.0
+    """
+
+    AND = '$and'
+    OR = '$or'
+
+    def __init__(self, **fields):
+        """Creates a new filter.
+
+        :param fields: Keyword arguments specifying the query.
+        :type fields: kwargs.
+
+        .. versionadded:: 0.1.0
+        """
+
+        self._filter = fields
+
+    def _add_filter(self, filter, condition):
+        """Adds to filters together.
+
+        :param filter: The filter to add.
+        :type filter: :class:`Q`.
+        :returns: :class:`Q` -- the new filter.
+        :raises: :class:`TypeError`.
+
+        .. versionadded:: 0.1.0
+        """
+
+        if not isinstance(filter, Q):
+            raise TypeError('`{0}` objects can only be combined with other '
+                            '`{0}` objects.'.format(self.__class__.__name__))
+
+        # If the filters are identical, get out early.
+        if self._filter == filter._filter:
+            return self
+
+        obj = type(self)()
+
+        # If the controlling Q object already contains a filter using
+        # condition, the new filter should be added to the existing
+        # filter. If condition doesn't already exist, though, a new
+        # filter should be created.
+        if condition in self._filter:
+            obj._filter = self._filter
+        else:
+            obj._filter = {condition: [self._filter, filter._filter]}
+
+        # Only add the new filter if it isn't already set.
+        if filter._filter not in obj._filter[condition]:
+            obj._filter[condition].append(filter._filter)
+
+        return obj
+
+    def __and__(self, filter):
+        """Adds a new filter using ``$and``.
+
+        :param filter: The filter to add.
+        :type filter: :class:`Q`.
+        :returns: :class:`Q` -- the new filter.
+
+        .. versionadded:: 0.1.0
+        """
+
+        return self._add_filter(filter, self.AND)
+
+    def __or__(self, filter):
+        """Adds a new filter using ``$or``.
+
+        :param filter: The filter to add.
+        :type filter: :class:`Q`.
+        :returns: :class:`Q` -- the new filter.
+
+        .. versionadded:: 0.1.0
+        """
+        return self._add_filter(filter, self.OR)
+
 
 class QuerySet(object):
     """A query set that wraps around MongoDB cursors and returns

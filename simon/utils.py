@@ -6,6 +6,12 @@ __all__ = ('get_nested_key', 'map_fields', 'parse_kwargs',
 import collections
 
 
+# The logical operators are needed when mapping fields. The values
+# could have been obtained through Q.AND and Q.OR, but I don't want
+# the utils module to depend on other modules.
+_logicals = ('$and', '$or')
+
+
 def get_nested_key(values, key):
     """Gets a value for a nested dictionary key.
 
@@ -57,6 +63,12 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     documents to be mapped. Without the first pass, only keys of the
     root document could be mapped. Without the second pass, only keys
     that do not contain embedded document could be mapped.
+
+    The ``$and`` and ``$or`` operators cannot be mapped to different
+    keys. Any occurrences of these operators as keys should be
+    accompanied by a ``list`` of ``dict``s. Each ``dict`` will be put
+    back into :meth:`map_fields` to ensure that keys nested within
+    boolean queries are mapped properly.
 
     If ``with_comparisons`` is set, the following comparison operators
     will be checked for and included in the result:
@@ -117,15 +129,27 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     # the keys through parse_kwargs()
     mapped_fields = {}
     for k, v in fields.items():
-        if '__' in k:
-            second_pass = True
-        # If the attribute contains __, use a . instead as this is the
-        # syntax for mapping embedded keys. If a . exists in the new
-        # key, second_pass should be set to True because parse_kwargs()
-        # should be run
-        k = cls._meta.field_map.get(k.replace('__', '.'), k)
-        if '.' in k:
-            second_pass = True
+        if k in _logicals:
+            # If the key is one of the logical operators, it shouldn't
+            # be mapped to something. Instead, it should contain a list
+            # of dictionaries. Each of those dictionaries should be fed
+            # back into map_fields() and a new list should be build
+            # from the mapped dictionaries.
+            if isinstance(v, list):
+                v = [map_fields(cls=cls, fields=x,
+                                with_comparisons=with_comparisons,
+                                flatten_keys=flatten_keys) for x in v]
+        else:
+            if '__' in k:
+                second_pass = True
+            # If the attribute contains __, use a . instead as this is
+            # the syntax for mapping embedded keys. If a . exists in the
+            # new key, second_pass should be set to True because
+            # parse_kwargs() should be run
+            k = cls._meta.field_map.get(k.replace('__', '.'), k)
+            if '.' in k:
+                second_pass = True
+
         mapped_fields[k.replace('.', '__')] = v
 
     if flatten_keys:
@@ -155,6 +179,12 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
         mapped_fields = {}
         for k, v in fields.items():
             k = cls._meta.field_map.get(k, k)
+
+            if isinstance(v, collections.Mapping) and k in ('$and', '$or'):
+                v = map_fields(cls=cls, fields=v,
+                               with_comparisons=with_comparisons,
+                               flatten_keys=flatten_keys)
+
             mapped_fields[k] = v
 
     return mapped_fields

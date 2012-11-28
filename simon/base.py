@@ -7,7 +7,7 @@ from datetime import datetime
 
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
-from .query import QuerySet
+from .query import Q, QuerySet
 from .utils import (get_nested_key, map_fields,
                     remove_nested_key, update_nested_keys)
 
@@ -192,12 +192,14 @@ class MongoModel(object):
         self._document = {}
 
     @classmethod
-    def find(cls, **fields):
+    def find(cls, *qs, **fields):
         """Gets multiple documents from the database.
 
         This will find a return multiple documents matching the query
         specified through ``**fields``.
 
+        :param qs: :class:`~simon.query.Q` objects to use with the query.
+        :type qs: args.
         :param fields: Keyword arguments specifying the query.
         :type fields: kwargs.
         :returns: :class:`~simon.base.QuerySet` -- query set containing
@@ -205,6 +207,11 @@ class MongoModel(object):
 
         .. versionadded:: 0.1.0
         """
+
+        # Add all Q objects to the filter
+        for q in qs:
+            if isinstance(q, Q):
+                fields.update(q._filter)
 
         query = map_fields(cls, fields, with_comparisons=True)
 
@@ -218,13 +225,15 @@ class MongoModel(object):
         return QuerySet(docs, cls)
 
     @classmethod
-    def get(cls, **fields):
+    def get(cls, *qs, **fields):
         """Gets a single document from the database.
 
         This will find and return a single document matching the
         query specified through ``**fields``. An exception will be
         raised if any number of documents other than one is found.
 
+        :param qs: :class:`~simon.query.Q` objects to use with the query.
+        :type qs: args.
         :param fields: Keyword arguments specifying the query.
         :type fields: kwargs.
         :returns: :class:`~simon.MongoModel` -- object matching ``query``.
@@ -233,6 +242,11 @@ class MongoModel(object):
 
         .. versionadded:: 0.1.0
         """
+
+        # Add all Q objects to the filter
+        for q in qs:
+            if isinstance(q, Q):
+                fields.update(q._filter)
 
         # Convert the field spec into a query by mapping any necessary
         # fields.

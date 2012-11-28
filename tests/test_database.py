@@ -142,6 +142,33 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m._document['a'], 1)
         self.assertEqual(m._document['b'], 2)
 
+    def test_find_with_q(self):
+        """Test the `find()` method with `Q` objects."""
+
+        qs = TestModel1.find(query.Q(a=1))
+        m = qs[0]
+        self.assertEqual(m._document['a'], 1)
+
+        qs = TestModel1.find(query.Q(a=1) | query.Q(a=2))
+        m = qs[0]
+        self.assertEqual(m._document['a'], 1)
+
+        qs = TestModel1.find(query.Q(a=1) & query.Q(a=2))
+        self.assertEqual(qs.count(), 0)
+
+        qs = TestModel1.find(query.Q(a=2) | query.Q(b=2))
+        m = qs[0]
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
+
+        qs = TestModel1.find(query.Q(a=1) & query.Q(b=2))
+        m = qs[0]
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
+
+        qs = TestModel1.find(query.Q(b=1) & query.Q(b=2))
+        self.assertEqual(qs.count(), 0)
+
     def test_get(self):
         """Test the `get()` method."""
 
@@ -186,6 +213,29 @@ class TestDatabase(unittest.TestCase):
 
         with self.assertRaises(TestModel1.NoDocumentFound):
             TestModel1.get(a=2)
+
+    def test_get_with_q(self):
+        """Test the `get()` method with `Q` objects."""
+
+        m = TestModel1.get(query.Q(a=1))
+        self.assertEqual(m._document['a'], 1)
+
+        m = TestModel1.get(query.Q(a=1) | query.Q(a=2))
+        self.assertEqual(m._document['a'], 1)
+
+        with self.assertRaises(TestModel1.NoDocumentFound):
+            TestModel1.get(query.Q(a=1) & query.Q(a=2))
+
+        m = TestModel1.get(query.Q(a=2) | query.Q(b=2))
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
+
+        m = TestModel1.get(query.Q(a=1) & query.Q(b=2))
+        self.assertEqual(m._document['a'], 1)
+        self.assertEqual(m._document['b'], 2)
+
+        with self.assertRaises(TestModel1.NoDocumentFound):
+            TestModel1.get(query.Q(b=1) & query.Q(b=2))
 
     def test_increment(self):
         """Test the `increment()` method."""
