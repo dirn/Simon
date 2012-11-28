@@ -3,17 +3,17 @@ try:
 except ImportError:
     import unittest
 
-from simon import MongoModel
-from simon.base import MongoModelMetaClass
+from simon import Model
+from simon.base import ModelMetaClass
 
 
-class TestModel1(MongoModel):
+class TestModel1(Model):
     class Meta:
         collection = 'test1'
         some_junk_value = 1
 
 
-class TestModel2(MongoModel):
+class TestModel2(Model):
     class Meta:
         auto_timestamp = False
         collection = 'test2'
@@ -22,7 +22,7 @@ class TestModel2(MongoModel):
 
 
 class TestModel3(object):
-    __metaclass__ = MongoModelMetaClass
+    __metaclass__ = ModelMetaClass
 
     class Meta:
         auto_timestamp = True
@@ -53,7 +53,7 @@ class TestMetaClass(unittest.TestCase):
         """Test that `_meta.collection` is a required attribute."""
 
         with self.assertRaises(AttributeError):
-            class TestModel(MongoModel):
+            class TestModel(Model):
                 pass
 
     def test_default_attributes(self):

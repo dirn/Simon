@@ -88,7 +88,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     of the result dictionary, using a ``.`` to separate each part of a
     key. When this happens, the second pass will be omitted.
 
-    :param cls: A subclass of :class:`~simon.MongoModel`.
+    :param cls: A subclass of :class:`~simon.Model`.
     :type cls: type.
     :param fields: Key/value pairs to be used for queries.
     :type fields: dict.

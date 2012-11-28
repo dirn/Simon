@@ -1,6 +1,6 @@
 """The base Simon models"""
 
-__all__ = ('MongoModel',)
+__all__ = ('Model',)
 
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -15,9 +15,9 @@ from .utils import (get_nested_key, map_fields,
 class Property(property):
     """Overrides the @property decorator
 
-    This is necessary for :class:`MongoModel` to be able to able to call
-    the collection methods from its ``_meta.db`` attribute. Without
-    this custom ``__get__()`` method, an AttributeError would be raised.
+    This is necessary for :class:`Model` to be able to able to call the
+    collection methods from its ``_meta.db`` attribute. Without this
+    custom ``__get__()`` method, an AttributeError would be raised.
 
     .. versionadded:: 0.1.0
     """
@@ -26,15 +26,15 @@ class Property(property):
         return self.fget.__get__(None, owner)()
 
 
-class MongoModelMetaClass(type):
-    """Define :class:`MongoModel`
+class ModelMetaClass(type):
+    """Define :class:`Model`
 
     .. versionadded:: 0.1.0
     """
 
     def __new__(cls, name, bases, attrs):
         module = attrs.pop('__module__')
-        new_class = super(MongoModelMetaClass, cls).__new__(
+        new_class = super(ModelMetaClass, cls).__new__(
             cls, name, bases, {'__module__': module})
 
         # Associate all attributes with the new class.
@@ -45,8 +45,8 @@ class MongoModelMetaClass(type):
         setattr(new_class, 'MultipleDocumentsFound', MultipleDocumentsFound)
         setattr(new_class, 'NoDocumentFound', NoDocumentFound)
 
-        # Get the Meta class. It's at least attached to MongoModel,
-        # so it will exist somewhere in the stack.
+        # Get the Meta class. It's at least attached to Model, so it
+        # will exist somewhere in the stack.
         meta = attrs.pop('Meta', None)
         if not meta:
             meta = getattr(new_class, 'Meta', None)
@@ -114,16 +114,16 @@ class MongoModelMetaClass(type):
         return new_class
 
 
-class MongoModel(object):
+class Model(object):
     """The base class for all Simon models
 
     .. versionadded:: 0.1.0
     """
 
-    __metaclass__ = MongoModelMetaClass
+    __metaclass__ = ModelMetaClass
 
     class Meta:
-        """Default settings for a :class:`~simon.MongoModel`.
+        """Default settings for a :class:`~simon.Model`.
 
         :param auto_timestamp: (optional) If ``False`` ``created`` and
                                ``modified`` fields won't be added.
@@ -236,9 +236,9 @@ class MongoModel(object):
         :type qs: args.
         :param fields: Keyword arguments specifying the query.
         :type fields: kwargs.
-        :returns: :class:`~simon.MongoModel` -- object matching ``query``.
-        :raises: :class:`~simon.MongoModel.MultipleDocumentsFound`,
-                 :class:`~simon.MongoModel.NoDocumentFound`
+        :returns: :class:`~simon.Model` -- object matching ``query``.
+        :raises: :class:`~simon.Model.MultipleDocumentsFound`,
+                 :class:`~simon.Model.NoDocumentFound`
 
         .. versionadded:: 0.1.0
         """
@@ -360,15 +360,15 @@ class MongoModel(object):
         replacement.
 
         Also, for simple updates, it is preferred to use the
-        :meth:`~simon.MongoModel.save` or
-        :meth:`~simon.MongoModel.update` methods as they will usually
+        :meth:`~simon.Model.save` or
+        :meth:`~simon.Model.update` methods as they will usually
         result in less data being transferred back from the database.
 
         If the document does not have an ``_id``--this will
         most likely indicate that the document has never been saved--
         a :class:`TypeError` will be raised.
 
-        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
         :param fields: The document to save to the database.
@@ -437,7 +437,7 @@ class MongoModel(object):
         most likely indicate that the document has never been saved--
         a :class:`TypeError` will be raised.
 
-        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
         :param fields: The names of the fields to remove.
@@ -568,7 +568,7 @@ class MongoModel(object):
         most likely indicate that the document has never been saved--
         a :class:`TypeError` will be raised.
 
-        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
         :param fields: The names of the fields to update.
@@ -625,7 +625,7 @@ class MongoModel(object):
         most likely indicate that the document has never been saved--
         a :class:`TypeError` will be raised.
 
-        Unlike :meth:`~simon.MongoModel.save`, ``modified`` will not be
+        Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
         :param safe: Whether to perform the save in safe mode.

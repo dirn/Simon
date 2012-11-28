@@ -3,10 +3,10 @@ try:
 except ImportError:
     import unittest
 
-from simon import MongoModel, connection
+from simon import Model, connection
 
 
-class TestModel(MongoModel):
+class TestModel(Model):
     attribute = 2
 
     class Meta:

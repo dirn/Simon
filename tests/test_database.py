@@ -19,17 +19,17 @@ from datetime import datetime
 import mock
 from pymongo.collection import Collection
 
-from simon import MongoModel, connection, query
+from simon import Model, connection, query
 
 
-class TestModel1(MongoModel):
+class TestModel1(Model):
     class Meta:
         collection = 'test-simon'
         database = 'test-simon'
         field_map = {'id': '_id', 'fake': 'real'}
 
 
-class TestModel2(MongoModel):
+class TestModel2(Model):
     class Meta:
         auto_timestamp = False
         collection = 'test-simon'

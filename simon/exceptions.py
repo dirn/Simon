@@ -1,7 +1,7 @@
 """Custom exceptions for Simon models
 
 Most of these exceptions should never be used directly. They are meant
-to be nested within each :class:`~simon.base.MongoModel` subclass.
+to be nested within each :class:`~simon.base.Model` subclass.
 
 Some of the names and behavior are modeled after SQLAlchemy.
 """

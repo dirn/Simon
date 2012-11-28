@@ -3,12 +3,12 @@ try:
 except ImportError:
     import unittest
 
-from simon import MongoModel
+from simon import Model
 from simon.utils import (get_nested_key, map_fields, parse_kwargs,
                          remove_nested_key, update_nested_keys)
 
 
-class TestModel(MongoModel):
+class TestModel(Model):
     class Meta:
         collection = 'test'
         field_map = {'b': 'c', 'd.e': 'f.e', 'g.h': 'i.j', 'x': 'z.x',

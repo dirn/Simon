@@ -86,7 +86,7 @@ class Q(object):
 
 class QuerySet(object):
     """A query set that wraps around MongoDB cursors and returns
-    :class:`~simon.MongoModel` objects
+    :class:`~simon.Model` objects
 
     .. versionadded:: 0.1.0
     """
@@ -97,7 +97,7 @@ class QuerySet(object):
         :param cursor: The result set.
         :type cursor: :class:`~pymongo.cursor.Cursor`.
         :param cls: Model class to map the results to.
-        :type cls: :class:`~simon.MongoModel`.
+        :type cls: :class:`~simon.Model`.
 
         .. versionadded:: 0.1.0
         """
