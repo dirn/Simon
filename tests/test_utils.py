@@ -144,6 +144,11 @@ class TestUtils(unittest.TestCase):
                             with_comparisons=True)
         self.assertEqual(actual, expected)
 
+        expected = {'loc': {'$near': [1, 2]}}
+        actual = map_fields(TestModel, {'loc__near': [1, 2]},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_flattened_keys(self):
         """Test the `map_fields()` method with `flatten_keys` set."""
 

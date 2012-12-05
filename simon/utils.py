@@ -83,6 +83,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     * ``in`` the key's value matches a value in the given list
     * ``nin`` the key's value is not within the given list
     * ``exists`` the the key exists
+    * ``near`` the key's value is near the given location
 
     If ``flatten_keys`` is set, all keys will be kept at the top level
     of the result dictionary, using a ``.`` to separate each part of a
@@ -105,7 +106,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
 
     if with_comparisons:
         operators = ('all', 'exists', 'gt', 'gte', 'in', 'lt', 'lte', 'ne',
-                     'nin')
+                     'near', 'nin')
 
         for k, v in fields.items():
             # To figure out if a key includes an operator, split it
