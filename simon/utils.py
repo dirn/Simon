@@ -73,17 +73,38 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     If ``with_comparisons`` is set, the following comparison operators
     will be checked for and included in the result:
 
-    * ``gt`` the key's value is greater than the value given
-    * ``gte`` the key's value is greater than or equal to the value
+    * ``$gt`` the key's value is greater than the value given
+    * ``$gte`` the key's value is greater than or equal to the value
       given
-    * ``lt`` the key's value is less than the value given
-    * ``lte`` the key's value is less than or equal to the value given
-    * ``ne`` the key's value is not equal to the value given
-    * ``all`` the key's value matches all values in the given list
-    * ``in`` the key's value matches a value in the given list
-    * ``nin`` the key's value is not within the given list
-    * ``exists`` the the key exists
-    * ``near`` the key's value is near the given location
+    * ``$lt`` the key's value is less than the value given
+    * ``$lte`` the key's value is less than or equal to the value given
+    * ``$ne`` the key's value is not equal to the value given
+    * ``$all`` the key's value matches all values in the given list
+    * ``$in`` the key's value matches a value in the given list
+    * ``$nin`` the key's value is not within the given list
+    * ``$exists`` the the key exists
+    * ``$near`` the key's value is near the given location
+
+    To utilize any of the operators, append ``__`` and the name of the
+    operator sans the ``$`` (e.g., ``__gt``, ``__lt``) to the name of
+    the key::
+
+        map_fields(ModelClass, {'a__gt': 1, 'b__lt': 2},
+                   with_comparisons=True)
+
+    This will check for a greater than 1 and b less than 2 as::
+
+        {'a': {'$gt': 1}, 'b': {'$lt': 2}}
+
+    The ``$not`` operator can be used in conjunction with any of the
+    above operators::
+
+        map_fields(ModelClass, {'a__gt': 1, 'b__not__lt': 2},
+                   with_comparisons=True)
+
+    This will check for a greater than 1 and b not less than 2 as::
+
+        {'a': {'$gt': 1}, 'b': {'$not': {'$lt': 2}}}
 
     If ``flatten_keys`` is set, all keys will be kept at the top level
     of the result dictionary, using a ``.`` to separate each part of a
@@ -121,6 +142,13 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
                     # a dictionary using the MongoDB operator as its key
                     # and remove the original key and operator
                     # combination from the fields dictionary.
+                    if operator[0].endswith('__not'):
+                        # If $not is being used, the query needs to be
+                        # restructured a little, so let's trick the
+                        # line that adds the operator to the query.
+                        v = {'${0}'.format(operator[1]): v}
+                        operator = operator[0].rstrip('__not'), 'not'
+
                     fields[operator[0]] = {'${0}'.format(operator[1]): v}
                     del fields[k]
 

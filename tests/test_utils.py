@@ -149,6 +149,30 @@ class TestUtils(unittest.TestCase):
                             with_comparisons=True)
         self.assertEqual(actual, expected)
 
+    def test_map_fields_comparison_operators_not(self):
+        ("Test the `map_fields()` method with `not` and "
+         "`with_comparisons` set.")
+
+        expected = {'a': {'$not': {'$gt': 1}}}
+        actual = map_fields(TestModel, {'a__not__gt': 1},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'c': {'$not': {'$lt': 1}}}
+        actual = map_fields(TestModel, {'b__not__lt': 1},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'b': {'$not': {'$ne': 1}}}}
+        actual = map_fields(TestModel, {'a__b__not__ne': 1},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$not': {'$gte': 1}}, 'c': 2}
+        actual = map_fields(TestModel, {'a__not__gte': 1, 'b': 2},
+                            with_comparisons=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_flattened_keys(self):
         """Test the `map_fields()` method with `flatten_keys` set."""
 
