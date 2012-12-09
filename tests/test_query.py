@@ -3,6 +3,7 @@ try:
 except ImportError:
     import unittest
 
+import collections
 import mock
 
 from simon import query
@@ -93,10 +94,13 @@ class TestHelpers(unittest.TestCase):
         with self.assertRaises(TypeError):
             query.near(1)
 
-        with self.assertRaises(TypeError):
+    def test_near_valueerror(self):
+        """Test that `near()` raises `ValueError`."""
+
+        with self.assertRaises(ValueError):
             query.near([1])
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             query.near([1, 2, 3])
 
     def test_polygon(self):
@@ -166,6 +170,93 @@ class TestHelpers(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             query.polygon([1, 2], [3, 4, 5])
+
+    def test_validate_point_alternate_type(self):
+        """Test the `_validate_point()` method with alternate types."""
+
+        query._validate_point({'a': 1, 'b': 2},
+                              alternate_type=collections.Mapping)
+
+    def test_validate_point_alternate_type_typeerror(self):
+        ("Test that `_validate_point()` raises `TypeError` with "
+         "alternate types.")
+
+        with self.assertRaises(TypeError):
+            query._validate_point(1, alternate_type=basestring)
+
+        with self.assertRaises(TypeError):
+            query._validate_point('a', alternate_type=int)
+
+    def test_validate_point_alternate_type_valueerror(self):
+        ("Test that `_validate_point()` raises `ValueError` with "
+         "alternate types.")
+
+        with self.assertRaises(ValueError):
+            query._validate_point({'a': 1},
+                                  alternate_type=collections.Mapping)
+
+        with self.assertRaises(ValueError):
+            query._validate_point({'a': 1, 'b': 2, 'c': 3},
+                                  alternate_type=collections.Mapping)
+
+    def test_validate_point_name(self):
+        """Test the `_validate_point()` method with names."""
+
+        with self.assertRaises(TypeError) as e:
+            query._validate_point(1, 'name')
+
+        expected = 'name must be a list containing exactly 2 elements'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        with self.assertRaises(ValueError) as e:
+            query._validate_point([1], 'name')
+
+        expected = 'name must be a list containing exactly 2 elements'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+    def test_validate_point_typeerror(self):
+        """Test that `_validate_point()` raises `TypeError`."""
+
+        # Test with a string
+        with self.assertRaises(TypeError) as e:
+            query._validate_point('a')
+
+        expected = '`point` must be a list containing exactly 2 elements'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        # Test with an int
+        with self.assertRaises(TypeError) as e:
+            query._validate_point(1)
+
+        expected = '`point` must be a list containing exactly 2 elements'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+    def test_validate_point_valueerror(self):
+        """Test the `_validate_point()` method."""
+
+        # Test with 1 element
+        with self.assertRaises(ValueError) as e:
+            query._validate_point([1])
+
+        expected = '`point` must be a list containing exactly 2 elements'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        # Test with 3 elements
+        with self.assertRaises(ValueError) as e:
+            query._validate_point([1, 2, 3])
+
+        expected = '`point` must be a list containing exactly 2 elements'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        # The following should not raise an exception
+        query._validate_point([1, 2])
+        query._validate_point((1, 2))
 
     def test_within(self):
         """Test the `within()` method."""

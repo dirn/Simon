@@ -5,6 +5,38 @@ __all__ = ('box', 'circle', 'near', 'polygon', 'Q', 'QuerySet', 'within')
 import collections
 
 
+def _validate_point(point, name=None, alternate_type=None):
+    """Validates the type and length of a point.
+
+    This method defines a point as either a ``list`` of exactly two
+    elements. If will also accept a ``tuple``.
+
+    :param point: The point to validate.
+    :type point: list.
+    :param name: (optional) A descriptive name to use when an
+                 exception is raised.
+    :type name: str.
+    :param alternate_type: (optional) Alternate type(s) to check for.
+    :type alternate_type: type or tuple of types.
+    :raises: :class:`TypeError`, :class:`ValueError`.
+
+    .. versionadded:: 0.1.0
+    """
+
+    exception = None
+
+    type_to_check = alternate_type or (list, tuple)
+
+    if not isinstance(point, type_to_check):
+        exception = TypeError
+    elif len(point) != 2:
+        exception = ValueError
+
+    if exception is not None:
+        message = '{0} must be a list containing exactly 2 elements'
+        raise exception(message.format(name or '`point`'))
+
+
 def box(lower_left_point, upper_right_point):
     """Builds a ``$box`` query.
 
@@ -25,18 +57,8 @@ def box(lower_left_point, upper_right_point):
     .. versionadded:: 0.1.0
     """
 
-    if not isinstance(lower_left_point, (list, tuple)):
-        raise TypeError('`lower_left_point` must be a list containing exactly'
-                        ' 2 elements.')
-    if len(lower_left_point) != 2:
-        raise ValueError('`lower_left_point` must be a list containing '
-                         'exactly 2 elements.')
-    if not isinstance(upper_right_point, (list, tuple)):
-        raise TypeError('`upper_right_point` must be a list containing exactly'
-                        ' 2 elements.')
-    if len(upper_right_point) != 2:
-        raise ValueError('`upper_right_point` must be a list containing '
-                         'exactly 2 elements.')
+    _validate_point(lower_left_point, '`lower_left_point`')
+    _validate_point(upper_right_point, '`upper_right_point`')
 
     return within('box', lower_left_point, upper_right_point)
 
@@ -57,12 +79,7 @@ def circle(point, radius):
     .. versionadded:: 0.1.0
     """
 
-    if not isinstance(point, (list, tuple)):
-        raise TypeError('`point` must be a list containing exactly 2 '
-                        'elements.')
-    if len(point) != 2:
-        raise ValueError('`point` must be a list containing exactly 2 '
-                         'elements.')
+    _validate_point(point)
 
     return within('circle', point, radius)
 
@@ -90,14 +107,12 @@ def near(point, max_distance=None, unique_docs=False):
     :param unique_docs: (optional) If ``True`` will only return unique
                         documents.
     :returns: dict -- the ``$near`` query.
-    :raises: :class:`TypeError`.
+    :raises: :class:`TypeError`, :class:`ValueError`.
 
     .. versionadded:: 0.1.0
     """
 
-    if not isinstance(point, (list, tuple)) or len(point) != 2:
-        raise TypeError('`point` must be a list containing exactly 2 '
-                        'elements.')
+    _validate_point(point)
 
     # All queries containing the $near point
     query = {'$near': point}
@@ -133,12 +148,8 @@ def polygon(*points):
         # If there are more than one point, they should be a series of
         # lists defining the coordinates. They should be passed into
         # within() as *args.
-        if not all(isinstance(p, (list, tuple)) for p in points):
-            raise TypeError('Each point must be a list containing exactly 2 '
-                            'elements.')
-        if not all(len(p) == 2 for p in points):
-            raise ValueError('Each point must be a list containing exactly 2 '
-                             'elements.')
+        for p in points:
+            _validate_point(p, 'Each point')
 
         return within('polygon', *points)
 
@@ -147,6 +158,7 @@ def polygon(*points):
         # dictionaries providing the coordinates. They should be passed
         # into within() as **kwargs.
         points = points[0]
+
         if not isinstance(points, collections.Mapping):
             raise TypeError('`points` must either be a list of points or a '
                             'dict mapping of points.')
@@ -154,13 +166,8 @@ def polygon(*points):
             raise ValueError('`points` must either be a list of points or a '
                              'dict mapping of points.')
 
-        if not all(isinstance(p, collections.Mapping) for k, p in
-                   points.iteritems()):
-            raise TypeError('Each point must be a dict containing exactly 2 '
-                            'elements.')
-        if not all(len(p) == 2 for k, p in points.iteritems()):
-            raise ValueError('Each point must be a dict containing exactly 2 '
-                             'elements.')
+        for k, p in points.iteritems():
+            _validate_point(p, name='Each point', alternate_type=collections.Mapping)
 
         return within('polygon', **points)
 
