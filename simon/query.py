@@ -136,8 +136,8 @@ def polygon(*points):
     single ``dict`` containing ``dict``'s providing pairs of coordinates
     that behind the polygon.
 
-    :param points: The bounds of the polygon.
-    :type points: args.
+    :param \*points: The bounds of the polygon.
+    :type \*points: \*args.
     :returns: dict -- the ``$polygon`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
 
@@ -189,8 +189,8 @@ class Q(object):
     def __init__(self, **fields):
         """Creates a new filter.
 
-        :param fields: Keyword arguments specifying the query.
-        :type fields: kwargs.
+        :param \*\*fields: Keyword arguments specifying the query.
+        :type \*\*fields: \*\*kwargs.
 
         .. versionadded:: 0.1.0
         """
@@ -356,8 +356,8 @@ class QuerySet(object):
             >>> qs.sort('id')
             >>> qs.sort('grade', '-score')
 
-        :param keys: Names of the fields to sort by.
-        :type keys: args.
+        :param \*keys: Names of the fields to sort by.
+        :type \*keys: \*args.
         :returns: :class:`QuerySet` -- the sorted documents.
 
         .. versionadded:: 0.1.0
@@ -486,10 +486,10 @@ def within(shape, *bounds, **bounds_map):
 
     :param shape: The shape of the bounding area.
     :type shape: str.
-    :param bounds: Coordinate pairs defining the bounding area.
-    :type bounds: args.
-    :param bounds_map: Named coordinate pairs defining the bounding area.
-    :type bounds_map: kwargs.
+    :param \*bounds: Coordinate pairs defining the bounding area.
+    :type \*bounds: \*args.
+    :param \*\*bounds_map: Named coordinate pairs defining the bounding area.
+    :type \*\*bounds_map: \*\*kwargs.
     :returns: dict -- the ``$within`` query.
     :raises: :class:`RuntimeError`.
 

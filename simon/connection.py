@@ -15,20 +15,20 @@ def connect(host='localhost', name=None, username=None, password=None,
 
     :param host: Hostname, IP address, or MongoDB URI of the host.
     :type host: str.
-    :param name: The name of the MongoDB database.
+    :param name: (optional) The name of the MongoDB database.
     :type host: str.
-    :param username: The username to use for authentication.
+    :param username: (optional) The username to use for authentication.
     :type username: str.
-    :param password: The password to use for authentication.
+    :param password: (optional) The password to use for authentication.
     :type password: str.
-    :param port: The port of the MongoDB host.
+    :param port: (optional) The port of the MongoDB host.
     :type port: int.
-    :param alias: An alias to use for accessing the database. If no
-                  value is provided, ``name`` will be used.
+    :param alias: (optional) An alias to use for accessing the database.
+                  If no value is provided, ``name`` will be used.
     :type alias: str.
-    :param kwargs: All other keyword arguments accepted by
+    :param \*\*kwargs: All other keyword arguments accepted by
                    :class:`pymongo.connection.Connection`.
-    :type kwargs: kwargs.
+    :type \*\*kwargs: \*\*kwargs.
     :returns: :class:`pymongo.database.Database` -- the database.
     :raises: :class:`ConnectionError`
 
@@ -100,11 +100,12 @@ def _get_connection(host, port, replica_set=None, **kwargs):
     :type host: str.
     :param port: The port of the MongoDB host.
     :type port: int.
-    :param replica_set: Name of the replica set when connecting to one
+    :param replica_set: (optional) Name of the replica set when
+                        connecting to one.
     :type replica_set: str.
-    :param kwargs: All other keyword arguments accepted by
+    :param \*\*kwargs: All other keyword arguments accepted by
                    :class:`pymongo.connection.Connection`.
-    :type kwargs: kwargs.
+    :type \*\*kwargs: \*\*kwargs.
     :returns: tuple -- a pair of values containing a
                        :class:`pymongo.Connection` and any settings
                        parsed when a URI is provided.

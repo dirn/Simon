@@ -148,8 +148,8 @@ class Model(object):
     def __init__(self, **fields):
         """Assigns all keyword arguments to the object's document.
 
-        :param **fields: Keyword arguments to add to the document.
-        :type **fields: **kwargs.
+        :param \*\*fields: Keyword arguments to add to the document.
+        :type \*\*fields: **kwargs.
         :raises: :class:`~simon.exceptions.ConnectionError`
 
         .. versionadded:: 0.1.0
@@ -173,7 +173,8 @@ class Model(object):
         most likely indicate that the document has never been saved--
         a :class:`TypeError` will be raised.
 
-        :param safe: Whether to perform the delete in safe mode.
+        :param safe: (optional) Whether to perform the delete in safe
+                     mode.
         :type safe: bool.
         :raises: :class:`TypeError`
 
@@ -198,10 +199,10 @@ class Model(object):
         This will find a return multiple documents matching the query
         specified through ``**fields``.
 
-        :param qs: :class:`~simon.query.Q` objects to use with the query.
-        :type qs: args.
-        :param fields: Keyword arguments specifying the query.
-        :type fields: kwargs.
+        :param \*qs: :class:`~simon.query.Q` objects to use with the query.
+        :type \*qs: \*args.
+        :param \*\*fields: Keyword arguments specifying the query.
+        :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.base.QuerySet` -- query set containing
                   objects matching ``query``.
 
@@ -232,10 +233,10 @@ class Model(object):
         query specified through ``**fields``. An exception will be
         raised if any number of documents other than one is found.
 
-        :param qs: :class:`~simon.query.Q` objects to use with the query.
-        :type qs: args.
-        :param fields: Keyword arguments specifying the query.
-        :type fields: kwargs.
+        :param \*qs: :class:`~simon.query.Q` objects to use with the query.
+        :type \*qs: \*args.
+        :param \*\*fields: Keyword arguments specifying the query.
+        :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.Model` -- object matching ``query``.
         :raises: :class:`~simon.Model.MultipleDocumentsFound`,
                  :class:`~simon.Model.NoDocumentFound`
@@ -298,15 +299,16 @@ class Model(object):
         If no fields are indicated--either through ``field`` or through
         ``**fields``, a :class:`ValueError` will be raised.
 
-        :param field: Name of the field to increment.
+        :param field: (optional) Name of the field to increment.
         :type field: str.
-        :param value: Value to increment ``field`` by.
+        :param value: (optional) Value to increment ``field`` by.
         :type value: int.
-        :param safe: Whether to perform the update in safe mode.
+        :param safe: (optional) Whether to perform the update in safe
+                     mode.
         :type safe: bool.
-        :param fields: Keyword arguments specifying fields and increment
-                       values.
-        :type fields: kwargs.
+        :param \*\*fields: Keyword arguments specifying fields and
+                           increment values.
+        :type \*\*fields: \*\*kwargs.
         :raises: :class:`TypeError`, :class:`ValueError`
 
         .. versionadded:: 0.1.0
@@ -373,9 +375,11 @@ class Model(object):
 
         :param fields: The document to save to the database.
         :type fields: dict.
-        :param safe: Whether to perform the save in safe mode.
+        :param safe: (optional) Whether to perform the save in safe
+                     mode.
         :type safe: bool.
-        :param upsert: Whether to perform the update as an upsert.
+        :param upsert: (optional) Whether to perform the update as an
+                       upsert.
         :type upsert: bool.
         :raises: :class:`TypeError`
 
@@ -442,7 +446,8 @@ class Model(object):
 
         :param fields: The names of the fields to remove.
         :type fields: str, list, or tuple.
-        :param safe: Whether to perform the save in safe mode.
+        :param safe: (optional) Whether to perform the save in safe
+                     mode.
         :type safe: bool.
         :raises: :class:`TypeError`
 
@@ -491,9 +496,11 @@ class Model(object):
         added with the current datetime in UTC. ``modified`` will
         always be set with the current datetime in UTC.
 
-        :param safe: Whether to perform the save in safe mode.
+        :param safe: (optional) Whether to perform the save in safe
+                     mode.
         :type safe: bool.
-        :param upsert: Whether to perform the save as an upsert.
+        :param upsert: (optional) Whether to perform the save as an
+                       upsert.
         :type upsert: bool.
 
         .. versionadded:: 0.1.0
@@ -573,7 +580,8 @@ class Model(object):
 
         :param fields: The names of the fields to update.
         :type fields: str, list, or tuple.
-        :param safe: Whether to perform the save in safe mode.
+        :param safe: (optional) Whether to perform the save in safe
+                     mode.
         :type safe: bool.
         :raises: :class:`AttributeError`, :class:`TypeError`
 
@@ -628,10 +636,11 @@ class Model(object):
         Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
-        :param safe: Whether to perform the save in safe mode.
+        :param safe: (optional) Whether to perform the save in safe
+                     mode.
         :type safe: bool.
-        :param fields: Names of the fields to save.
-        :type fields: list or tuple.
+        :param \*\*fields: The fields to update.
+        :type \*\*fields: \*\*kwargs.
         :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0

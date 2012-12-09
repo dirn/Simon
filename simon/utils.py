@@ -114,10 +114,11 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     :type cls: type.
     :param fields: Key/value pairs to be used for queries.
     :type fields: dict.
-    :param with_comparisons: Whether or not to process comparison
-                             operators.
+    :param with_comparisons: (optional) Whether or not to process
+                             comparison operators.
     :type with_comparisons: bool.
-    :param flatten_keys: Whether to allow the nested keys to be nested.
+    :param flatten_keys: (optional) Whether to allow the nested keys to
+                         be nested.
     :type flatten_keys: bool.
     :returns: dict -- key/value pairs renamed based on ``cls``'s
               ``field_map`` mapping.
@@ -227,8 +228,8 @@ def parse_kwargs(**kwargs):
     them to a new dictionary with new keys created by splitting the
     originals on the ``__``.
 
-    :param kwargs: Keyword arguments to parse.
-    :type kwargs: kwargs.
+    :param \*\*kwargs: Keyword arguments to parse.
+    :type \*\*kwargs: \*\*kwargs.
     :returns: dict -- dictionary with nested keys generated from the
               names of the arguments.
 
