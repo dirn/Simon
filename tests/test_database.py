@@ -739,9 +739,9 @@ class TestQuery(unittest.TestCase):
     def test_distinct(self):
         """Test the `distinct()` method."""
 
-        self.assertEqual(set(self.qs.distinct('a')), set([1, 2]))
-        self.assertEqual(set(self.qs.distinct('b')), set([1, 2]))
-        self.assertEqual(set(self.qs.distinct('c')), set([1, 2]))
+        self.assertEqual(sorted(self.qs.distinct('a')), [1, 2])
+        self.assertEqual(sorted(self.qs.distinct('b')), [1, 2])
+        self.assertEqual(sorted(self.qs.distinct('c')), [1, 2])
 
     def test_limit(self):
         """Test the `limit()` method."""
