@@ -167,7 +167,8 @@ def polygon(*points):
                              'dict mapping of points.')
 
         for k, p in points.iteritems():
-            _validate_point(p, name='Each point', alternate_type=collections.Mapping)
+            _validate_point(p, name='Each point',
+                            alternate_type=collections.Mapping)
 
         return within('polygon', **points)
 
