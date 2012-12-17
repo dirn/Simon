@@ -237,7 +237,8 @@ class Model(object):
             if isinstance(q, Q):
                 fields.update(q._filter)
 
-        query = map_fields(cls, fields, with_comparisons=True)
+        query = map_fields(cls, fields, flatten_keys=True,
+                           with_comparisons=True)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query and not isinstance(query['_id'], ObjectId):
@@ -274,7 +275,8 @@ class Model(object):
 
         # Convert the field spec into a query by mapping any necessary
         # fields.
-        query = map_fields(cls, fields, with_comparisons=True)
+        query = map_fields(cls, fields, flatten_keys=True,
+                           with_comparisons=True)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query and not isinstance(query['_id'], ObjectId):

@@ -51,7 +51,9 @@ class TestDatabase(unittest.TestCase):
         self.database = self.__class__.connection['test-simon']
         self.collection = self.database['test-simon']
 
-        self._id = self.collection.insert({'a': 1, 'b': 2}, safe=True)
+        self._id = self.collection.insert({'a': 1, 'b': 2,
+                                           'c': {'d': 3, 'e': 4}},
+                                          safe=True)
 
     def tearDown(self):
         self.database.drop_collection('test-simon')
@@ -142,6 +144,12 @@ class TestDatabase(unittest.TestCase):
         qs = TestModel1.find(a__lte=1, b=2)
         self.assertEqual(len(qs), 1)
 
+    def test_find_embedded_document(self):
+        """Test the `find()` method with an embedded document."""
+
+        qs = TestModel1.find(c__d=3)
+        self.assertEqual(len(qs), 1)
+
     def test_find_id_string(self):
         """Test the `find()` method with a string `_id`."""
 
@@ -206,6 +214,13 @@ class TestDatabase(unittest.TestCase):
 
         m = TestModel1.get(a__lte=1, b=2)
         self.assertEqual(m.a, 1)
+
+    def test_get_embedded_document(self):
+        """Test the `get()` method with an embedded document."""
+
+        m = TestModel1.get(c__d=3)
+
+        self.assertEqual(m.id, self._id)
 
     def test_get_id_string(self):
         """Test the `get()` method with a string `_id`."""
@@ -461,20 +476,22 @@ class TestDatabase(unittest.TestCase):
         """Test the `remove_fields()` method with nested fields."""
 
         m = TestModel1.get(id=self._id)
-        m.c = {'d': 1, 'e': 2}
+        m.f = {'g': 1, 'h': 2}
         m.save()
 
-        m.remove_fields('c__e', safe=True)
+        m.remove_fields('f__h', safe=True)
 
         self.assertTrue('a' in m._document)
         self.assertTrue('b' in m._document)
         self.assertTrue('c' in m._document)
-        self.assertTrue('d' in m._document['c'])
-        self.assertFalse('e' in m._document['c'])
+        self.assertTrue('f' in m._document)
+        self.assertTrue('g' in m._document['f'])
+        self.assertFalse('h' in m._document['f'])
 
         self.assertTrue('a' in m._document)
         self.assertTrue('b' in m._document)
         self.assertTrue('c' in m._document)
+        self.assertTrue('f' in m._document)
 
     def test_remove_fields_one(self):
         """Test the `remove_fields()` method for one field."""
@@ -554,12 +571,12 @@ class TestDatabase(unittest.TestCase):
 
         m = TestModel1(**doc)
 
-        m.c = {'d': 1}
-        m.save_fields('c__d', safe=True)
+        m.f = {'g': 1}
+        m.save_fields('f__g', safe=True)
 
         doc = self.collection.find_one({'_id': self._id})
 
-        self.assertEqual(m._document['c'], doc['c'])
+        self.assertEqual(m._document['f'], doc['f'])
 
     def test_save_fields_one(self):
         """Test the `save_fields()` method for one field."""
