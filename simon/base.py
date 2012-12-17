@@ -165,6 +165,29 @@ class Model(object):
         for k, v in fields.items():
             setattr(self, k, v)
 
+    @classmethod
+    def create(cls, safe=False, **fields):
+        """Creates a new document and saves it to the database.
+
+        This is a convenience method to create a new document. It will
+        instantiate a new ``Model`` from the keyword arguments,
+        call ``save()``, and return the instance.
+
+        :param safe: (optional) Whether to perform the create in safe
+                     mode.
+        :type safe: bool.
+        :param \*\*fields: Keyword argument to add to the document.
+        :type \*\*fields: **kwargs.
+        :returns: :class:`~simon.Model` -- the new document.
+
+        .. versionadded:: 0.1.0
+        """
+
+        new = cls(**fields)
+        new.save(safe=safe)
+
+        return new
+
     def delete(self, safe=False):
         """Deletes a single document from the database.
 
@@ -277,6 +300,35 @@ class Model(object):
 
         # Return an instantiated object for the retrieved document
         return cls(**docs[0])
+
+    @classmethod
+    def get_or_create(cls, safe=False, **fields):
+        """Gets an existing or creates a new document.
+
+        This will find and return a single document matching the
+        query specified through ``**fields``. If no document is found,
+        a new one will be created.
+
+        Along with returning the ``Model`` instance, a boolean value
+        will also be returned to indicate whether or not the document
+        was created.
+
+        :param safe: (optional) Whether to perform the create in safe
+                     mode.
+        :type safe: bool.
+        :param \*\*fields: Keyword arguments specifying the query.
+        :type \*\*fields: \*\*kwargs.
+        :returns: tuple -- the :class:`~simon.Model` and whether the
+                  document was created.
+        :raises: :class:`~simon.Model.MultipleDocumentsFound`
+
+        .. versionadded:: 0.1.0
+        """
+
+        try:
+            return cls.get(**fields), False
+        except cls.NoDocumentFound:
+            return cls.create(safe=safe, **fields), True
 
     def increment(self, field=None, value=1, safe=False, **fields):
         """Performs an atomic increment.

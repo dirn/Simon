@@ -67,6 +67,24 @@ class TestDatabase(unittest.TestCase):
             self.assertTrue(hasattr(m, k))
             self.assertEqual(m._document[k], v)
 
+    def test_create(self):
+        """Test the `create()` method."""
+
+        m = TestModel1.create(d=1, e=2, f=3, safe=True)
+
+        self.assertTrue(hasattr(m, 'id'))
+
+        self.assertEqual(m._document['d'], 1)
+        self.assertEqual(m._document['e'], 2)
+        self.assertEqual(m._document['f'], 3)
+
+        doc = self.collection.find_one({'d': 1, 'e': 2, 'f': 3})
+
+        self.assertEqual(doc['_id'], m.id)
+        self.assertEqual(doc['d'], m._document['d'])
+        self.assertEqual(doc['e'], m._document['e'])
+        self.assertEqual(doc['f'], m._document['f'])
+
     def test_db_attribute(self):
         ("Test that the `db` attribute of classes and instances is the "
          "right type.")
@@ -207,6 +225,35 @@ class TestDatabase(unittest.TestCase):
 
         with self.assertRaises(TestModel1.MultipleDocumentsFound):
             TestModel1.get(a=1)
+
+    def test_get_or_create_create(self):
+        """Test the `get_or_create()` method for creating documents."""
+
+        m, created = TestModel1.get_or_create(d=1, e=2, f=3, safe=True)
+
+        self.assertTrue(created)
+
+        self.assertTrue(hasattr(m, 'id'))
+
+        self.assertEqual(m._document['d'], 1)
+        self.assertEqual(m._document['e'], 2)
+        self.assertEqual(m._document['f'], 3)
+
+        doc = self.collection.find_one({'d': 1, 'e': 2, 'f': 3})
+
+        self.assertEqual(doc['_id'], m.id)
+        self.assertEqual(doc['d'], m._document['d'])
+        self.assertEqual(doc['e'], m._document['e'])
+        self.assertEqual(doc['f'], m._document['f'])
+
+    def test_get_or_create_get(self):
+        """Test the `get_or_create()` method for getting documents."""
+
+        m, created = TestModel1.get_or_create(id=self._id, safe=True)
+
+        self.assertFalse(created)
+
+        self.assertEqual(m.id, self._id)
 
     def test_get_nodocumentfound(self):
         """Test that `get()` raises `NoDocumentFound`."""
