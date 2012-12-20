@@ -149,7 +149,7 @@ class Model(object):
         """Assigns all keyword arguments to the object's document.
 
         :param \*\*fields: Keyword arguments to add to the document.
-        :type \*\*fields: **kwargs.
+        :type \*\*fields: \*\*kwargs.
         :raises: :class:`~simon.exceptions.ConnectionError`
 
         .. versionadded:: 0.1.0
@@ -176,8 +176,8 @@ class Model(object):
         :param safe: (optional) Whether to perform the create in safe
                      mode.
         :type safe: bool.
-        :param \*\*fields: Keyword argument to add to the document.
-        :type \*\*fields: **kwargs.
+        :param \*\*fields: Keyword arguments to add to the document.
+        :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.Model` -- the new document.
 
         .. versionadded:: 0.1.0
