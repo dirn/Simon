@@ -498,8 +498,8 @@ def within(shape, *bounds, **bounds_map):
     """
 
     if bounds and bounds_map:
-        raise RuntimeError('Only one of `bounds` and `bounds_map` can be '
-                           'provided.')
+        raise RuntimeError("Only one of 'bounds' and 'bounds_map' can be "
+                           "provided.")
 
     # **kwargs trumps *args here. This decision was made so the *args
     # can be forced into a list with ease.

@@ -274,7 +274,8 @@ class Model(object):
         query specified through ``**fields``. An exception will be
         raised if any number of documents other than one is found.
 
-        :param \*qs: :class:`~simon.query.Q` objects to use with the query.
+        :param \*qs: :class:`~simon.query.Q` objects to use with the
+                     query.
         :type \*qs: \*args.
         :param \*\*fields: Keyword arguments specifying the query.
         :type \*\*fields: \*\*kwargs.
