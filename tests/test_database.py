@@ -36,6 +36,20 @@ class TestModel2(Model):
         database = 'test-simon'
 
 
+class TestModel3(Model):
+    class Meta:
+        collection = 'test-simon'
+        database = 'test-simon'
+        sort = 'a'
+
+
+class TestModel4(Model):
+    class Meta:
+        collection = 'test-simon'
+        database = 'test-simon'
+        sort = '-a'
+
+
 class TestDatabase(unittest.TestCase):
     """Test database interaction"""
 
@@ -175,6 +189,30 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m._document['_id'], self._id)
         self.assertEqual(m._document['a'], 1)
         self.assertEqual(m._document['b'], 2)
+
+    def test_find_sorted(self):
+        """Test the `find()` method with a sort on the class."""
+
+        self.collection.insert({'a': 2})
+        self.collection.insert({'a': 0})
+
+        # Unsorted
+        qs = TestModel1.find()
+        self.assertEqual(qs[0]._document['a'], 1)
+        self.assertEqual(qs[1]._document['a'], 2)
+        self.assertEqual(qs[2]._document['a'], 0)
+
+        # Ascending
+        qs = TestModel3.find()
+        self.assertEqual(qs[0]._document['a'], 0)
+        self.assertEqual(qs[1]._document['a'], 1)
+        self.assertEqual(qs[2]._document['a'], 2)
+
+        # Descending
+        qs = TestModel4.find()
+        self.assertEqual(qs[0]._document['a'], 2)
+        self.assertEqual(qs[1]._document['a'], 1)
+        self.assertEqual(qs[2]._document['a'], 0)
 
     def test_find_with_q(self):
         """Test the `find()` method with `Q` objects."""

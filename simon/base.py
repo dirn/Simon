@@ -229,9 +229,11 @@ class Model(object):
         """Gets multiple documents from the database.
 
         This will find a return multiple documents matching the query
-        specified through ``**fields``.
+        specified through ``**fields``. If ``sort`` has been defined on
+        the ``Meta`` class it will be used to order the records.
 
-        :param \*qs: :class:`~simon.query.Q` objects to use with the query.
+        :param \*qs: :class:`~simon.query.Q` objects to use with the
+                      query.
         :type \*qs: \*args.
         :param \*\*fields: Keyword arguments specifying the query.
         :type \*\*fields: \*\*kwargs.
@@ -256,7 +258,13 @@ class Model(object):
         # Find all of the matching documents.
         docs = cls._meta.db.find(query)
 
-        return QuerySet(docs, cls)
+        qs = QuerySet(docs, cls)
+
+        if hasattr(cls._meta, 'sort'):
+            # If the model has a default sort, apply it.
+            qs = qs.sort(cls._meta.sort)
+
+        return qs
 
     @classmethod
     def get(cls, *qs, **fields):
