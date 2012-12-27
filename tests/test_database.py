@@ -69,6 +69,14 @@ class TestDatabase(unittest.TestCase):
             self.assertTrue(hasattr(m, k))
             self.assertEqual(m._document[k], v)
 
+    def test_all(self):
+        """Test the `all()` method."""
+
+        with mock.patch('simon.Model.find') as mock_find:
+            TestModel1.all()
+
+            mock_find.assert_called_with()
+
     def test_create(self):
         """Test the `create()` method."""
 

@@ -166,6 +166,15 @@ class Model(object):
             setattr(self, k, v)
 
     @classmethod
+    def all(self):
+        """Wraps around :meth:`~simon.Model.find`.
+
+        .. versionadded:: 0.1.0
+        """
+
+        return self.find()
+
+    @classmethod
     def create(cls, safe=False, **fields):
         """Creates a new document and saves it to the database.
 
