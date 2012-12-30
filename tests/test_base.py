@@ -31,6 +31,17 @@ class TestBase(unittest.TestCase):
                 'test-simon': None,
             }
 
+    def test_contains(self):
+        """Test the `__contains__()` method."""
+
+        m = TestModel()
+        m._document['a'] = 1
+        m._document['b'] = 2
+
+        self.assertTrue('a' in m)
+        self.assertTrue('b' in m)
+        self.assertFalse('c' in m)
+
     def test_db(self):
         ("Test that the `db` attribute is associated with classes and "
          "instances.")

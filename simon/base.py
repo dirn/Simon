@@ -587,7 +587,7 @@ class Model(object):
         if self._meta.auto_timestamp:
             now = datetime.utcnow()
             now = now.replace(microsecond=(now.microsecond / 1000 * 1000))
-            if not (hasattr(self, 'id') and hasattr(self, 'created')):
+            if not ('id' in self and 'created' in self):
                 self.created = now
             self.modified = now
 
@@ -743,6 +743,11 @@ class Model(object):
 
         for k, v in doc.items():
             setattr(self, k, v)
+
+    def __contains__(self, name):
+        """Check for a key in a document"""
+
+        return name in self._document
 
     def __delattr__(self, name):
         """Remove a key from the document"""
