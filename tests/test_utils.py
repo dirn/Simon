@@ -3,9 +3,16 @@ try:
 except ImportError:
     import unittest
 
+from bson import ObjectId
+from bson.errors import InvalidId
+
 from simon import Model
-from simon.utils import (get_nested_key, map_fields, parse_kwargs,
-                         remove_nested_key, update_nested_keys)
+from simon.utils import (get_nested_key, guarantee_object_id, map_fields,
+                         parse_kwargs, remove_nested_key, update_nested_keys)
+
+
+AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
+AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
 
 
 class TestModel(Model):
@@ -57,6 +64,71 @@ class TestUtils(unittest.TestCase):
         # And once more with a key that's more nested than the dict
         with self.assertRaises(KeyError):
             get_nested_key({'a': {'b': 1}}, 'a.b.c')
+
+    def test_guarantee_object_id(self):
+        """Test the `guarantee_object_id()` method."""
+
+        expected = AN_OBJECT_ID
+        actual = guarantee_object_id(AN_OBJECT_ID_STR)
+
+        self.assertEqual(actual, expected)
+
+    def test_guarantee_object_id_dict(self):
+        """Test the `guarantee_object_id()` method with `dict`."""
+
+        expected = {
+            '$gt': AN_OBJECT_ID,
+            '$lt': AN_OBJECT_ID,
+        }
+        actual = guarantee_object_id({
+            '$gt': AN_OBJECT_ID_STR,
+            '$lt': AN_OBJECT_ID,
+        })
+        self.assertEqual(actual, expected)
+
+    def test_guarantee_object_id_invalidid(self):
+        """Test that `guarantee_object_id()` raises `InvalidId`."""
+
+        with self.assertRaises(InvalidId):
+            guarantee_object_id('abc')
+
+    def test_guarantee_object_id_list(self):
+        """Test the `guarantee_object_id()` method with a `list`."""
+
+        expected = {
+            '$in': [AN_OBJECT_ID, AN_OBJECT_ID],
+        }
+        actual = guarantee_object_id({
+            '$in': [AN_OBJECT_ID_STR, AN_OBJECT_ID],
+        })
+        self.assertEqual(actual, expected)
+
+    def test_guarantee_object_id_object_id(self):
+        """Test the `guarantee_object_id()` method with `ObjectId`."""
+
+        expected = AN_OBJECT_ID
+        actual = guarantee_object_id(AN_OBJECT_ID)
+        self.assertEqual(actual, expected)
+
+    def test_guarantee_object_id_tuple(self):
+        """Test the `guarantee_object_id()` method with a `tuple`."""
+
+        expected = {
+            '$in': [AN_OBJECT_ID, AN_OBJECT_ID],
+        }
+        actual = guarantee_object_id({
+            '$in': (AN_OBJECT_ID_STR, AN_OBJECT_ID),
+        })
+        self.assertEqual(actual, expected)
+
+    def test_guarantee_object_id_typeerror(self):
+        """Test that `guarantee_object_id()` raises `TypeError`."""
+
+        with self.assertRaises(TypeError):
+            guarantee_object_id(1)
+
+        with self.assertRaises(TypeError):
+            guarantee_object_id([AN_OBJECT_ID_STR])
 
     def test_map_fields(self):
         """Test the `map_fields()` method."""

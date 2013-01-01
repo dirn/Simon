@@ -2,13 +2,12 @@
 
 __all__ = ('Model',)
 
-from bson.objectid import ObjectId
 from datetime import datetime
 
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import Q, QuerySet
-from .utils import (get_nested_key, map_fields,
+from .utils import (get_nested_key, guarantee_object_id, map_fields,
                     remove_nested_key, update_nested_keys)
 
 
@@ -252,8 +251,8 @@ class Model(object):
                            with_comparisons=True)
 
         # If querying by the _id, make sure it's an Object ID
-        if '_id' in query and not isinstance(query['_id'], ObjectId):
-            query['_id'] = ObjectId(query['_id'])
+        if '_id' in query:
+            query['_id'] = guarantee_object_id(query['_id'])
 
         # Find all of the matching documents.
         docs = cls._meta.db.find(query)
@@ -297,8 +296,8 @@ class Model(object):
                            with_comparisons=True)
 
         # If querying by the _id, make sure it's an Object ID
-        if '_id' in query and not isinstance(query['_id'], ObjectId):
-            query['_id'] = ObjectId(query['_id'])
+        if '_id' in query:
+            query['_id'] = guarantee_object_id(query['_id'])
 
         # Find all of the matching documents. find_one() could be used
         # here instead, but that would return the *first* matching
@@ -597,6 +596,8 @@ class Model(object):
         # capture a reference to the document and pop it out of that.
         doc = self._document.copy()
         id = doc.pop('_id', None)
+        if id:
+            id = guarantee_object_id(id)
 
         doc = map_fields(self.__class__, doc)
 

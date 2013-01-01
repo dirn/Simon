@@ -1,9 +1,11 @@
 """Helper utilities"""
 
-__all__ = ('get_nested_key', 'map_fields', 'parse_kwargs',
-           'remove_nested_key', 'update_nested_keys')
+__all__ = ('get_nested_key', 'guarantee_object_id', 'map_fields',
+           'parse_kwargs', 'remove_nested_key', 'update_nested_keys')
 
 import collections
+
+from bson import ObjectId
 
 
 # The logical operators are needed when mapping fields. The values
@@ -49,6 +51,58 @@ def get_nested_key(values, key):
         return get_nested_key(values[keys[0]], keys[1])
     except KeyError:
         raise KeyError(key)
+
+
+def guarantee_object_id(value):
+    """Converts a value into an Object ID.
+
+    This method will convert a value to an :class:`ObjectId`. If
+    ``value`` is a ``dict`` (e.g., with a comparison operator as the key
+    ), the value in the ``dict`` will be converted. Any values that are
+    a ``list`` or ``tuple`` will be iterated over, and replaced with a
+    ``list`` containing all :class:`ObjectId` instances.
+
+    :class:`TypeError` will be raised for any ``value`` that cannot be
+    converted to an :class:`ObjectId`. :class:`InvalidId` will be raised
+    for any ``value`` that is of the right type but is not a valid value
+    for an :class:`ObjectId`.
+
+    Any value of ``None`` will be replaced with a newly generated
+    :class:`ObjectId`.
+
+    :param value: the ID.
+    :returns: ObjectId or dict -- the Object ID.
+    :raises: :class:`TypeError`, :class:`~bson.errors.InvalidId`
+
+    .. versionadded:: 0.1.0
+    """
+
+    # If it's already an Object ID, get out early.
+    if isinstance(value, ObjectId):
+        return value
+
+    if isinstance(value, collections.Mapping):
+        # Handle dicts.
+        for k, v in value.iteritems():
+            if isinstance(v, ObjectId):
+                # If it's already an Object ID, skip it.
+                continue
+
+            if not isinstance(v, (list, tuple)):
+                value[k] = ObjectId(v)
+                continue
+
+            # Sometimes the dict can contain a list of IDs (e.g., with a
+            # comparison operator). When that is the case, all items in
+            # the list that are not Object IDs should be converted to
+            # them.
+            value[k] = [
+                x if isinstance(x, ObjectId) else ObjectId(x) for x in v]
+
+    else:
+        value = ObjectId(value)
+
+    return value
 
 
 def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
