@@ -12,6 +12,7 @@ class TestModel(Model):
     class Meta:
         collection = 'test-simon'
         database = 'test-simon-mock'
+        field_map = {'x': 'y'}
 
 
 class TestBase(unittest.TestCase):
@@ -42,6 +43,16 @@ class TestBase(unittest.TestCase):
         self.assertTrue('b' in m)
         self.assertFalse('c' in m)
 
+    def test_contains_field_map(self):
+        """Test the `__contains__()` method with a mapped field."""
+
+        m = TestModel()
+        m._document['y'] = 1
+
+        self.assertTrue('x' in m)
+        self.assertTrue('y' in m)
+        self.assertFalse('x' in m._document)
+
     def test_db(self):
         ("Test that the `db` attribute is associated with classes and "
          "instances.")
@@ -54,7 +65,8 @@ class TestBase(unittest.TestCase):
     def test_delattr(self):
         """Test the `__delattr__()` method."""
 
-        m = TestModel(a=1)
+        m = TestModel()
+        m._document['a'] = 1
         with self.assertRaises(AttributeError):
             del m.b
 
@@ -64,6 +76,15 @@ class TestBase(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             del m.attribute
+
+    def test_delattr_field_map(self):
+        """Test the `__delattr__()` method with a mapped field."""
+
+        m = TestModel()
+        m._document['y'] = 1
+
+        del m.x
+        self.assertFalse('y' in m._document)
 
     def test_getattr(self):
         """Test the `__getattr__()` method."""
@@ -86,6 +107,15 @@ class TestBase(unittest.TestCase):
 
         self.assertEqual(m.attribute, 2)
 
+    def test_getattr_field_map(self):
+        """Test the `__getattr__()` method with a mapped field."""
+
+        m = TestModel()
+
+        m._document['y'] = 1
+
+        self.assertEqual(getattr(m, 'x'), 1)
+
     def test_init(self):
         """Test the `__init__()` method."""
 
@@ -98,7 +128,8 @@ class TestBase(unittest.TestCase):
     def test_setattr(self):
         """Test the `__setattr__()` method."""
 
-        m = TestModel(a=1)
+        m = TestModel()
+        m._document['a'] = 1
         self.assertFalse('b' in m._document)
         with self.assertRaises(AttributeError):
             m.b
@@ -114,3 +145,12 @@ class TestBase(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             m._meta = 'this better not work'
+
+    def test_setattr_field_map(self):
+        """Test the `__setattr__()` method with a mapped field."""
+
+        m = TestModel()
+        setattr(m, 'x', 1)
+
+        self.assertTrue('y' in m._document)
+        self.assertEqual(m._document['y'], 1)

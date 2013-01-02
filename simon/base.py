@@ -748,7 +748,8 @@ class Model(object):
     def __contains__(self, name):
         """Check for a key in a document"""
 
-        return name in self._document
+        key = self._meta.field_map.get(name, name)
+        return key in self._document
 
     def __delattr__(self, name):
         """Remove a key from the document"""
