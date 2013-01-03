@@ -671,6 +671,18 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(hasattr(m, 'created'))
         self.assertTrue(hasattr(m, 'modified'))
 
+    def test_save_resave(self):
+        """Test the `save()` method for resaving documents."""
+
+        m = TestModel1.get(_id=self._id)
+        m.a = 3
+        m.save(safe=True)
+
+        doc = self.collection.find_one({'_id': m.id})
+
+        self.assertEqual(m._document['a'], doc['a'])
+        self.assertEqual(doc['a'], 3)
+
     def test_save_timestamps(self):
         """Test that `save()` properly handles adding timestamps."""
 
