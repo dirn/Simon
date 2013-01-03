@@ -86,7 +86,7 @@ class Q(object):
 
 class QuerySet(object):
     """A query set that wraps around MongoDB cursors and returns
-    :class:`~simon.Model` objects
+    :class:`~simon.Model` objects.
 
     .. versionadded:: 0.1.0
     """
