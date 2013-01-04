@@ -1,6 +1,12 @@
 __all__ = ('connect', 'get_database', 'ConnectionError')
 
-from pymongo import Connection, ReplicaSetConnection, uri_parser
+from pymongo import uri_parser
+try:
+    # pymongo 2.4+
+    from pymongo import MongoClient, MongoReplicaSetClient
+except ImportError:
+    from pymongo import (Connection as MongoClient,
+                         ReplicaSetConnection as MongoReplicaSetClient)
 
 from .exceptions import ConnectionError
 
@@ -164,10 +170,10 @@ def _get_connection(host, port, replica_set=None, **kwargs):
     if connection_key not in _connections:
         # If using a replica set, prepare the settings and class name
         if replica_set:
-            connection_class = ReplicaSetConnection
+            connection_class = MongoReplicaSetClient
             settings = {'hosts_or_uri': host, 'replicaSet': replica_set}
         else:
-            connection_class = Connection
+            connection_class = MongoClient
             settings = {'host': host, 'port': port}
 
         # Open a connection to the database and try to connect to it

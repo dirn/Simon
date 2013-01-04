@@ -104,7 +104,7 @@ class TestConnection(unittest.TestCase):
     def test__get_connection(self):
         """Test the `_get_connection()` method."""
 
-        with mock.patch('simon.connection.Connection') as mock_conn:
+        with mock.patch('simon.connection.MongoClient') as mock_conn:
             connection._get_connection(host='localhost', port=None,
                                        replica_set=None)
 
@@ -136,7 +136,7 @@ class TestConnection(unittest.TestCase):
     def test__get_connection_with_replica_set(self):
         """Test the `_get_connection()` method with replica sets."""
 
-        with mock.patch('simon.connection.ReplicaSetConnection') as mock_conn:
+        with mock.patch('simon.connection.MongoReplicaSetClient') as mock_conn:
             connection._get_connection(host='localhost', port=None,
                                        replica_set='simonrs')
             mock_conn.assert_called_with(hosts_or_uri='localhost',
@@ -145,7 +145,7 @@ class TestConnection(unittest.TestCase):
     def test__get_connection_with_uri(self):
         """Test the `_get_connection()` method with URIs."""
 
-        with mock.patch('simon.connection.Connection') as mock_conn:
+        with mock.patch('simon.connection.MongoClient') as mock_conn:
             url1 = 'mongodb://simonuser:simonpassword@simon.mongo.com:27017/simon'
             conn, settings = connection._get_connection(host=url1, port=None,
                                                         replica_set=None)
@@ -156,7 +156,7 @@ class TestConnection(unittest.TestCase):
             self.assertEqual(settings['username'], 'simonuser')
             self.assertEqual(settings['password'], 'simonpassword')
 
-        with mock.patch('simon.connection.ReplicaSetConnection') as mock_conn:
+        with mock.patch('simon.connection.MongoReplicaSetClient') as mock_conn:
             url2 = 'mongodb://simonuser:simonpassword@simon.m0.mongo.com:27017/simon-rs'
             conn, settings = connection._get_connection(host=url2, port=None,
                                                         replica_set='simonrs')
