@@ -111,10 +111,19 @@ class QuerySet(object):
     def count(self):
         """Gets the number of documents in the :class:`QuerySet`.
 
+        If no cursor has been associated with the query set,
+        ``TypeError`` will be raised.
+
         :returns: int -- the number of documents.
+        :raises: :class:`TypeError`.
 
         .. versionadded:: 0.1.0
         """
+
+        if not self._cursor:
+            raise TypeError(
+                "The '{0}' has no cursor associated with it.".format(
+                    self.__class__.__name__))
 
         # Store the count interally so that the call doesn't need to
         # be made over and over
@@ -303,4 +312,7 @@ class QuerySet(object):
         .. versionadded:: 0.1.0
         """
 
-        return self.count()
+        try:
+            return self.count()
+        except TypeError:
+            return 0

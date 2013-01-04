@@ -858,6 +858,13 @@ class TestQuery(unittest.TestCase):
         self.assertEqual(self.qs.count(), self.cursor.count())
         self.assertEqual(self.qs._count, self.cursor.count())
 
+    def test_count_typeerror(self):
+        """Test that `count()` raises `TypeError`."""
+
+        qs = query.QuerySet()
+        with self.assertRaises(TypeError):
+            qs.count()
+
     def test_distinct(self):
         """Test the `distinct()` method."""
 
