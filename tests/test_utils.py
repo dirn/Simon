@@ -296,6 +296,17 @@ class TestUtils(unittest.TestCase):
                             with_comparisons=True)
         self.assertEqual(actual, expected)
 
+    def test_map_fields_logical_operators(self):
+        """Test the `map_fields()` method with logical operators."""
+
+        expected = {'$and': [{'a': {'b': 1}}, {'c': 2}]}
+        actual = map_fields(TestModel, {'$and': [{'a__b': 1}, {'c': 2}]})
+        self.assertEqual(actual, expected)
+
+        expected = {'$or': [{'a': {'b': 1}}, {'c': 2}]}
+        actual = map_fields(TestModel, {'$or': [{'a__b': 1}, {'c': 2}]})
+        self.assertEqual(actual, expected)
+
     def test_map_fields_second_pass(self):
         """Test the `map_fields()` method with a second pass."""
 

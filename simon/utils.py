@@ -265,11 +265,6 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
         for k, v in fields.items():
             k = cls._meta.field_map.get(k, k)
 
-            if isinstance(v, collections.Mapping) and k in ('$and', '$or'):
-                v = map_fields(cls=cls, fields=v,
-                               with_comparisons=with_comparisons,
-                               flatten_keys=flatten_keys)
-
             mapped_fields[k] = v
 
     return mapped_fields
