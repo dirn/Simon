@@ -1265,8 +1265,18 @@ class TestQuery(unittest.TestCase):
     def test___getitem___indexerror(self):
         """Test that `__getitem__()` raises `IndexError`."""
 
-        with self.assertRaises(IndexError):
+        with self.assertRaises(IndexError) as e:
             self.qs[3]
+
+        expected = "No such item in 'QuerySet' for 'TestModel1' object"
+        self.assertEqual(e.exception.message, expected)
+
+        self.qs._cls = None
+        with self.assertRaises(IndexError) as e:
+            self.qs[3]
+
+        expected = "No such item in 'QuerySet'"
+        self.assertEqual(e.exception.message, expected)
 
     def test___getitem___typeerror(self):
         """Test that `__getitem__()` raises `TypeError`."""

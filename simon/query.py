@@ -278,10 +278,15 @@ class QuerySet(object):
             if k < 0:
                 raise TypeError('Negative indexing is not supported.')
             elif k >= self.count():
-                raise IndexError(
-                    "No such item in QuerySet for '{0}' object".format(
+                if self._cls:
+                    message = "No such item in '{0}' for '{1}' object".format(
+                        self.__class__.__name__,
                         self._cls.__name__ if self._cls else
-                        self.__class__.__name__))
+                        self.__class__.__name__)
+                else:
+                    message = "No such item in '{0}'".format(
+                        self.__class__.__name__)
+                raise IndexError(message)
 
             bound = k + 1
 
