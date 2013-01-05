@@ -189,7 +189,7 @@ class TestMetaClass(unittest.TestCase):
         self.assertFalse(TestModel3._meta.map_id)
 
     def test_repr(self):
-        """Test the `__repr__()` method of the `Meta` class."""
+        """Test the `__repr__()` method."""
 
         self.assertEqual('{0!r}'.format(DefaultModel._meta),
                          '<Meta options for DefaultModel>')
@@ -211,7 +211,7 @@ class TestMetaClass(unittest.TestCase):
         self.assertEqual(TestModel3._meta.sort, '-id')
 
     def test_str(self):
-        """Test the `__str__()` method of the `Meta` class."""
+        """Test the `__str__()` method."""
 
         self.assertEqual('{0!s}'.format(DefaultModel._meta),
                          'DefaultModel.Meta')
@@ -235,3 +235,10 @@ class TestMetaClass(unittest.TestCase):
         # except that the subclassed one shouldn't have Meta.
         self.assertEqual(sorted(meta3.core_attributes),
                          sorted(meta4.core_attributes + ['Meta']))
+
+    def test_unicode(self):
+        """Test the `__unicode__()` method."""
+
+        self.assertEqual(u'{0}'.format(DefaultModel._meta),
+                         u'DefaultModel.Meta')
+

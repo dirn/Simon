@@ -6,13 +6,21 @@ except ImportError:
 from simon import Model, connection
 
 
-class TestModel(Model):
+class TestModel1(Model):
     attribute = 2
 
     class Meta:
         collection = 'test-simon'
         database = 'test-simon-mock'
         field_map = {'x': 'y'}
+
+
+class TestModel2(Model):
+    def __str__(self):
+        return 'this is the __str__'
+
+    def __unicode__(self):
+        return u'this is the __unicode__'
 
 
 class TestBase(unittest.TestCase):
@@ -35,7 +43,7 @@ class TestBase(unittest.TestCase):
     def test_contains(self):
         """Test the `__contains__()` method."""
 
-        m = TestModel()
+        m = TestModel1()
         m._document['a'] = 1
         m._document['b'] = 2
 
@@ -46,7 +54,7 @@ class TestBase(unittest.TestCase):
     def test_contains_field_map(self):
         """Test the `__contains__()` method with a mapped field."""
 
-        m = TestModel()
+        m = TestModel1()
         m._document['y'] = 1
 
         self.assertTrue('x' in m)
@@ -57,15 +65,15 @@ class TestBase(unittest.TestCase):
         ("Test that the `db` attribute is associated with classes and "
          "instances.")
 
-        self.assertTrue(hasattr(TestModel._meta, 'db'))
+        self.assertTrue(hasattr(TestModel1._meta, 'db'))
 
-        m = TestModel()
+        m = TestModel1()
         self.assertTrue(hasattr(m._meta, 'db'))
 
     def test_delattr(self):
         """Test the `__delattr__()` method."""
 
-        m = TestModel()
+        m = TestModel1()
         m._document['a'] = 1
         with self.assertRaises(AttributeError):
             del m.b
@@ -80,7 +88,7 @@ class TestBase(unittest.TestCase):
     def test_delattr_field_map(self):
         """Test the `__delattr__()` method with a mapped field."""
 
-        m = TestModel()
+        m = TestModel1()
         m._document['y'] = 1
 
         del m.x
@@ -89,7 +97,7 @@ class TestBase(unittest.TestCase):
     def test_getattr(self):
         """Test the `__getattr__()` method."""
 
-        m = TestModel()
+        m = TestModel1()
 
         m._document['a'] = 1
         self.assertEqual(m.a, 1)
@@ -110,7 +118,7 @@ class TestBase(unittest.TestCase):
     def test_getattr_field_map(self):
         """Test the `__getattr__()` method with a mapped field."""
 
-        m = TestModel()
+        m = TestModel1()
 
         m._document['y'] = 1
 
@@ -120,15 +128,30 @@ class TestBase(unittest.TestCase):
         """Test the `__init__()` method."""
 
         fields = {'a': 1}
-        m = TestModel(**fields)
+        m = TestModel1(**fields)
         self.assertTrue(all(getattr(m, k) == v for k, v in fields.items()))
 
         self.assertTrue(isinstance(m._document, dict))
 
+    def test_repr(self):
+        """Test the `__repr__()` method."""
+
+        m = TestModel1()
+
+        expected = '<TestModel1: TestModel1 object>'
+        actual = '{0!r}'.format(m)
+        self.assertEqual(actual, expected)
+
+        m2 = TestModel2()
+
+        expected = '<TestModel2: this is the __str__>'
+        actual = '{0!r}'.format(m2)
+        self.assertEqual(actual, expected)
+
     def test_setattr(self):
         """Test the `__setattr__()` method."""
 
-        m = TestModel()
+        m = TestModel1()
         m._document['a'] = 1
         self.assertFalse('b' in m._document)
         with self.assertRaises(AttributeError):
@@ -149,8 +172,38 @@ class TestBase(unittest.TestCase):
     def test_setattr_field_map(self):
         """Test the `__setattr__()` method with a mapped field."""
 
-        m = TestModel()
+        m = TestModel1()
         setattr(m, 'x', 1)
 
         self.assertTrue('y' in m._document)
         self.assertEqual(m._document['y'], 1)
+
+    def test_str(self):
+        """Test the `__str__()` method."""
+
+        m = TestModel1()
+
+        expected = 'TestModel1 object'
+        actual = '{0!s}'.format(m)
+        self.assertEqual(actual, expected)
+
+        m2 = TestModel2()
+
+        expected = 'this is the __str__'
+        actual = '{0!s}'.format(m2)
+        self.assertEqual(actual, expected)
+
+    def test_unicode(self):
+        """Test the `__unicode__()` method."""
+
+        m = TestModel1()
+
+        expected = u'TestModel1 object'
+        actual = u'{0}'.format(m)
+        self.assertEqual(actual, expected)
+
+        m2 = TestModel2()
+
+        expected = u'this is the __unicode__'
+        actual = u'{0}'.format(m2)
+        self.assertEqual(actual, expected)

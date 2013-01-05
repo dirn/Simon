@@ -98,6 +98,9 @@ class Meta(object):
     def __str__(self):
         return '{0}.Meta'.format(self.class_name)
 
+    def __unicode__(self):
+        return u'{0}.Meta'.format(self.class_name)
+
 
 class ModelMetaClass(type):
     """Define :class:`Model`
@@ -811,6 +814,9 @@ class Model(object):
                 self.__class__.__name__, name))
         return self._document[name]
 
+    def __repr__(self):
+        return '<{0}: {1}>'.format(self.__class__.__name__, self)
+
     def __setattr__(self, name, value):
         """Set a document value"""
 
@@ -826,3 +832,9 @@ class Model(object):
         if name not in self._meta.core_attributes:
             name = self._meta.field_map.get(name, name)
             self._document[name] = value
+
+    def __str__(self):
+        return '{0} object'.format(self.__class__.__name__)
+
+    def __unicode__(self):
+        return u'{0} object'.format(self.__class__.__name__)
