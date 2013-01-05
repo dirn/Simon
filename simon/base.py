@@ -11,18 +11,92 @@ from .utils import (get_nested_key, guarantee_object_id, map_fields,
                     remove_nested_key, update_nested_keys)
 
 
-class Property(property):
-    """Overrides the @property decorator
-
-    This is necessary for :class:`Model` to be able to able to call the
-    collection methods from its ``_meta.db`` attribute. Without this
-    custom ``__get__()`` method, an AttributeError would be raised.
+class Meta(object):
+    """Custom options for a :class:`~simon.Model`.
 
     .. versionadded:: 0.1.0
     """
 
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
+    _db = None
+
+    def __init__(self, meta):
+        self.meta = meta
+
+        # Set all the default option values.
+        self.auto_timestamp = True
+        self.database = 'default'
+        self.field_map = {}
+        self.map_id = True
+        self.safe = False
+        self.sort = None
+
+    def add_to_original(self, cls, name):
+        """Adds the ``Meta`` object to another class.
+
+        .. versionadded:: 0.1.0
+        """
+
+        cls._meta = self
+
+        if self.meta:
+            meta_attrs = self.meta.__dict__.copy()
+            for name in self.meta.__dict__:
+                # Remove any "private" attributes.
+                if name.startswith('_'):
+                    del meta_attrs[name]
+
+            # Add the known attributes to the instance
+            for name in ('auto_timestamp', 'collection', 'database',
+                         'field_map', 'map_id', 'safe', 'sort'):
+                if name in meta_attrs:
+                    setattr(self, name, meta_attrs.pop(name))
+
+            if not hasattr(self, 'collection'):
+                # If there's no collection name, generate one from the
+                # other class's name.
+                self.collection = ''.join([cls.__name__.lower(), 's'])
+
+        else:
+            # If there's no real instance to add, we just have to
+            # generate the collection name.
+            self.collection = ''.join([cls.__name__.lower(), 's'])
+        del self.meta
+
+        # Store the name of the class to make __repr__() and __str__()
+        # more useful.
+        self.class_name = cls.__name__
+
+        # Get the list of the attributes associated with the class.
+        # These will make up the list of reserved words that cannot be
+        # used for keys.
+        self.core_attributes = cls.__dict__.keys() + ['_document']
+
+        if self.map_id and 'id' not in self.field_map:
+            # If map_id is True and id isn't in field_map, add it.
+            self.field_map['id'] = '_id'
+
+        # Assign the database as a lambda so that the connection isn't
+        # actually made until it's needed.
+        #self.db = Property(classmethod(
+        #    lambda cls: get_database(cls.database)[cls.collection]))
+
+    @property
+    def db(self):
+        """Contains the :class:`~pymongo.collection.Collection`.
+
+        .. versionadded:: 0.1.0
+        """
+
+        if self._db is None:
+            # Only make the call to get_database once for each class.
+            self._db = get_database(self.database)[self.collection]
+        return self._db
+
+    def __repr__(self):
+        return '<Meta options for {0}>'.format(self.class_name)
+
+    def __str__(self):
+        return '{0}.Meta'.format(self.class_name)
 
 
 class ModelMetaClass(type):
@@ -32,85 +106,44 @@ class ModelMetaClass(type):
     """
 
     def __new__(cls, name, bases, attrs):
+        new_new = super(ModelMetaClass, cls).__new__
+        if bases == (object,):
+            # If this class isn't a subclass of anything besides object
+            # there's no need to do anything.
+            return new_new(cls, name, bases, attrs)
+
         module = attrs.pop('__module__')
-        new_class = super(ModelMetaClass, cls).__new__(
-            cls, name, bases, {'__module__': module})
+        new_class = new_new(cls, name, bases, {'__module__': module})
 
         # Associate all attributes with the new class.
         for k, v in attrs.items():
-            setattr(new_class, k, v)
+            new_class.addattr(k, v)
 
         # Associate the custom exceptions with the new class.
-        setattr(new_class, 'MultipleDocumentsFound', MultipleDocumentsFound)
-        setattr(new_class, 'NoDocumentFound', NoDocumentFound)
+        new_class.addattr('MultipleDocumentsFound', MultipleDocumentsFound)
+        new_class.addattr('NoDocumentFound', NoDocumentFound)
 
-        # Get the Meta class. It's at least attached to Model, so it
-        # will exist somewhere in the stack.
+        # Get the Meta class if it exists. If not, try to get it from
+        # the new class.
         meta = attrs.pop('Meta', None)
         if not meta:
             meta = getattr(new_class, 'Meta', None)
 
-        # All models need a collection. The base model doesn't though.
-        # Rather than pinning the check to the class name, it's
-        # better to check the bases since this should never change.
-        if not getattr(meta, 'collection', None) and bases != (object,):
-            raise AttributeError(
-                "'{0}' must have a 'collection'".format(new_class.__name__))
-
-        # All models also need a database. This is easier to handle than
-        # the collection, though. Only the name is needed here. If no
-        # name has been specified, the default is what should be used.
-        if not getattr(meta, 'database', None):
-            meta.database = 'default'
-
-        # Parent classes may define their own Meta class, so subclasses
-        # should inherit any of the settings they haven't overridden.
-        base_meta = getattr(new_class, '_meta', None)
-        if base_meta:
-            for k, v in base_meta.__dict__.items():
-                if not hasattr(meta, k):
-                    setattr(meta, k, v)
-
-        # All models need the ability to map document keys to different
-        # attribute names. If no map has been provided, add a
-        # placeholder. If map_id has not been set to False, add a map
-        # from id to _id.
-        if not hasattr(meta, 'field_map'):
-            meta.field_map = {}
-        if getattr(meta, 'map_id', True) and 'id' not in meta.field_map:
-            meta.field_map['id'] = '_id'
-
-        # Find out whether or not to associate timestamps with documents
-        # when they are saved.
-        if not hasattr(meta, 'auto_timestamp'):
-            meta.auto_timestamp = True
-
-        # Find out whether or not the model should always perform writes
-        # in safe mode
-        if not hasattr(meta, 'safe'):
-            meta.safe = False
-
-        # Associate the database collection with the new class. A
-        # lambda is used so that the collection reference isn't grabbed
-        # until it's actually needed. property by itself is not
-        # sufficient here. The custom Property subclass is needed in
-        # conjunction with classmethod in order to expose db as a
-        # property of the Meta class.
-        meta.db = Property(classmethod(
-            lambda cls: get_database(cls.database)[cls.collection]))
-
-        # In order to allow __setattr__() to properly ignore real
-        # attributes of the class when passing values through to the
-        # core document, a list of the class's attributes needs to be
-        # stored. At the time of instantiation, _document will be added
-        # to the class. By adding it to the list now, it doesn't need
-        # to be done each time a new list is instantiated.
-        meta.core_attributes = new_class.__dict__.keys() + ['_document']
-
-        # Associate Meta with the new class.
-        setattr(new_class, '_meta', meta)
+        # Associate _meta with the new class.
+        new_class.addattr('_meta', Meta(meta))
 
         return new_class
+
+    def addattr(self, name, value):
+        """Assigns attributes to the class.
+
+        .. versionadded:: 0.1.0
+        """
+
+        if hasattr(value, 'add_to_original'):
+            value.add_to_original(self, name)
+        else:
+            setattr(self, name, value)
 
 
 class Model(object):
@@ -120,29 +153,6 @@ class Model(object):
     """
 
     __metaclass__ = ModelMetaClass
-
-    class Meta:
-        """Default settings for a :class:`~simon.Model`.
-
-        :param auto_timestamp: (optional) If ``False`` ``created`` and
-                               ``modified`` fields won't be added.
-        :type auto_timestamp: bool.
-        :param collection: Name of the collection in the database.
-        :type collection: str.
-        :param database: (optional) Alias of the database.
-        :type database: str.
-        :param field_map: (optional) Map defining aliases for document
-                          keys.
-        :type field_map: dict.
-        :param map_id: (optional) If ``False`` won't include
-                       ``{'id': '_id'}`` in ``field_map``.
-        :type map_id: bool.
-        :param safe: (optional) If ``True`` all writes will use safe
-                     mode.
-        :type safe: bool.
-
-        .. versionadded:: 0.1.0
-        """
 
     def __init__(self, **fields):
         """Assigns all keyword arguments to the object's document.
@@ -259,7 +269,7 @@ class Model(object):
 
         qs = QuerySet(docs, cls)
 
-        if hasattr(cls._meta, 'sort'):
+        if cls._meta.sort:
             # If the model has a default sort, apply it.
             qs = qs.sort(cls._meta.sort)
 
