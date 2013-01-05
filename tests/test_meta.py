@@ -84,8 +84,13 @@ class TestMetaClass(unittest.TestCase):
         class SomeOtherModel(Model):
             pass
 
+        class ModelWithMeta(Model):
+            class Meta:
+                database = 'default'
+
         self.assertEqual(TestModel._meta.collection, 'testmodels')
         self.assertEqual(SomeOtherModel._meta.collection, 'someothermodels')
+        self.assertEqual(ModelWithMeta._meta.collection, 'modelwithmetas')
 
     def test_core_attributes(self):
         """Test the `_meta.core_attributes` attribute."""
