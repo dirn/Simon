@@ -175,7 +175,7 @@ class TestGeo(unittest.TestCase):
         """Test the `_validate_point()` method with alternate types."""
 
         geo._validate_point({'a': 1, 'b': 2},
-                              alternate_type=collections.Mapping)
+                            alternate_type=collections.Mapping)
 
     def test_validate_point_alternate_type_typeerror(self):
         ("Test that `_validate_point()` raises `TypeError` with "
@@ -193,11 +193,11 @@ class TestGeo(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             geo._validate_point({'a': 1},
-                                  alternate_type=collections.Mapping)
+                                alternate_type=collections.Mapping)
 
         with self.assertRaises(ValueError):
             geo._validate_point({'a': 1, 'b': 2, 'c': 3},
-                                  alternate_type=collections.Mapping)
+                                alternate_type=collections.Mapping)
 
     def test_validate_point_name(self):
         """Test the `_validate_point()` method with names."""
@@ -268,7 +268,7 @@ class TestGeo(unittest.TestCase):
         expected = {'$within': {'$polygon': {'a': {'x': 1, 'y': 2},
                                              'b': {'x': 3, 'y': 4}}}}
         actual = geo.within('polygon', a={'x': 1, 'y': 2},
-                              b={'x': 3, 'y': 4})
+                            b={'x': 3, 'y': 4})
         self.assertEqual(actual, expected)
 
     def test_within_runtimeerror(self):
