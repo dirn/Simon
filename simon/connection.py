@@ -1,4 +1,3 @@
-__all__ = ('connect', 'get_database', 'ConnectionError')
 
 from pymongo import uri_parser
 try:
@@ -10,6 +9,7 @@ except ImportError:
 
 from .exceptions import ConnectionError
 
+__all__ = ('connect', 'get_database', 'ConnectionError')
 
 _connections = None
 _databases = None

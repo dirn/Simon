@@ -1,11 +1,11 @@
 """Helper utilities"""
 
-__all__ = ('get_nested_key', 'guarantee_object_id', 'map_fields',
-           'parse_kwargs', 'remove_nested_key', 'update_nested_keys')
-
 import collections
 
 from bson import ObjectId
+
+__all__ = ('get_nested_key', 'guarantee_object_id', 'map_fields',
+           'parse_kwargs', 'remove_nested_key', 'update_nested_keys')
 
 
 # The logical operators are needed when mapping fields. The values

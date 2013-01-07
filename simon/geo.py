@@ -1,8 +1,8 @@
 """Helper methods to ease geospatial queries."""
 
-__all__ = ('box', 'circle', 'near', 'polygon', 'within')
-
 import collections
+
+__all__ = ('box', 'circle', 'near', 'polygon', 'within')
 
 
 def _validate_point(point, name=None, alternate_type=None):

@@ -1,7 +1,5 @@
 """The base Simon models"""
 
-__all__ = ('Model',)
-
 from datetime import datetime
 
 from .connection import get_database
@@ -9,6 +7,8 @@ from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import Q, QuerySet
 from .utils import (get_nested_key, guarantee_object_id, map_fields,
                     remove_nested_key, update_nested_keys)
+
+__all__ = ('Model',)
 
 
 class Meta(object):
