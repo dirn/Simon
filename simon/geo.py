@@ -1,4 +1,4 @@
-"""Helper methods to ease geospatial queries."""
+"""Helper methods to ease geospatial queries"""
 
 import collections
 

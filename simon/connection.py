@@ -1,3 +1,4 @@
+"""Manage database connections"""
 
 from pymongo import uri_parser
 try:
