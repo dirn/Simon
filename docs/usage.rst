@@ -1,0 +1,79 @@
+Basic Usage
+===========
+
+Simon offers a lot of flexibility in how you interact with the database.
+
+All of the examples below utilize the ``User`` model defined in
+:doc:`quickstart`, so if you haven't already done that, you want to
+check it out first.
+
+
+Retrieving
+----------
+
+At the heart of retrieving documents are three methods:
+:meth:`~simon.Model.all`, :meth:`~simon.Model.find`, and
+:meth:`~simon.Model.get`.
+
+Use :meth:`~simon.Model.all` to retrieve all documents from the
+``users`` collection.
+
+.. code-block:: python
+
+    users = Users.all()
+
+Often times it will be necessary to filter the documents coming back. To
+do so, use :meth:`~simon.Model.find`. It takes a series of named
+parameters that represent keys in the documents and the values to match
+against.
+
+To find all documents whose ``name`` field has a value of ``Simon``:
+
+.. code-block:: python
+
+    users = Users.find(name='Simon')
+
+To find all documents whose ``name`` field has a value of ``Simon``
+and whose ``company`` field has a value of ``My Company``:
+
+.. code-block:: python
+
+    internal_users = Users.find(name='Simon', company='My Company')
+
+If you were to execute these queries using the mongo Shell, they would
+look like:
+
+.. code-block:: javascript
+
+    users = db.users.find({name: 'Simon'})
+
+    internal_users = db.users.find({name: 'Simon', company: 'My Company'})
+
+At this point, no real information would have been returned from the
+database. Utilizing the cursor behavior built into PyMongo, documents
+will only be transferred from the database when they are requested. This
+is done by interacting with the result of :meth:`~simon.Model.find` like
+you would with any other iterable such as a ``list``.
+
+.. code-block:: python
+
+    for user in users:
+        print 'A document was just loaded from the users collection'
+
+Documents can also be loaded through slicing, although this will cause
+all documents in, as well as prior to, the slice to be loaded.
+
+.. code-block:: python
+
+    first_user = users[0]
+    # the first user has been loaded
+
+    fourth_users = users[3]
+    # the first four users have been loaded
+
+    all_users = users[:]
+    # all users have been loaded
+
+
+Saving
+------

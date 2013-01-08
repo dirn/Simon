@@ -17,13 +17,15 @@ in a couple of ways. First, unlike other libraries of its kind, Simon
 does not enforce a schema on your documents. This allows you to take
 advantage of the dynamic schemas offered by MongoDB. Second, while Simon
 allows you to perform traditional saves, it also allows you full control
-over performing atomic updates.
+over performing atomic updates. This is covered in greater detail in the
+:doc:`usage` section.
 
 
 .. toctree::
    :maxdepth: 2
 
    quickstart
+   usage
 
 
 Installation
