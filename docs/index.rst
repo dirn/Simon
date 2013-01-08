@@ -12,6 +12,13 @@ of MongoDB and PyMongo in a Pythonic way. It allows you to work with
 objects and methods instead of only allowing you to work with everything
 as a ``dict``.
 
+Simon tries emphasize the flexibility and power of MongoDB. It does this
+in a couple of ways. First, unlike other libraries of its kind, Simon
+does not enforce a schema on your documents. This allows you to take
+advantage of the dynamic schemas offered by MongoDB. Second, while Simon
+allows you to perform traditional saves, it also allows you full control
+over performing atomic updates.
+
 
 .. toctree::
    :maxdepth: 2
