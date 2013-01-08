@@ -179,11 +179,16 @@ class Model(object):
 
     @classmethod
     def all(self):
-        """Wraps around :meth:`~simon.Model.find`.
+        """Returns all documents in the collection.
+
+        If ``sort`` has been defined on the ``Meta`` class it will be
+        used to order the records.
 
         .. versionadded:: 0.1.0
         """
 
+        # All of the functionality already exists inside find(), so
+        # just call that with no parameters.
         return self.find()
 
     @classmethod
