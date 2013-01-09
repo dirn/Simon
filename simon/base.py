@@ -230,11 +230,11 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = getattr(self, 'id', None)
+        id = self._document.get('_id')
         if not id:
             raise TypeError("The '{0}' object cannot be deleted because its "
                             "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
+                                self.__class__.__name__, '_id'))
 
         safe = safe or self._meta.safe
         self._meta.db.remove({'_id': id}, safe=safe)
@@ -403,11 +403,11 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = getattr(self, 'id', None)
+        id = self._document.get('_id')
         if not id:
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
+                                self.__class__.__name__, '_id'))
 
         # There needs to be something to update
         if field is None and not fields:
@@ -475,11 +475,11 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = getattr(self, 'id', None)
+        id = self._document.get('_id')
         if not (id or upsert):
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
+                                self.__class__.__name__, '_id'))
 
         safe = safe or self._meta.safe
 
@@ -543,11 +543,11 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = getattr(self, 'id', None)
+        id = self._document.get('_id')
         if not id:
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
+                                self.__class__.__name__, '_id'))
 
         # fields can contain a single item as a string. If it's not a
         # list or tuple, make it one. Otherwise the generators below
@@ -604,7 +604,7 @@ class Model(object):
         if self._meta.auto_timestamp:
             now = datetime.utcnow()
             now = now.replace(microsecond=(now.microsecond / 1000 * 1000))
-            if not ('id' in self and 'created' in self):
+            if not ('_id' in self._document and 'created' in self):
                 self.created = now
             self.modified = now
 
@@ -680,11 +680,11 @@ class Model(object):
         """
 
         # Make sure the document has already been saved
-        id = getattr(self, 'id', None)
+        id = self._document.get('_id')
         if not id:
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
+                                self.__class__.__name__, '_id'))
 
         # fields can contain a single item as a string. If it's not a
         # list or tuple, make it one. Otherwise the generators below
@@ -737,11 +737,11 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = getattr(self, 'id', None)
+        id = self._document.get('_id')
         if not id:
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, 'id'))
+                                self.__class__.__name__, '_id'))
 
         update = map_fields(self.__class__, fields, flatten_keys=True)
 
