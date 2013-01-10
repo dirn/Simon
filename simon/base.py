@@ -443,7 +443,7 @@ class Model(object):
         for k, v in doc.items():
             setattr(self, k, v)
 
-    def raw_update(self, fields, safe=False, upsert=False):
+    def raw_update(self, fields, safe=False):
         """Performs an update using a raw document.
 
         This method should be used carefully as it will perform the
@@ -467,56 +467,30 @@ class Model(object):
         :param safe: (optional) Whether to perform the save in safe
                      mode.
         :type safe: bool.
-        :param upsert: (optional) Whether to perform the update as an
-                       upsert.
-        :type upsert: bool.
         :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0
         """
 
         id = self._document.get('_id')
-        if not (id or upsert):
+        if not id:
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
                                 self.__class__.__name__, '_id'))
 
         safe = safe or self._meta.safe
 
-        result = self._meta.db.update({'_id': id}, fields, safe=safe,
-                                      upsert=upsert)
+        self._meta.db.update({'_id': id}, fields, safe=safe)
 
-        # When upserting, the instance will need its _id. The way
-        # to obtain that varies based on whether or not the upsert
-        # happened in safe mode.
-        #
-        # When not in safe mode, the newly created document must be
-        # retrieved from the database. It can be obtained through
-        # a call to find_one() with the same query. A sort needs
-        # to be provided to make sure the newest document comes
-        # back first.
-        #
-        # When in safe mode, however, the database will return a
-        # document which includes the upserted _id and the
-        # updatedExisting field set to False.
-        #
-        # At the same time, the entire document needs to be reloaded
-        # in order to update the existence. When performing an unsafe
-        # upsert, the document needs to be retrieved in order to get the
-        # _id. Rather than only getting the one field, the whole
-        # document can be requested to avoid two trips to the database.
-        doc = None
-        if safe:
-            if not result.get('updatedExisting', True):
-                self.id = result.get('upserted', None)
-        elif upsert:
-            doc = self._meta.db.find_one(fields, sort=[('_id', -1)])
-            self.id = doc['_id']
+        # After saving the document, the entire document must be
+        # reloaded in order to update the instance.
+        doc = self._meta.db.find_one({'_id': self.id})
 
-        if not doc:
-            doc = self._meta.db.find_one({'_id': self.id})
-
-        for k, v in doc.items():
+        for k, v in doc.iteritems():
+            # Normally I'd use self._document[k] = v, but if a value
+            # has already been associated with an attribute, assigning
+            # the new value through _document won't update the
+            # attribute's value.
             setattr(self, k, v)
 
     def remove_fields(self, fields, safe=False):
@@ -577,7 +551,7 @@ class Model(object):
                     # Silently handle attributes that don't exist
                     pass
 
-    def save(self, safe=False, upsert=False):
+    def save(self, safe=False):
         """Saves the object to the database.
 
         When saving a new document for a model with ``auto_timestamp``
@@ -588,9 +562,6 @@ class Model(object):
         :param safe: (optional) Whether to perform the save in safe
                      mode.
         :type safe: bool.
-        :param upsert: (optional) Whether to perform the save as an
-                       upsert.
-        :type upsert: bool.
 
         .. versionadded:: 0.1.0
         """
@@ -614,39 +585,19 @@ class Model(object):
         # capture a reference to the document and pop it out of that.
         doc = self._document.copy()
         id = doc.pop('_id', None)
-        if id:
-            id = guarantee_object_id(id)
 
         doc = map_fields(self.__class__, doc)
 
         safe = safe or self._meta.safe
 
-        if upsert or id:
-            result = self._meta.db.update({'_id': id}, doc, safe=safe,
-                                          upsert=upsert)
-
-            # When upserting, the instance will need its _id. The way
-            # to obtain that varies based on whether or not the upsert
-            # happened in safe mode.
-            #
-            # When not in safe mode, the newly created document must be
-            # retrieved from the database. It can be obtained through
-            # a call to find_one() with the same query. A sort needs
-            # to be provided to make sure the newest document comes
-            # back first.
-            #
-            # When in safe mode, however, the database will return a
-            # document which includes the upserted _id and the
-            # updatedExisting field set to False.
-            if safe:
-                if not result.get('updatedExisting', True):
-                    self.id = result.get('upserted', None)
-            elif upsert:
-                doc = self._meta.db.find_one(doc, {'_id': 1},
-                                             sort=[('_id', -1)])
-                self.id = doc['_id']
+        if id:
+            # The document already exists, so it can just be updated.
+            id = guarantee_object_id(id)
+            self._meta.db.update({'_id': id}, doc, safe=safe)
         else:
-            self.id = self._meta.db.insert(doc, safe=safe)
+            # When the document doesn't exist, insert() can be used to
+            # created it and get back the _id.
+            self._document['_id'] = self._meta.db.insert(doc, safe=safe)
 
     def save_fields(self, fields, safe=False):
         """Saves only the specified fields.
