@@ -80,8 +80,9 @@ Saving
 
 The main way to save a document using Simon is with
 :meth:`~simon.Model.save`. Calling it on an instance with a new document
-will insert the document. The document will be given an Object ID by the
-database, which will then be associated with the instance.
+will insert the document. The document will be given an
+:class:`ObjectId <pymongo:bson.objectid.ObjectId>` by the database,
+which will then be associated with the instance.
 
 .. code-block:: python
 

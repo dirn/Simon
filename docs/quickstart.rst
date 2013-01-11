@@ -46,7 +46,8 @@ Saving
 
 Saving the changes is as easy as calling :meth:`~simon.Model.save`.
 ``created`` and ``modified`` dates will be added to the document before
-it is written to the database, and the Object ID assigned by the
+it is written to the database, and the
+:class:`ObjectId <pymongo:bson.objectid.ObjectId>` assigned by the
 database will be added to the instance. (``created`` will only be added
 to documents that haven't already been saved and don't already have a
 ``created`` field.)
