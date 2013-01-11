@@ -77,3 +77,30 @@ all documents in, as well as prior to, the slice to be loaded.
 
 Saving
 ------
+
+The main way to save a document using Simon is with
+:meth:`~simon.Model.save`. Calling it on an instance with a new document
+will insert the document. The document will be given an Object ID by the
+database, which will then be associated with the instance.
+
+.. code-block:: python
+
+    user = User(name='Simon')
+    user.save()  # insert
+
+Calling :meth:`~simon.Model.save` on an instance with an existing
+document will update the document. This will replace what's in the
+database with the one associated with the instance.
+
+.. code-block:: python
+
+    user.email = 'simon@example.org'
+    user.save()  # update
+
+The equivalent queries in the mongo Shell would be:
+
+.. code-block:: javascript
+
+    db.users.insert({name: 'Simon'})
+
+    db.users.update({_id: ObjectId(...)}, {email: 'simon@example.org'})
