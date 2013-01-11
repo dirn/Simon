@@ -105,3 +105,30 @@ The equivalent queries in the mongo Shell would be:
     db.users.insert({name: 'Simon'})
 
     db.users.update({_id: ObjectId(...)}, {email: 'simon@example.org'})
+
+
+Deleting
+--------
+
+If you don't want a document anymore, removing it from the database is
+simply a matter of calling :meth:`~simon.Model.delete`.
+
+.. code-block:: python
+
+    user.delete()
+
+Be careful as this will raise a :class:`TypeError` if you try to delete
+a document that was never saved.
+
+If you were to execute this query directly in mongo Shell, it would
+look like:
+
+.. code-block:: javascript
+
+    db.users.remove({_id: ObjectId(...)})
+
+At the time of this writing there appears to be no way to set the
+``justOne`` parameter to ``true`` using
+:meth:`PyMongo <pymongo:pymongo.collection.Collection.remove>`. If you
+decide to remove the unique constraint from the ``_id`` field, bad
+things could happen when you use :meth:`~simon.Model.delete`.
