@@ -26,6 +26,7 @@ over performing atomic updates. This is covered in greater detail in the
 
    quickstart
    usage
+   queryset
    api
 
 
