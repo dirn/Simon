@@ -169,6 +169,13 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'x': 1, 'y': 2})
         self.assertEqual(actual, expected)
 
+    def test_map_fields_array_operators(self):
+        """Test the `map_fields()` method with array operators."""
+
+        expected = {'a': {'$size': 2}}
+        actual = map_fields(TestModel, {'a__size': 2}, with_comparisons=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_comparison_operators(self):
         """Test the `map_fields()` method with `with_comparisons` set."""
 

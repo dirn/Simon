@@ -138,6 +138,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     * ``$nin`` the key's value is not within the given list
     * ``$exists`` the the key exists
     * ``$near`` the key's value is near the given location
+    * ``$size`` the key's value has a length equal to the given value
 
     To utilize any of the operators, append ``__`` and the name of the
     operator sans the ``$`` (e.g., ``__gt``, ``__lt``) to the name of
@@ -182,7 +183,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
 
     if with_comparisons:
         operators = ('all', 'exists', 'gt', 'gte', 'in', 'lt', 'lte', 'ne',
-                     'near', 'nin')
+                     'near', 'nin', 'size')
 
         for k, v in fields.items():
             # To figure out if a key includes an operator, split it
