@@ -266,7 +266,7 @@ class Model(object):
                 fields.update(q._filter)
 
         query = map_fields(cls, fields, flatten_keys=True,
-                           with_comparisons=True)
+                           with_operators=True)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query:
@@ -311,7 +311,7 @@ class Model(object):
         # Convert the field spec into a query by mapping any necessary
         # fields.
         query = map_fields(cls, fields, flatten_keys=True,
-                           with_comparisons=True)
+                           with_operators=True)
 
         # If querying by the _id, make sure it's an Object ID
         if '_id' in query:
