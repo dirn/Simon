@@ -105,7 +105,7 @@ def guarantee_object_id(value):
     return value
 
 
-def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
+def map_fields(cls, fields, with_operators=False, flatten_keys=False):
     """Maps attribute names to document keys.
 
     Attribute names will be mapped to document keys using
@@ -124,8 +124,8 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     back into :meth:`map_fields` to ensure that keys nested within
     boolean queries are mapped properly.
 
-    If ``with_comparisons`` is set, the following comparison operators
-    will be checked for and included in the result:
+    If ``with_operators`` is set, the following operators will be
+    checked for and included in the result:
 
     * ``$gt`` the key's value is greater than the value given
     * ``$gte`` the key's value is greater than or equal to the value
@@ -145,7 +145,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     the key::
 
         map_fields(ModelClass, {'a__gt': 1, 'b__lt': 2},
-                   with_comparisons=True)
+                   with_operators=True)
 
     This will check for a greater than 1 and b less than 2 as::
 
@@ -155,7 +155,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     above operators::
 
         map_fields(ModelClass, {'a__gt': 1, 'b__not__lt': 2},
-                   with_comparisons=True)
+                   with_operators=True)
 
     This will check for a greater than 1 and b not less than 2 as::
 
@@ -169,9 +169,9 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     :type cls: type.
     :param fields: Key/value pairs to be used for queries.
     :type fields: dict.
-    :param with_comparisons: (optional) Whether or not to process
-                             comparison operators.
-    :type with_comparisons: bool.
+    :param with_operators: (optional) Whether or not to process
+                             operators.
+    :type with_operators: bool.
     :param flatten_keys: (optional) Whether to allow the nested keys to
                          be nested.
     :type flatten_keys: bool.
@@ -181,7 +181,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
     .. versionadded:: 0.1.0
     """
 
-    if with_comparisons:
+    if with_operators:
         operators = ('all', 'exists', 'gt', 'gte', 'in', 'lt', 'lte', 'ne',
                      'near', 'nin', 'size')
 
@@ -223,7 +223,7 @@ def map_fields(cls, fields, with_comparisons=False, flatten_keys=False):
             # from the mapped dictionaries.
             if isinstance(v, list):
                 v = [map_fields(cls=cls, fields=x,
-                                with_comparisons=with_comparisons,
+                                with_operators=with_operators,
                                 flatten_keys=flatten_keys) for x in v]
         else:
             if '__' in k:
