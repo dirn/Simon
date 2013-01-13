@@ -43,53 +43,85 @@ available in the `MongoDB docs`_.
 Comparison Operators
 --------------------
 
-The full list of operators available is:
+The full list of comparison operators available is:
 
 gt
   Matches documents where the field's value is greater than the
   specified value.
 
+  .. code-block:: python
+
+    users = User.find(score__gt=1000)
+
 gte
   Matches documents where the field's value is greater than or equal to
   the specified value.
+
+  .. code-block:: python
+
+    users = User.find(score__gte=1000)
 
 lt
   Matches documents where the field's value is less than the specified
   value.
 
+  .. code-block:: python
+
+    users = User.find(score__lt=1000)
+
 lte
   Matches documents where the field's value is less than or equal to the
   specified value.
+
+  .. code-block:: python
+
+    users = User.find(score__lte=1000)
 
 ne
   Matches documents where the field's value is not equal to the
   specified value.
 
+  .. code-block:: python
+
+    users = User.find(name__ne='Simon')
+
 in
   Matches documents where the field's value is equal to any of the
   values in the specified list.
+
+  .. code-block:: python
+
+    users = User.find(name__in=['Alvin', 'Simon', 'Theodore'])
 
 nin
   Matches documents where the field's value is not equal to any of the
   values in the specified list.
 
+  .. code-block:: python
+
+    users = User.find(name__nin=['Alvin', 'Simon', 'Theodore'])
+
 all
   Matches documents where the field holds a list containing all of the
   specified elements.
 
+  .. code-block:: python
 
-Logical Operators
------------------
-
-    * ``$and``
-    * ``$or``
-    * ``$not``
+    users = User.find(friends__all=['Alvin', 'Theodore'])
 
 
 Element Operators
 -----------------
 
-    * ``$exists``
+The full list of element operators available is:
+
+exists
+  Matches documents where the field's existence mtches the specified
+  value.
+
+  .. code-block:: python
+
+    users = User.find(email__exists=True)
 
 
 Array Operators
@@ -102,3 +134,13 @@ Geospatial Queries
 ------------------
 
     * ``$near``
+
+
+Logical Operators
+-----------------
+
+    * ``$and``
+    * ``$or``
+    * ``$not``
+
+
