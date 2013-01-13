@@ -169,89 +169,6 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'x': 1, 'y': 2})
         self.assertEqual(actual, expected)
 
-    def test_map_fields_array_operators(self):
-        """Test the `map_fields()` method with array operators."""
-
-        expected = {'a': {'$size': 2}}
-        actual = map_fields(TestModel, {'a__size': 2}, with_operators=True)
-        self.assertEqual(actual, expected)
-
-    def test_map_fields_comparison_operators(self):
-        """Test the `map_fields()` method with `with_operators` set."""
-
-        expected = {'a': 1}
-        actual = map_fields(TestModel, {'a': 1}, with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$all': [1, 2]}}
-        actual = map_fields(TestModel, {'a__all': [1, 2]},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$gt': 1}}
-        actual = map_fields(TestModel, {'a__gt': 1}, with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$gte': 1}}
-        actual = map_fields(TestModel, {'a__gte': 1}, with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$lt': 1}}
-        actual = map_fields(TestModel, {'a__lt': 1}, with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$lte': 1}}
-        actual = map_fields(TestModel, {'a__lte': 1}, with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$ne': 1}}
-        actual = map_fields(TestModel, {'a__ne': 1}, with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$in': [1, 2]}}
-        actual = map_fields(TestModel, {'a__in': [1, 2]},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$nin': [1, 2]}}
-        actual = map_fields(TestModel, {'a__nin': [1, 2]},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$exists': True}}
-        actual = map_fields(TestModel, {'a__exists': True},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'loc': {'$near': [1, 2]}}
-        actual = map_fields(TestModel, {'loc__near': [1, 2]},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-    def test_map_fields_comparison_operators_not(self):
-        ("Test the `map_fields()` method with `not` and "
-         "`with_operators` set.")
-
-        expected = {'a': {'$not': {'$gt': 1}}}
-        actual = map_fields(TestModel, {'a__not__gt': 1},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'c': {'$not': {'$lt': 1}}}
-        actual = map_fields(TestModel, {'b__not__lt': 1},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'b': {'$not': {'$ne': 1}}}}
-        actual = map_fields(TestModel, {'a__b__not__ne': 1},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
-        expected = {'a': {'$not': {'$gte': 1}}, 'c': 2}
-        actual = map_fields(TestModel, {'a__not__gte': 1, 'b': 2},
-                            with_operators=True)
-        self.assertEqual(actual, expected)
-
     def test_map_fields_flattened_keys(self):
         """Test the `map_fields()` method with `flatten_keys` set."""
 
@@ -375,6 +292,86 @@ class TestUtils(unittest.TestCase):
         expected = {'$or': [{'a': 1}, {'i.j': 2},
                             {'$and': [{'z.x': 3}, {'z.y': 4}]}]}
         actual = map_fields(TestModel, condition, flatten_keys=True)
+        self.assertEqual(actual, expected)
+
+    def test_map_fields_with_operators(self):
+        """Test the `map_fields()` method with `with_operators` set."""
+
+        expected = {'a': 1}
+        actual = map_fields(TestModel, {'a': 1}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$all': [1, 2]}}
+        actual = map_fields(TestModel, {'a__all': [1, 2]},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$gt': 1}}
+        actual = map_fields(TestModel, {'a__gt': 1}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$gte': 1}}
+        actual = map_fields(TestModel, {'a__gte': 1}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$lt': 1}}
+        actual = map_fields(TestModel, {'a__lt': 1}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$lte': 1}}
+        actual = map_fields(TestModel, {'a__lte': 1}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$ne': 1}}
+        actual = map_fields(TestModel, {'a__ne': 1}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$in': [1, 2]}}
+        actual = map_fields(TestModel, {'a__in': [1, 2]},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$nin': [1, 2]}}
+        actual = map_fields(TestModel, {'a__nin': [1, 2]},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$exists': True}}
+        actual = map_fields(TestModel, {'a__exists': True},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'loc': {'$near': [1, 2]}}
+        actual = map_fields(TestModel, {'loc__near': [1, 2]},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$size': 2}}
+        actual = map_fields(TestModel, {'a__size': 2}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+    def test_map_fields_with_operators_not(self):
+        ("Test the `map_fields()` method with `not` and "
+         "`with_operators` set.")
+
+        expected = {'a': {'$not': {'$gt': 1}}}
+        actual = map_fields(TestModel, {'a__not__gt': 1},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'c': {'$not': {'$lt': 1}}}
+        actual = map_fields(TestModel, {'b__not__lt': 1},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'b': {'$not': {'$ne': 1}}}}
+        actual = map_fields(TestModel, {'a__b__not__ne': 1},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$not': {'$gte': 1}}, 'c': 2}
+        actual = map_fields(TestModel, {'a__not__gte': 1, 'b': 2},
+                            with_operators=True)
         self.assertEqual(actual, expected)
 
     def test_parse_kwargs(self):
