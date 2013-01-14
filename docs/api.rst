@@ -4,12 +4,16 @@ Simon API
 The following is a look into the API inside Simon.
 
 
+.. _connection:
+
 Connection
 ----------
 
 .. automodule:: simon.connection
    :members:
 
+
+.. _model:
 
 Model
 -----
@@ -18,6 +22,8 @@ Model
    :members:
 
 
+.. _geo:
+
 Geo
 ---
 
@@ -25,12 +31,16 @@ Geo
    :members:
 
 
+.. _query:
+
 Query
 -----
 
 .. automodule:: simon.query
    :members:
 
+
+.. _utils:
 
 Utils
 -----
