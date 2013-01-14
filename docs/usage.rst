@@ -74,6 +74,8 @@ all documents in, as well as prior to, the slice to be loaded.
     all_users = users[:]
     # all users have been loaded
 
+More advanced uses are covered in :doc:`querying`.
+
 
 Saving
 ------

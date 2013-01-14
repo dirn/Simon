@@ -219,8 +219,63 @@ The full list of options offered by each method can be found in the
 Logical Operators
 -----------------
 
-    * ``$and``
-    * ``$or``
-    * ``$not``
+Sometimes more complex queries require combining conditions with logical
+operators, such as ``AND``, ``OR``, and ``NOT``.
 
+not
+  Performs a logical ``NOT`` operation on the specified expression.
 
+  .. code-block:: python
+
+    users = User.find(score__not__gt=1000)
+
+To perform this query in the mongo Shell:
+
+.. code-block:: javascript
+
+    users = db.users.find({score: {$not: {$gt: 1000}}})
+
+Using the ``AND`` and ``OR`` operators with Simon requires the
+assistance of :class:`~simon.query.Q` objects. Fortunately they work
+just like any other query with Simon. Instead of passing the the query
+directly to a method like :meth:`~simon.Model.find`, however, the
+query is passed to :class:`~simon.query.Q`.
+
+.. code-block:: python
+
+    from simon.query import Q
+    query = Q(name='Simon')
+
+The new object is then combined with one or more additional
+:class:`~simon.query.Q` objects, the end result of which is then passed
+to :meth:`~simon.Model.find`. :class:`~simon.query.Q` objects are
+combined using bitwise and (``&``) and or (``|``) to represent logical
+``AND`` and ``OR``, respectively.
+
+.. code-block:: python
+
+    # match users where name is equal to 'Simon' AND score is greater
+    # than 1000
+    users = User.find(Q(name='Simon') & Q(score__gt=1000))
+
+    # match users where name is equal to 'Simon' AND score is greater
+    # than 1000, OR name is either 'Alvin' or 'Theodore'
+    users = User.find(Q(name='Simon', score__gt=1000) | Q(name__in=['Alvin', 'Theodore']))
+
+    # match users who have no friends
+    users = User.find(Q(friends__exists=False) | Q(friends__size=0))
+
+Any number of :class:`~simon.query.Q` objects can be chained together.
+Be careful, however, as chaining together a lot of queries through
+different operators can result in deeply nested queries, which may
+become inefficient.
+
+Here's how these queries would look in the mongo Shell:
+
+.. code-block:: javascript
+
+    users = db.users.find({$and: [{name: 'Simon'}, {score: {$gt: 1000}}]})
+
+    users = db.users.find({$or: [{name: 'Simon', score: {$gt: 1000}}, {name: {$in: ['Alvin', 'Theodore']}}]})
+
+    users = db.users.find({$or: [{friends: {$exists: false}}, {friends: {$size: 0}}]})
