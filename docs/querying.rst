@@ -116,7 +116,7 @@ Element Operators
 The full list of element operators available is:
 
 exists
-  Matches documents where the field's existence mtches the specified
+  Matches documents where the field's existence matches the specified
   value.
 
   .. code-block:: python
