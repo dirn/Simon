@@ -241,4 +241,3 @@ class TestMetaClass(unittest.TestCase):
 
         self.assertEqual(u'{0}'.format(DefaultModel._meta),
                          u'DefaultModel.Meta')
-
