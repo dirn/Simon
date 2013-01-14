@@ -127,13 +127,74 @@ exists
 Array Operators
 ---------------
 
-    * ``$size``
+The full list of array operators available is:
+
+size
+  Matches documents where the field is a list of the specified length.
+
+  .. code-block:: python
+
+    users = User.find(fields__size=2)
 
 
-Geospatial Queries
-------------------
+Geospatial Operators
+--------------------
 
-    * ``$near``
+One of the most powerful ways to query with MongoDB is through
+geospatial querying. Unlike the operators discussed thus far, Simon
+exposes the geospatial operators through convenience methods that help
+harness the full potential of each operator.
+
+The convenience methods can be used by importing the ``geo`` module.
+
+.. code-block:: python
+
+    from simon import geo
+
+near
+  Matches documents from nearest to farthest with respect to the
+  specified point.
+
+  .. code-block:: python
+
+    users = User.find(location=geo.near([x, y]))
+
+within
+  Matches documents contained within the specified shape.
+
+  .. code-block:: python
+
+    users = User.find(location=geo.within('box', [x1, y1], [x2, y2]))
+
+  While :meth:`~simon.geo.within` can be used on its own, the following
+  methods make it even easier.
+
+box
+  Matches documents within the specified rectangular shape.
+
+  .. code-block:: python
+
+    users = User.find(location=geo.box([x1, y1], [x2, y2]))
+
+polygon
+  Matches documents within the specified polygonal shape.
+
+  .. code-block:: python
+
+    users = User.find(location=geo.polygon([x1, y1], [x2, y2], [x3, y3]))
+
+center
+  Matches documents within the specified circular shape. **Note** the
+  ``center`` operator is accessed through the :meth:`~simon.geo.circle`
+  method.
+
+  .. code-block:: python
+
+    center = [x, y]
+    users = User.find(location=geo.circle(center, radius))
+
+The full list of options offered by each method can be found in the
+:ref:`geo` section of :doc:`api`.
 
 
 Logical Operators
