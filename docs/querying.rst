@@ -145,6 +145,13 @@ geospatial querying. Unlike the operators discussed thus far, Simon
 exposes the geospatial operators through convenience methods that help
 harness the full potential of each operator.
 
+Before you can use any of these operators, you will need to create a
+:data:`two-dimensional index <pymongo:pymongo.GEO2D>`.
+
+.. code-block:: javascript
+
+    db.users.ensureIndex({location: '2d'})
+
 The convenience methods can be used by importing the ``geo`` module.
 
 .. code-block:: python
@@ -192,6 +199,18 @@ center
 
     center = [x, y]
     users = User.find(location=geo.circle(center, radius))
+
+Here's a quick run through of these queries in the mongo Shell:
+
+.. code-block:: javascript
+
+    users = db.users.find({location: {$near: [x, y]}})
+
+    users = db.users.find({location: {$within: {$box: [[x1, y1], [x2, y2]]}}})
+
+    users = db.users.find({location: {$within: {$polygon: [[x1, y1], [x2, y2], [x3, y3]]}}})
+
+    users = db.users.find({location: {$within: {$center: [[x, y], radius]}}})
 
 The full list of options offered by each method can be found in the
 :ref:`geo` section of :doc:`api`.
