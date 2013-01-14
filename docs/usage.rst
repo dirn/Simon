@@ -108,6 +108,8 @@ The equivalent queries in the mongo Shell would be:
 
     db.users.update({_id: ObjectId(...)}, {email: 'simon@example.org'})
 
+More advanced uses are covered in :doc:`saving`.
+
 
 Deleting
 --------
