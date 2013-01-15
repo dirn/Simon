@@ -29,6 +29,7 @@ over performing atomic updates. This is covered in greater detail in the
    queryset
    querying
    saving
+   connection
    meta
    api
 
