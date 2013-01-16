@@ -45,6 +45,11 @@ class TestModel4(TestModel3):
     """This is used to test a subclassed model."""
 
 
+class TestModel5(Model):
+    class Meta:
+        sort = ['id', '-name']
+
+
 class TestMetaClass(unittest.TestCase):
     def test_auto_timestamp(self):
         """Test the `_meta.auto_timestamp` attribute."""
@@ -59,7 +64,7 @@ class TestMetaClass(unittest.TestCase):
         # Test the explicit behavior, just as a sanity check
         self.assertFalse(TestModel2._meta.auto_timestamp)
         self.assertTrue(TestModel3._meta.auto_timestamp)
-        self.assertTrue(TestModel4._meta.auto_timestamp)
+        self.assertTrue(TestModel5._meta.auto_timestamp)
 
     def test_class_name(self):
         """Test the `_meta.class_name` attribute."""
@@ -68,7 +73,7 @@ class TestMetaClass(unittest.TestCase):
         self.assertEqual(TestModel1.__name__, TestModel1._meta.class_name)
         self.assertEqual(TestModel2.__name__, TestModel2._meta.class_name)
         self.assertEqual(TestModel3.__name__, TestModel3._meta.class_name)
-        self.assertEqual(TestModel4.__name__, TestModel4._meta.class_name)
+        self.assertEqual(TestModel5.__name__, TestModel5._meta.class_name)
 
     def test_collection(self):
         """Test the `_meta.collection` attribute."""
@@ -208,7 +213,8 @@ class TestMetaClass(unittest.TestCase):
         self.assertTrue(DefaultModel._meta.sort is None)
         self.assertTrue(TestModel1._meta.sort is None)
         self.assertTrue(TestModel2._meta.sort is None)
-        self.assertEqual(TestModel3._meta.sort, '-id')
+        self.assertEqual(TestModel3._meta.sort, ('-id',))
+        self.assertEqual(TestModel5._meta.sort, ['id', '-name'])
 
     def test_str(self):
         """Test the `__str__()` method."""

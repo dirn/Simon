@@ -75,6 +75,13 @@ class Meta(object):
             # If map_id is True and id isn't in field_map, add it.
             self.field_map['id'] = '_id'
 
+        # When calling QuerySet.sort(), it accepts the sort fields as
+        # *args. Forcing Meta.sort into an iterable now allows it to
+        # be specified as either a single field or a list when defining
+        # the model and saves the trouble of having to worry about it
+        # later.
+        if self.sort and not isinstance(self.sort, (list, tuple)):
+            self.sort = (self.sort,)
 
     @property
     def db(self):
@@ -275,7 +282,7 @@ class Model(object):
 
         if cls._meta.sort:
             # If the model has a default sort, apply it.
-            qs = qs.sort(cls._meta.sort)
+            qs = qs.sort(*cls._meta.sort)
 
         return qs
 
