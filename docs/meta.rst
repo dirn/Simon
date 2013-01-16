@@ -150,5 +150,15 @@ by defining the ``sort`` option on the ``Meta`` class.
     class Meta:
         sort = 'name'  # sort by name ascending
 
+The default sort can also handle multiple fields.
+
+.. code-block:: python
+
+    class Meta:
+        sort = ('name', 'email')  # sort by name and email ascending
+
+For a explanation of how to take full advantage of the ``sort`` option,
+check out the :meth:`~simon.query.QuerySet.sort` method.
+
 More information about natural sort is available in the
 `MongoDB Docs <http://docs.mongodb.org/manual/reference/glossary/#term-natural-order>`_.
