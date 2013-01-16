@@ -75,10 +75,6 @@ class Meta(object):
             # If map_id is True and id isn't in field_map, add it.
             self.field_map['id'] = '_id'
 
-        # Assign the database as a lambda so that the connection isn't
-        # actually made until it's needed.
-        #self.db = Property(classmethod(
-        #    lambda cls: get_database(cls.database)[cls.collection]))
 
     @property
     def db(self):
