@@ -187,3 +187,6 @@ behavior.
     user.update(email='simon@example.com', safe=True)
 
     user.delete(safe=True)
+
+This allows applies to the :meth:`~simon.Model.get_or_create` method
+discussed in :doc:`querying`.

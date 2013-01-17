@@ -319,3 +319,29 @@ Assume the following documents for all examples below.
     else:
         """Only one User was found"""
 
+In the case of :class:`~simon.exceptions.NoDocumentFound`, there may be
+times when the way to handle the exception would be to create the
+document. A common pattern would:
+
+.. code-block:: python
+
+    try:
+        user = User.get(name='Simon')
+    except User.NoDocumentFound:
+        user = User.create(name='Simon')
+
+Rather than making you use this pattern over and over, Simon does it for
+you, inside the :meth:`~simon.Model.get_or_create` method. Not only will
+:meth:`~simon.Model.get_or_create` do this, it will also let you know if
+it had to create the document.
+
+.. code-block:: python
+
+    user, created = User.get_or_create(name='Simon')
+    # user will be the newly created document and created will be True
+
+    user, created = User.get_or_create(name='Simon')
+    # user will be loaded from the database and created will be False
+
+If multiple documents match the query,
+:class:`~simon.exceptions.MultipleDocumentsFound` will still be raised.
