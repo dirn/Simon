@@ -188,5 +188,5 @@ behavior.
 
     user.delete(safe=True)
 
-This allows applies to the :meth:`~simon.Model.get_or_create` method
+This also applies to the :meth:`~simon.Model.get_or_create` method
 discussed in :doc:`querying`.
