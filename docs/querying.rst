@@ -16,11 +16,11 @@ Simon will automatically translate it into the correct query syntax.
     # match users where score is greater than 1000
     users = User.find(score__gt=1000)
 
-    # match users who joined in 2012
+    # match users created in 2012
     from datetime import datetime
     jan_1_2012 = datetime(2012, 1, 1)
     jan_1_2013 = datetime(2013, 1, 1)
-    users = User.find(joined__gte=jan_1_2012, joined__lt=jan_1_2013)
+    users = User.find(created__gte=jan_1_2012, created__lt=jan_1_2013)
 
 There's queries will be translated to:
 
@@ -32,7 +32,7 @@ There's queries will be translated to:
 
     jan_1_2012 = new Date(2012, 1, 1)
     jan_1_2013 = new Date(2013, 1, 1)
-    users = db.users.find({joined: {$gte: jan_1_2012, $lt: jan_1_2013}})
+    users = db.users.find({created: {$gte: jan_1_2012, $lt: jan_1_2013}})
 
 More information about all of the operators offered by MongoDB is
 available in the `MongoDB docs`_.
