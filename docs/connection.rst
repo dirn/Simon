@@ -43,7 +43,7 @@ database with the alias ``simon``. It will also connect to ``mongod`` on
 ``legacy-server`` and use the ``simon`` database with the alias
 ``legacy-simon``.
 
-Before moving on to more advanced concepts, there's on more thing to
+Before moving on to more advanced concepts, there's one more thing to
 point out. The first call to :meth:`~simon.connection.connect` will have
 two aliases, the name of the database and ``default``. By default, all
 of your Simon models will use this connection.
