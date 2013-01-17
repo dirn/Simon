@@ -279,3 +279,43 @@ Here's how these queries would look in the mongo Shell:
     users = db.users.find({$or: [{name: 'Simon', score: {$gt: 1000}}, {name: {$in: ['Alvin', 'Theodore']}}]})
 
     users = db.users.find({$or: [{friends: {$exists: false}}, {friends: {$size: 0}}]})
+
+
+Exceptions
+----------
+
+When using :meth:`~simon.Model.get` to retrieve a document, there are
+two potential exceptions that may be raised. When one of these
+exceptions is raised, it will be raised as part of the model class
+being queried.
+
+Assume the following documents for all examples below.
+
+:class:`~simon.exceptions.MultipleDocumentsFound`
+  This exception is raised when multiple documents match the specified
+  query.
+
+  .. code-block:: python
+
+    User.create(name='Simon', email='simon@example.com')
+    User.create(name='Simon', email='simon@example.org')
+
+    try:
+        user = User.get(name='Simon')
+    except User.MultipleDocumentsFound:
+        """Handle the exception here"""
+    else:
+        """Only one User was found"""
+
+:class:`~simon.exceptions.NoDocumentFound`
+  This exception is raised when no documents match the specified query.
+
+  .. code-block:: python
+
+    try:
+        user = User.get(name='Alvin')
+    except User.NoDocumentFound:
+        """Handle the exception here"""
+    else:
+        """Only one User was found"""
+
