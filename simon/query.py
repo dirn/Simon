@@ -233,6 +233,11 @@ class QuerySet(object):
         .. versionadded:: 0.1.0
         """
 
+        # If all of the the requested documents have been loaded, get
+        # out early.
+        if index < len(self._items):
+            return
+
         # If the specified index is beyond the total number of
         # documents, load until the last document
         if index >= self.count():
@@ -290,10 +295,10 @@ class QuerySet(object):
 
             bound = k + 1
 
-        # If the requested index or slice hasn't been loaded into the
-        # cache yet, do it now
-        if len(self._items) < bound:
-            self._fill_to(bound)
+        # bound will contain the number, not the index, of the last
+        # requested document. Load all documents up to and including
+        # the last bound now.
+        self._fill_to(bound - 1)
 
         return self._items[k]
 

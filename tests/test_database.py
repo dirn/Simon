@@ -1139,6 +1139,7 @@ class TestQuery(unittest.TestCase):
         for x in range(3):
             self.assertEqual(self.qs[x], docs[x])
             self.assertEqual(self.qs[x], self.qs._items[x])
+            self.assertEqual(len(self.qs._items), x + 1)
 
     def test___getitem___slice(self):
         """Test the `__getitem__()` method with slices."""
@@ -1151,37 +1152,75 @@ class TestQuery(unittest.TestCase):
         doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
         doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
 
-        slice1 = self.qs[1:]
-        slice2 = self.qs[:1]
-        slice3 = self.qs[1:2]
-        slice4 = self.qs[::2]
-        slice5 = self.qs[1::2]
-        slice6 = self.qs[::]
+        # For these tests, use skip() so each slice is created based on
+        # a fresh cursor.
+
+        qs1 = self.qs.skip(0)
+        slice1 = qs1[1:]
+
+        # Skips the first document and returns the rest, so all
+        # documents need to be loaded from the cursor.
+        self.assertEqual(len(qs1._items), 3)
 
         self.assertEqual(len(slice1), 2)
         self.assertFalse(doc1 in slice1)
         self.assertTrue(doc2 in slice1)
         self.assertTrue(doc3 in slice1)
 
+        qs2 = self.qs.skip(0)
+        slice2 = qs2[:1]
+
+        # Loads the first document, so only one should be loaded from
+        # the cursor.
+        self.assertEqual(len(qs2._items), 1)
+
         self.assertEqual(len(slice2), 1)
         self.assertTrue(doc1 in slice2)
         self.assertFalse(doc2 in slice2)
         self.assertFalse(doc2 in slice2)
+
+        qs3 = self.qs.skip(0)
+        slice3 = qs3[1:2]
+
+        # Loads the second document, so the first two should be loaded
+        # from the cursor.
+        self.assertEqual(len(qs3._items), 2)
 
         self.assertEqual(len(slice3), 1)
         self.assertFalse(doc1 in slice3)
         self.assertTrue(doc2 in slice3)
         self.assertFalse(doc3 in slice3)
 
+        qs4 = self.qs.skip(0)
+        slice4 = qs4[::2]
+
+        # Loads all documents, skipping every other one, so all
+        # documents need to be loaded from the cursor.
+        self.assertEqual(len(qs4._items), 3)
+
         self.assertEqual(len(slice4), 2)
         self.assertTrue(doc1 in slice4)
         self.assertFalse(doc2 in slice4)
         self.assertTrue(doc3 in slice4)
 
+        qs5 = self.qs.skip(0)
+        slice5 = qs5[1::2]
+
+        # Loads all documents, skipping every other one, so all
+        # documents need to be loaded from the cursor.
+        self.assertEqual(len(qs5._items), 3)
+
         self.assertEqual(len(slice5), 1)
         self.assertFalse(doc1 in slice5)
         self.assertTrue(doc2 in slice5)
         self.assertFalse(doc3 in slice5)
+
+        qs6 = self.qs.skip(0)
+        slice6 = qs6[::]
+
+        # Loads all documents, so all documents need to be loaded from
+        # the cursor.
+        self.assertEqual(len(qs6._items), 3)
 
         self.assertEqual(len(slice6), 3)
         self.assertTrue(doc1 in slice6)
