@@ -16,10 +16,15 @@ except ImportError:
 
 import collections
 from datetime import datetime
+
+from bson import ObjectId
 import mock
 from pymongo.collection import Collection
 
 from simon import Model, connection, query
+
+AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
+AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
 
 
 class TestModel1(Model):
@@ -94,20 +99,15 @@ class TestDatabase(unittest.TestCase):
     def test_create(self):
         """Test the `create()` method."""
 
-        m = TestModel1.create(d=1, e=2, f=3, safe=True)
+        with mock.patch('simon.base._current_datetime') as _current_datetime:
+            with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
+                _current_datetime.return_value = 1
 
-        self.assertTrue(hasattr(m, 'id'))
+                TestModel1.create(d=1, e=2, f=3, safe=True)
 
-        self.assertEqual(m._document['d'], 1)
-        self.assertEqual(m._document['e'], 2)
-        self.assertEqual(m._document['f'], 3)
-
-        doc = self.collection.find_one({'d': 1, 'e': 2, 'f': 3})
-
-        self.assertEqual(doc['_id'], m.id)
-        self.assertEqual(doc['d'], m._document['d'])
-        self.assertEqual(doc['e'], m._document['e'])
-        self.assertEqual(doc['f'], m._document['f'])
+                insert.assert_called_with({'d': 1, 'e': 2, 'f': 3,
+                                           'created': 1, 'modified': 1},
+                                          safe=True)
 
     def test_db_attribute(self):
         ("Test that the `db` attribute of classes and instances is the "
@@ -121,15 +121,12 @@ class TestDatabase(unittest.TestCase):
     def test_delete(self):
         """Test the `delete()` method."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        m = TestModel1(_id=1)
 
-        m = TestModel1(**doc)
+        with mock.patch.object(TestModel1._meta.db, 'remove') as remove:
+            m.delete(safe=True)
 
-        m.delete(safe=True)
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertIsNone(doc)
+            remove.assert_called_with({'_id': 1}, safe=True)
 
     def test_delete_typeerror(self):
         """Test that `delete()` raises `TypeError`."""
@@ -141,6 +138,13 @@ class TestDatabase(unittest.TestCase):
 
     def test_find(self):
         """Test the `find()` method."""
+
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            find.return_value = [{'_id': self._id}]
+
+            qs = TestModel1.find(id=self._id)
+
+            find.assert_called_with({'_id': self._id})
 
         qs = TestModel1.find(id=self._id)
 
@@ -636,113 +640,94 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(hasattr(m, 'created'))
         self.assertTrue(hasattr(m, 'modified'))
 
-    def test_save_resave(self):
-        """Test the `save()` method for resaving documents."""
-
-        m = TestModel1.get(_id=self._id)
-        m.a = 3
-        m.save(safe=True)
-
-        doc = self.collection.find_one({'_id': m.id})
-
-        self.assertEqual(m._document['a'], doc['a'])
-        self.assertEqual(doc['a'], 3)
-
     def test_save_timestamps(self):
         """Test that `save()` properly handles adding timestamps."""
 
-        m1 = TestModel1(a=1)
-        m1.save(safe=True)
+        with mock.patch('simon.base._current_datetime') as _current_datetime:
+            _current_datetime.return_value = 1
 
-        self.assertTrue(hasattr(m1, 'created'))
-        self.assertTrue(hasattr(m1, 'modified'))
+            with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
+                m1 = TestModel1(a=1)
+                m1.save(safe=True)
 
-        self.assertTrue(isinstance(m1.created, datetime))
-        self.assertTrue(isinstance(m1.modified, datetime))
+                insert.assert_called_with({'a': 1, 'created': 1, 'modified': 1}, safe=True)
 
-        doc1 = self.collection.find_one({'_id': m1.id})
+                self.assertTrue('created' in m1._document)
+                self.assertTrue('modified' in m1._document)
 
-        self.assertTrue('created' in doc1)
-        self.assertTrue('modified' in doc1)
+                self.assertTrue(hasattr(m1, 'created'))
+                self.assertTrue(hasattr(m1, 'modified'))
 
-        m2 = TestModel2(a=1)
-        m2.save(safe=True)
+        with mock.patch.object(TestModel2._meta.db, 'insert') as insert:
+            m2 = TestModel2(a=2)
+            m2.save(safe=True)
 
-        self.assertFalse(hasattr(m2, 'created'))
-        self.assertFalse(hasattr(m2, 'modified'))
+            insert.assert_called_with({'a': 2}, safe=True)
 
-        doc2 = self.collection.find_one({'_id': m2.id})
-
-        self.assertFalse('created' in doc2)
-        self.assertFalse('modified' in doc2)
+            self.assertFalse('created' in m2._document)
+            self.assertFalse('modified' in m2._document)
 
     def test_save_update(self):
         """Test the `save()` method for existing documents."""
 
-        # save() should also update the modified date. While this test
-        # could simply test that modified is added to a document that
-        # lacks it, it's a more complete test if it actually checks
-        # for a changed value, so add it to the document in the
-        # database.
-        self.collection.update({'_id': self._id}, {'$set': {'modified': 1}})
+        with mock.patch('simon.base._current_datetime') as _current_datetime:
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                _current_datetime.return_value = 1
 
-        doc = self.collection.find_one({'_id': self._id})
+                m = TestModel1(_id=AN_OBJECT_ID, created=1, modified=0)
+                m.c = 3
+                m.save(safe=True)
 
-        m = TestModel1()
-        m._document = doc.copy()
-
-        m.c = 3
-        m.save(safe=True)
-
-        doc['c'] = 3
-
-        for k, v in doc.items():
-            if k != 'modified':
-                self.assertEqual(m._document[k], v)
-            else:
-                self.assertNotEqual(m._document[k], v)
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'c': 3, 'created': 1,
+                                           'modified': 1}, safe=True)
 
     def test_update(self):
         """Test the `update()` method."""
 
-        m = TestModel1.get(id=self._id)
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 2, 'b': 3}
 
-        m.update(a=2, b=3, safe=True)
+                m = TestModel1(_id=AN_OBJECT_ID)
+                m.update(a=2, b=3, safe=True)
 
-        doc = self.collection.find_one({'_id': self._id})
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$set': {'a': 2, 'b': 3}},
+                                          safe=True)
 
-        self.assertEqual(m.a, doc['a'])
-        self.assertEqual(doc['a'], 2)
-
-        self.assertEqual(m.b, doc['b'])
-        self.assertEqual(doc['b'], 3)
+                self.assertEqual(m._document['a'], 2)
+                self.assertEqual(m._document['b'], 3)
 
     def test_update_field_map(self):
         """Test the `update()` method with a name in `field_map`."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
 
-        m = TestModel1(**doc)
+                m = TestModel1(_id=AN_OBJECT_ID)
+                m.update(fake=1, safe=True)
 
-        m.update(fake=1, safe=True)
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$set': {'real': 1}}, safe=True)
 
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertEqual(m.fake, doc['real'])
-        self.assertEqual(doc['real'], 1)
+                self.assertEqual(m._document['real'], 1)
 
     def test_update_nested_field(self):
         """Test the `update()` method with a nested field."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'c': {'d': 1}}
 
-        m = TestModel1(**doc)
+                m = TestModel1(_id=AN_OBJECT_ID)
+                m.update(c__d=1, safe=True)
 
-        m.update(c__d=1, safe=True)
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$set': {'c.d': 1}}, safe=True)
 
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertEqual(m._document['c'], doc['c'])
+                self.assertEqual(m._document['c'], {'d': 1})
 
     def test_update_typeerror(self):
         """Test that `update()` raises `TypeError`."""

@@ -11,6 +11,13 @@ from .utils import (get_nested_key, guarantee_object_id, map_fields,
 __all__ = ('Model',)
 
 
+def _current_datetime():
+    """"""
+
+    now = datetime.utcnow()
+    return now.replace(microsecond=(now.microsecond / 1000 * 1000))
+
+
 class Meta(object):
     """Custom options for a :class:`~simon.Model`.
 
@@ -576,8 +583,7 @@ class Model(object):
         # from the Python datetime before associating it with the
         # instance.
         if self._meta.auto_timestamp:
-            now = datetime.utcnow()
-            now = now.replace(microsecond=(now.microsecond / 1000 * 1000))
+            now = _current_datetime()
             if not ('_id' in self._document and 'created' in self):
                 self.created = now
             self.modified = now
