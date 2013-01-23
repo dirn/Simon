@@ -804,9 +804,11 @@ class Model(object):
         # If either b isn't of the right type, a and b use different
         # database connections, or a and b use different collections,
         # the two cannot be equal.
-        if not (isinstance(a, b.__class__) or isinstance(b, a.__class__)) \
-                or a._meta.database != b._meta.database \
-                or a._meta.collection != b._meta.collection:
+        if not (isinstance(a, b.__class__) or isinstance(b, a.__class__)):
+            return False
+        if a._meta.database != b._meta.database:
+            return False
+        if a._meta.collection != b._meta.collection:
             return False
 
         a_id = a._document.get('_id', None)

@@ -99,51 +99,65 @@ class TestBase(unittest.TestCase):
     def test_eq(self):
         """Test the `__eq__()` method."""
 
-        class TestModel1Subclass1(TestModel1):
+        # I'm using TestModel2 here because TestModel1 has crazy
+        # settings.
+
+        class TestModel2Subclass1(TestModel2):
             class Meta:
                 collection = 'some-other-collection'
 
-        class TestModel1Subclass2(TestModel1):
-            pass
+        class TestModel2Subclass2(TestModel2):
+            class Meta:
+                database = 'some-other-database'
+
+        class TestModel2Subclass3(TestModel2):
+            class Meta:
+                collection = 'testmodel2s'
 
         # Different classes shouldn't be equal
-        m1 = TestModel1(_id=1)
-        m2 = TestModel2(_id=1)
+        m1 = TestModel2(_id=1)
+        m2 = TestModel1(_id=1)
         self.assertFalse(m1 == m2)
 
-        # Even a subclass shouldn't be equal
-        m1 = TestModel1(_id=1)
-        m2 = TestModel1Subclass1(_id=1)
+        # Even a subclass shouldn't be equal ...
+        # ... when the collection is different
+        m1 = TestModel2(_id=3)
+        m2 = TestModel2Subclass1(_id=3)
+        self.assertFalse(m1 == m2)
+
+        # ... when the database is different
+        m1 = TestModel2(_id=4)
+        m2 = TestModel2Subclass2(_id=4)
         self.assertFalse(m1 == m2)
 
         # Unless they use the same database and collection
-        m1 = TestModel1(_id=1)
-        m2 = TestModel1Subclass2(_id=1)
+        m1 = TestModel2(_id=1)
+        m2 = TestModel2Subclass3(_id=1)
         self.assertTrue(m1 == m2)
 
         # No _id's shouldn't be equal
-        m1 = TestModel1()
-        m2 = TestModel1()
+        m1 = TestModel2()
+        m2 = TestModel2()
         self.assertFalse(m1 == m2)
 
         # Only one _id shouldn't be equal
-        m1 = TestModel1(_id=1)
-        m2 = TestModel1()
+        m1 = TestModel2(_id=1)
+        m2 = TestModel2()
         self.assertFalse(m1 == m2)
         self.assertFalse(m2 == m1)
 
         # Different _id's shouldn't be equal
-        m1 = TestModel1(_id=1)
-        m2 = TestModel1(_id=2)
+        m1 = TestModel2(_id=1)
+        m2 = TestModel2(_id=2)
         self.assertFalse(m1 == m2)
 
         # The same _id should be equal
-        m1 = TestModel1(_id=1)
-        m2 = TestModel1(_id=1)
+        m1 = TestModel2(_id=1)
+        m2 = TestModel2(_id=1)
         self.assertTrue(m1 == m2)
 
         # And just for the heck of it...
-        m1 = TestModel1(_id=1)
+        m1 = TestModel2(_id=1)
         self.assertFalse(m1 == 'abc')
 
     def test_getattr(self):
