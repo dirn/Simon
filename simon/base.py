@@ -717,11 +717,18 @@ class Model(object):
         for k, v in doc.items():
             setattr(self, k, v)
 
-    def __contains__(self, name):
-        """Check for a key in a document"""
+    # String representation methods
 
-        key = self._meta.field_map.get(name, name)
-        return key in self._document
+    def __repr__(self):
+        return '<{0}: {1}>'.format(self.__class__.__name__, self)
+
+    def __str__(self):
+        return '{0} object'.format(self.__class__.__name__)
+
+    def __unicode__(self):
+        return u'{0} object'.format(self.__class__.__name__)
+
+    # Attribute access methods
 
     def __delattr__(self, name):
         """Remove a key from the document"""
@@ -745,27 +752,6 @@ class Model(object):
             return
 
         object.__delattr__(self, name)
-
-    def __eq__(a, b):
-        """Check equality of two instances"""
-
-        # If either b isn't of the right type, a and b use different
-        # database connections, or a and b use different collections,
-        # the two cannot be equal.
-        if not (isinstance(a, b.__class__) or isinstance(b, a.__class__)) \
-                or a._meta.database != b._meta.database \
-                or a._meta.collection != b._meta.collection:
-            return False
-
-        a_id = a._document.get('_id', None)
-        b_id = b._document.get('_id', None)
-
-        # If either one of the instances has a value of _id, the two
-        # cannot be equal.
-        if not (a_id and b_id):
-            return False
-
-        return a_id == b_id
 
     def __getattr__(self, name):
         """Retrieve a value from the document"""
@@ -794,14 +780,6 @@ class Model(object):
                 self.__class__.__name__, name))
         return self._document[name]
 
-    def __ne__(a, b):
-        """Check inequality of two instances"""
-
-        return not a.__eq__(b)
-
-    def __repr__(self):
-        return '<{0}: {1}>'.format(self.__class__.__name__, self)
-
     def __setattr__(self, name, value):
         """Set a document value"""
 
@@ -818,8 +796,38 @@ class Model(object):
             name = self._meta.field_map.get(name, name)
             self._document[name] = value
 
-    def __str__(self):
-        return '{0} object'.format(self.__class__.__name__)
+    # Rich comparison methods
 
-    def __unicode__(self):
-        return u'{0} object'.format(self.__class__.__name__)
+    def __eq__(a, b):
+        """Check equality of two instances"""
+
+        # If either b isn't of the right type, a and b use different
+        # database connections, or a and b use different collections,
+        # the two cannot be equal.
+        if not (isinstance(a, b.__class__) or isinstance(b, a.__class__)) \
+                or a._meta.database != b._meta.database \
+                or a._meta.collection != b._meta.collection:
+            return False
+
+        a_id = a._document.get('_id', None)
+        b_id = b._document.get('_id', None)
+
+        # If either one of the instances has a value of _id, the two
+        # cannot be equal.
+        if not (a_id and b_id):
+            return False
+
+        return a_id == b_id
+
+    def __ne__(a, b):
+        """Check inequality of two instances"""
+
+        return not a.__eq__(b)
+
+    # Container methods
+
+    def __contains__(self, name):
+        """Check for a key in a document"""
+
+        key = self._meta.field_map.get(name, name)
+        return key in self._document
