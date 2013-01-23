@@ -794,6 +794,11 @@ class Model(object):
                 self.__class__.__name__, name))
         return self._document[name]
 
+    def __ne__(a, b):
+        """Check inequality of two instances"""
+
+        return not a.__eq__(b)
+
     def __repr__(self):
         return '<{0}: {1}>'.format(self.__class__.__name__, self)
 

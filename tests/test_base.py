@@ -3,6 +3,8 @@ try:
 except ImportError:
     import unittest
 
+import mock
+
 from simon import Model, connection
 
 
@@ -182,6 +184,28 @@ class TestBase(unittest.TestCase):
         self.assertTrue(all(getattr(m, k) == v for k, v in fields.items()))
 
         self.assertTrue(isinstance(m._document, dict))
+
+    def test_ne(self):
+        """Test the `__ne__()` method."""
+
+        # __ne__() should call __eq__(), so check that first
+        with mock.patch.object(TestModel1, '__eq__') as __eq__:
+            m1 = TestModel1(_id=1)
+            m2 = TestModel1(_id=1)
+
+            m1 != m2
+
+            __eq__.assert_called_with(m2)
+
+        # __ne__() should return the opposite of __eq__(), so perform
+        # a couple of simple comparisons just to make sure
+        m1 = TestModel1(_id=1)
+        m2 = TestModel1(_id=1)
+        self.assertNotEqual(m1 == m2, m1 != m2)
+
+        m1 = TestModel1(_id=1)
+        m2 = TestModel1(_id=2)
+        self.assertNotEqual(m1 == m2, m1 != m2)
 
     def test_repr(self):
         """Test the `__repr__()` method."""
