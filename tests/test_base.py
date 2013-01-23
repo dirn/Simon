@@ -94,6 +94,56 @@ class TestBase(unittest.TestCase):
         del m.x
         self.assertFalse('y' in m._document)
 
+    def test_eq(self):
+        """Test the `__eq__()` method."""
+
+        class TestModel1Subclass1(TestModel1):
+            class Meta:
+                collection = 'some-other-collection'
+
+        class TestModel1Subclass2(TestModel1):
+            pass
+
+        # Different classes shouldn't be equal
+        m1 = TestModel1(_id=1)
+        m2 = TestModel2(_id=1)
+        self.assertFalse(m1 == m2)
+
+        # Even a subclass shouldn't be equal
+        m1 = TestModel1(_id=1)
+        m2 = TestModel1Subclass1(_id=1)
+        self.assertFalse(m1 == m2)
+
+        # Unless they use the same database and collection
+        m1 = TestModel1(_id=1)
+        m2 = TestModel1Subclass2(_id=1)
+        self.assertTrue(m1 == m2)
+
+        # No _id's shouldn't be equal
+        m1 = TestModel1()
+        m2 = TestModel1()
+        self.assertFalse(m1 == m2)
+
+        # Only one _id shouldn't be equal
+        m1 = TestModel1(_id=1)
+        m2 = TestModel1()
+        self.assertFalse(m1 == m2)
+        self.assertFalse(m2 == m1)
+
+        # Different _id's shouldn't be equal
+        m1 = TestModel1(_id=1)
+        m2 = TestModel1(_id=2)
+        self.assertFalse(m1 == m2)
+
+        # The same _id should be equal
+        m1 = TestModel1(_id=1)
+        m2 = TestModel1(_id=1)
+        self.assertTrue(m1 == m2)
+
+        # And just for the heck of it...
+        m1 = TestModel1(_id=1)
+        self.assertFalse(m1 == 'abc')
+
     def test_getattr(self):
         """Test the `__getattr__()` method."""
 

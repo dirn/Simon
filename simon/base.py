@@ -746,6 +746,27 @@ class Model(object):
 
         object.__delattr__(self, name)
 
+    def __eq__(a, b):
+        """Check equality of two instances"""
+
+        # If either b isn't of the right type, a and b use different
+        # database connections, or a and b use different collections,
+        # the two cannot be equal.
+        if not (isinstance(a, b.__class__) or isinstance(b, a.__class__)) \
+                or a._meta.database != b._meta.database \
+                or a._meta.collection != b._meta.collection:
+            return False
+
+        a_id = a._document.get('_id', None)
+        b_id = b._document.get('_id', None)
+
+        # If either one of the instances has a value of _id, the two
+        # cannot be equal.
+        if not (a_id and b_id):
+            return False
+
+        return a_id == b_id
+
     def __getattr__(self, name):
         """Retrieve a value from the document"""
 
