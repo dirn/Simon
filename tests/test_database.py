@@ -121,12 +121,12 @@ class TestDatabase(unittest.TestCase):
     def test_delete(self):
         """Test the `delete()` method."""
 
-        m = TestModel1(_id=1)
+        m = TestModel1(_id=AN_OBJECT_ID)
 
         with mock.patch.object(TestModel1._meta.db, 'remove') as remove:
             m.delete(safe=True)
 
-            remove.assert_called_with({'_id': 1}, safe=True)
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=True)
 
     def test_delete_typeerror(self):
         """Test that `delete()` raises `TypeError`."""
@@ -433,12 +433,19 @@ class TestDatabase(unittest.TestCase):
     def test_raw_update(self):
         """Test the `raw_update()` method."""
 
-        m = TestModel1(id=self._id)
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
 
-        m.raw_update({'a': 2, 'b': 3})
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                m = TestModel1(_id=AN_OBJECT_ID)
+                m.raw_update({'$set': {'a': 1, 'b': 2}}, safe=True)
 
-        self.assertEqual(m.a, 2)
-        self.assertEqual(m.b, 3)
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$set': {'a': 1, 'b': 2}},
+                                          safe=True)
+
+                self.assertEqual(m._document['a'], 1)
+                self.assertEqual(m._document['b'], 2)
 
     def test_raw_update_typeerror(self):
         """Test that `raw_update()` raises `TypeError`."""
@@ -451,82 +458,59 @@ class TestDatabase(unittest.TestCase):
     def test_remove_fields_multiple(self):
         """Test the `remove_fields()` method for multiple fields."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID, a=1, b=2)
+            m.remove_fields(('a', 'b'), safe=True)
 
-        m = TestModel1(**doc)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'a': True, 'b': True}},
+                                      safe=True)
 
-        m.remove_fields(('a', 'b'), safe=True)
-
-        self.assertFalse('a' in m._document)
-        self.assertFalse('b' in m._document)
-
-        self.assertFalse(hasattr(m, 'a'))
-        self.assertFalse(hasattr(m, 'b'))
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertFalse('a' in doc)
-        self.assertFalse('b' in doc)
+            self.assertFalse('a' in m._document)
+            self.assertFalse('b' in m._document)
 
     def test_remove_fields_nested_multiple(self):
         """Test the `remove_fields()` method with nested fields."""
 
-        m = TestModel1.get(id=self._id)
-        m.c = {'d': 1, 'e': 2}
-        m.save()
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID, b=1)
+            m.c = {'d': 2, 'e': 3}
+            m.remove_fields(('b', 'c__e'), safe=True)
 
-        m.remove_fields(('b', 'c__e'), safe=True)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'b': True, 'c.e': True}},
+                                      safe=True)
 
-        self.assertTrue('a' in m._document)
-        self.assertFalse('b' in m._document)
-        self.assertTrue('c' in m._document)
-        self.assertTrue('d' in m._document['c'])
-        self.assertFalse('e' in m._document['c'])
-
-        self.assertTrue('a' in m._document)
-        self.assertFalse('b' in m._document)
-        self.assertTrue('c' in m._document)
+            self.assertFalse('b' in m._document)
+            self.assertTrue('d' in m._document['c'])
+            self.assertFalse('e' in m._document['c'])
 
     def test_remove_fields_nested_one(self):
         """Test the `remove_fields()` method with nested fields."""
 
-        m = TestModel1.get(id=self._id)
-        m.f = {'g': 1, 'h': 2}
-        m.save()
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID)
+            m.f = {'g': 1, 'h': 2}
+            m.remove_fields('f__h', safe=True)
 
-        m.remove_fields('f__h', safe=True)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'f.h': True}}, safe=True)
 
-        self.assertTrue('a' in m._document)
-        self.assertTrue('b' in m._document)
-        self.assertTrue('c' in m._document)
-        self.assertTrue('f' in m._document)
-        self.assertTrue('g' in m._document['f'])
-        self.assertFalse('h' in m._document['f'])
-
-        self.assertTrue('a' in m._document)
-        self.assertTrue('b' in m._document)
-        self.assertTrue('c' in m._document)
-        self.assertTrue('f' in m._document)
+            self.assertTrue('g' in m._document['f'])
+            self.assertFalse('h' in m._document['f'])
 
     def test_remove_fields_one(self):
         """Test the `remove_fields()` method for one field."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID, a=1, b=2)
+            m.remove_fields('b', safe=True)
 
-        m = TestModel1(**doc)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'b': True}}, safe=True)
 
-        m.remove_fields('b', safe=True)
-
-        self.assertTrue('a' in m._document)
-        self.assertFalse('b' in m._document)
-
-        self.assertTrue(hasattr(m, 'a'))
-        self.assertFalse(hasattr(m, 'b'))
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertTrue('a' in doc)
-        self.assertFalse('b' in doc)
+            self.assertTrue('a' in m._document)
+            self.assertFalse('b' in m._document)
 
     def test_remove_fields_typeerror(self):
         """Test that `remove_fields()` raises `TypeError`."""
@@ -539,75 +523,66 @@ class TestDatabase(unittest.TestCase):
     def test_save_field_map(self):
         """Test the `save()` method with a name in `field_map`."""
 
-        m = TestModel1(fake=1)
-        m.save(safe=True)
+        with mock.patch('simon.base._current_datetime') as _current_datetime:
+            _current_datetime.return_value = 1
 
-        doc = self.collection.find_one({'_id': m.id})
+            with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
+                insert.return_value = 1
 
-        self.assertEqual(m.id, doc['_id'])
-        self.assertEqual(m.fake, doc['real'])
-        self.assertTrue('real' in doc)
-        self.assertFalse('fake' in doc)
+                m = TestModel1(fake=1)
+                m.save(safe=True)
+
+                insert.assert_called_with({'real': 1, 'created': 1,
+                                           'modified': 1},
+                                          safe=True)
+
+                self.assertEqual(m._document['_id'], 1)
 
     def test_save_fields_field_map(self):
         """Test the `save_fields()` method with a name in `field_map`."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID)
+            m.fake = 1
+            m.save_fields('fake', safe=True)
 
-        m = TestModel1(**doc)
-
-        m.fake = 1
-        m.save_fields('fake', safe=True)
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertEqual(m._document['real'], doc['real'])
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'real': 1}}, safe=True)
 
     def test_save_fields_multiple(self):
         """Test the `save_fields()` method for multiple fields."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID)
+            m.a = 1
+            m.b = 2
+            m.save_fields(('a', 'b'), safe=True)
 
-        m = TestModel1(**doc)
-
-        m.a = 3
-        m.b = 4
-        m.save_fields(('a', 'b'), safe=True)
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertEqual(m._document['a'], doc['a'])
-        self.assertEqual(m._document['b'], doc['b'])
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1, 'b': 2}}, safe=True)
 
     def test_save_fields_nested_field(self):
         """Test the `save_fields()` method with a nested field."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID)
+            m.f = {'g': 1}
+            m.save_fields('f__g', safe=True)
 
-        m = TestModel1(**doc)
-
-        m.f = {'g': 1}
-        m.save_fields('f__g', safe=True)
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertEqual(m._document['f'], doc['f'])
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'f.g': 1}}, safe=True)
 
     def test_save_fields_one(self):
         """Test the `save_fields()` method for one field."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        with mock.patch.object(TestModel1._meta.db, 'update') as update:
+            m = TestModel1(_id=AN_OBJECT_ID)
+            m.a = 1
+            m.b = 2
+            m.save_fields('b', safe=True)
 
-        m = TestModel1(**doc)
-
-        m.a = 3
-        m.b = 4
-        m.save_fields('b', safe=True)
-
-        doc = self.collection.find_one({'_id': self._id})
-
-        self.assertNotEqual(m._document['a'], doc['a'])
-        self.assertEqual(m._document['b'], doc['b'])
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'b': 2}}, safe=True)
 
     def test_save_fields_attributeerror(self):
         """Test that `save_fields()` raises `AttributeError`."""
@@ -630,33 +605,29 @@ class TestDatabase(unittest.TestCase):
     def test_save_insert(self):
         """Test the `save()` method for new documents."""
 
-        m = TestModel1(a=1, b=2)
-        m.save(safe=True)
-
-        doc = self.collection.find_one({'_id': m.id})
-
-        self.assertEqual(m.id, doc['_id'])
-        self.assertEqual(m._document, doc)
-        self.assertTrue(hasattr(m, 'created'))
-        self.assertTrue(hasattr(m, 'modified'))
-
-    def test_save_timestamps(self):
-        """Test that `save()` properly handles adding timestamps."""
-
         with mock.patch('simon.base._current_datetime') as _current_datetime:
             _current_datetime.return_value = 1
 
             with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
-                m1 = TestModel1(a=1)
-                m1.save(safe=True)
+                m = TestModel1(a=1, b=2)
+                m.save(safe=True)
 
-                insert.assert_called_with({'a': 1, 'created': 1, 'modified': 1}, safe=True)
+                insert.assert_called_with({'a': 1, 'b': 2, 'created': 1,
+                                           'modified': 1},
+                                          safe=True)
 
-                self.assertTrue('created' in m1._document)
-                self.assertTrue('modified' in m1._document)
+    def test_save_timestamps(self):
+        """Test that `save()` properly handles adding timestamps."""
 
-                self.assertTrue(hasattr(m1, 'created'))
-                self.assertTrue(hasattr(m1, 'modified'))
+        with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
+            m1 = TestModel1()
+            m1.save()
+
+            self.assertTrue('created' in m1._document)
+            self.assertTrue('modified' in m1._document)
+
+            self.assertTrue(isinstance(m1._document['created'], datetime))
+            self.assertTrue(isinstance(m1._document['modified'], datetime))
 
         with mock.patch.object(TestModel2._meta.db, 'insert') as insert:
             m2 = TestModel2(a=2)
@@ -686,8 +657,9 @@ class TestDatabase(unittest.TestCase):
         """Test the `update()` method."""
 
         with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 2, 'b': 3}
+
             with mock.patch.object(TestModel1._meta.db, 'update') as update:
-                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 2, 'b': 3}
 
                 m = TestModel1(_id=AN_OBJECT_ID)
                 m.update(a=2, b=3, safe=True)
@@ -703,8 +675,9 @@ class TestDatabase(unittest.TestCase):
         """Test the `update()` method with a name in `field_map`."""
 
         with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
+
             with mock.patch.object(TestModel1._meta.db, 'update') as update:
-                find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
 
                 m = TestModel1(_id=AN_OBJECT_ID)
                 m.update(fake=1, safe=True)
@@ -718,8 +691,9 @@ class TestDatabase(unittest.TestCase):
         """Test the `update()` method with a nested field."""
 
         with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'c': {'d': 1}}
+
             with mock.patch.object(TestModel1._meta.db, 'update') as update:
-                find_one.return_value = {'_id': AN_OBJECT_ID, 'c': {'d': 1}}
 
                 m = TestModel1(_id=AN_OBJECT_ID)
                 m.update(c__d=1, safe=True)
