@@ -294,31 +294,31 @@ class TestDatabase(unittest.TestCase):
     def test_get_or_create_create(self):
         """Test the `get_or_create()` method for creating documents."""
 
-        m, created = TestModel1.get_or_create(d=1, e=2, f=3, safe=True)
+        with mock.patch.object(TestModel1, 'get') as get:
+            get.side_effect = TestModel1.NoDocumentFound
 
-        self.assertTrue(created)
+            with mock.patch.object(TestModel1, 'create') as create:
+                create.return_value = mock.Mock()
 
-        self.assertTrue(hasattr(m, 'id'))
+                m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID,
+                                                      safe=True)
 
-        self.assertEqual(m._document['d'], 1)
-        self.assertEqual(m._document['e'], 2)
-        self.assertEqual(m._document['f'], 3)
+                get.assert_called_with(_id=AN_OBJECT_ID)
+                create.assert_called_with(_id=AN_OBJECT_ID, safe=True)
 
-        doc = self.collection.find_one({'d': 1, 'e': 2, 'f': 3})
-
-        self.assertEqual(doc['_id'], m.id)
-        self.assertEqual(doc['d'], m._document['d'])
-        self.assertEqual(doc['e'], m._document['e'])
-        self.assertEqual(doc['f'], m._document['f'])
+                self.assertTrue(created)
 
     def test_get_or_create_get(self):
         """Test the `get_or_create()` method for getting documents."""
 
-        m, created = TestModel1.get_or_create(id=self._id, safe=True)
+        with mock.patch.object(TestModel1, 'get') as get:
+            get.return_value = mock.Mock()
 
-        self.assertFalse(created)
+            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID, safe=True)
 
-        self.assertEqual(m.id, self._id)
+            get.assert_called_with(_id=AN_OBJECT_ID)
+
+            self.assertFalse(created)
 
     def test_get_nodocumentfound(self):
         """Test that `get()` raises `NoDocumentFound`."""
@@ -352,67 +352,73 @@ class TestDatabase(unittest.TestCase):
     def test_increment(self):
         """Test the `increment()` method."""
 
-        m = TestModel1.get(id=self._id)
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                m = TestModel1(_id=AN_OBJECT_ID)
 
-        m.increment('a', safe=True)
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+                m.increment('a', safe=True)
 
-        doc = self.collection.find_one({'_id': self._id})
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$inc': {'a': 1}}, safe=True)
 
-        self.assertEqual(m.a, doc['a'])
-        self.assertEqual(doc['a'], 2)
+                self.assertTrue(m._document['a'], 1)
 
-        m.increment('b', 2, safe=True)
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'b': 2}
+                m.increment('b', 2, safe=True)
 
-        doc = self.collection.find_one({'_id': self._id})
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$inc': {'b': 2}}, safe=True)
 
-        self.assertEqual(m.b, doc['b'])
-        self.assertEqual(doc['b'], 4)
-
-        # And some sanity checks just to make sure a wasn't changed
-        self.assertEqual(m.a, doc['a'])
-        self.assertEqual(doc['a'], 2)
+                self.assertTrue(m._document['a'], 1)
+                self.assertTrue(m._document['b'], 2)
 
     def test_increment_embedded_document(self):
         """Test the `increment()` method with an embedded document."""
 
-        id = self.collection.insert({'a': {'b': 1, 'c': 2}})
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'c': 3}}
 
-        m = TestModel1.get(id=id)
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                m = TestModel1(_id=AN_OBJECT_ID)
+                m.increment(a__c=3, safe=True)
 
-        m.increment(a__c=3, safe=True)
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$inc': {'a.c': 3}}, safe=True)
 
-        doc = self.collection.find_one({'_id': id})
-
-        self.assertEqual(m.a['b'], doc['a']['b'])
-        self.assertEqual(m.a['c'], doc['a']['c'])
-        self.assertEqual(doc['a']['b'], 1)
-        self.assertEqual(doc['a']['c'], 5)
+                self.assertTrue(m._document['a']['c'], 3)
 
     def test_increment_field_map(self):
         """Test the `increment()` method with a name in `field_map`."""
 
-        m = TestModel1.get(id=self._id)
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 2}
 
-        m.increment(fake=2, safe=True)
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                m = TestModel1(_id=AN_OBJECT_ID)
+                m.increment(fake=2, safe=True)
 
-        doc = self.collection.find_one({'_id': self._id})
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$inc': {'real': 2}}, safe=True)
 
-        self.assertEqual(m.fake, doc['real'])
-        self.assertEqual(doc['real'], 2)
+                self.assertTrue(m._document['real'], 2)
 
     def test_increment_kwargs(self):
         """Test the `increment()` method with **kwargs."""
 
-        m = TestModel1.get(id=self._id)
+        with mock.patch.object(TestModel1._meta.db, 'find_one') as find_one:
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 5}
 
-        m.increment(a=1, b=5, safe=True)
+            with mock.patch.object(TestModel1._meta.db, 'update') as update:
+                m = TestModel1(_id=AN_OBJECT_ID)
+                m.increment(a=1, b=5, safe=True)
 
-        doc = self.collection.find_one({'_id': self._id})
+                update.assert_called_with({'_id': AN_OBJECT_ID},
+                                          {'$inc': {'a': 1, 'b': 5}},
+                                          safe=True)
 
-        self.assertEqual(m.a, doc['a'])
-        self.assertEqual(doc['a'], 2)
-        self.assertEqual(m.b, doc['b'])
-        self.assertEqual(doc['b'], 7)
+                self.assertTrue(m._document['a'], 1)
+                self.assertTrue(m._document['b'], 5)
 
     def test_increment_typeerror(self):
         """Test that `increment()` raises `TypeError`."""
