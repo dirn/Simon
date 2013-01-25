@@ -1,17 +1,36 @@
 """Helper utilities"""
 
 import collections
+from datetime import datetime
 
 from bson import ObjectId
 
-__all__ = ('get_nested_key', 'guarantee_object_id', 'map_fields',
-           'parse_kwargs', 'remove_nested_key', 'update_nested_keys')
+__all__ = ('current_datetime', 'get_nested_key', 'guarantee_object_id',
+           'map_fields', 'parse_kwargs', 'remove_nested_key',
+           'update_nested_keys')
 
 
 # The logical operators are needed when mapping fields. The values
 # could have been obtained through Q.AND and Q.OR, but I don't want
 # the utils module to depend on other modules.
 _logicals = ('$and', '$or')
+
+
+def current_datetime():
+    """Gets the current datetime in UTC formatted for MongoDB
+
+    Python includes microseconds in its ``datetime`` values. MongoDB,
+    on the other hand, only retains them down to milliseconds. This
+    method will not only get the current time in UTC, but it will also
+    remove microseconds from the value.
+
+    :returns: datetime -- the current datetime formatted for MongoDB.
+
+    .. versionadded:: 0.2.0
+    """
+
+    now = datetime.utcnow()
+    return now.replace(microsecond=(now.microsecond / 1000 * 1000))
 
 
 def get_nested_key(values, key):

@@ -99,9 +99,9 @@ class TestDatabase(unittest.TestCase):
     def test_create(self):
         """Test the `create()` method."""
 
-        with mock.patch('simon.base._current_datetime') as _current_datetime:
+        with mock.patch('simon.base.current_datetime') as current_datetime:
             with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
-                _current_datetime.return_value = 1
+                current_datetime.return_value = 1
 
                 TestModel1.create(d=1, e=2, f=3, safe=True)
 
@@ -248,48 +248,76 @@ class TestDatabase(unittest.TestCase):
     def test_get(self):
         """Test the `get()` method."""
 
-        m = TestModel1.get(id=self._id)
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            mock_query_set = mock.MagicMock()
+            mock_query_set.__getitem__.return_value = {'_id': AN_OBJECT_ID}
+            mock_query_set.count.return_value = 1
 
-        self.assertEqual(m.id, self._id)
+            find.return_value = mock_query_set
 
-        self.assertEqual(m._document['_id'], self._id)
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
+            m = TestModel1.get(_id=AN_OBJECT_ID)
+
+            find.assert_called_with({'_id': AN_OBJECT_ID})
+
+            self.assertEqual(m._document['_id'], AN_OBJECT_ID)
 
     def test_get_comparison(self):
         """Test the `get()` method with comparison operators."""
 
-        with self.assertRaises(TestModel1.NoDocumentFound):
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            mock_query_set = mock.MagicMock()
+            mock_query_set.__getitem__.return_value = {'_id': AN_OBJECT_ID}
+            mock_query_set.count.return_value = 1
+
+            find.return_value = mock_query_set
+
             TestModel1.get(a__gt=1)
 
-        m = TestModel1.get(a__lte=1, b=2)
-        self.assertEqual(m.a, 1)
+            find.assert_called_with({'a': {'$gt': 1}})
+
+            TestModel1.get(a__lte=1, b=2)
+
+            find.assert_called_with({'a': {'$lte': 1}, 'b': 2})
 
     def test_get_embedded_document(self):
         """Test the `get()` method with an embedded document."""
 
-        m = TestModel1.get(c__d=3)
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            mock_query_set = mock.MagicMock()
+            mock_query_set.__getitem__.return_value = {'_id': AN_OBJECT_ID}
+            mock_query_set.count.return_value = 1
 
-        self.assertEqual(m.id, self._id)
+            find.return_value = mock_query_set
+
+            TestModel1.get(a__b=1)
+
+            find.assert_called_with({'a.b': 1})
 
     def test_get_id_string(self):
         """Test the `get()` method with a string `_id`."""
 
-        m = TestModel1.get(id=str(self._id))
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            mock_query_set = mock.MagicMock()
+            mock_query_set.__iter__ = [{'_id': AN_OBJECT_ID}]
+            mock_query_set.count.return_value = 1
 
-        self.assertEqual(m.id, self._id)
+            find.return_value = mock_query_set
 
-        self.assertEqual(m._document['_id'], self._id)
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
+            TestModel1.get(_id=AN_OBJECT_ID_STR)
+
+            find.assert_called_with({'_id': AN_OBJECT_ID})
 
     def test_get_multipledocumentsfound(self):
         """Test that `get()` raises `MultipleDocumentsFound`."""
 
-        self.collection.insert({'a': 1})
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            mock_query_set = mock.Mock()
+            mock_query_set.count.return_value = 2
 
-        with self.assertRaises(TestModel1.MultipleDocumentsFound):
-            TestModel1.get(a=1)
+            find.return_value = mock_query_set
+
+            with self.assertRaises(TestModel1.MultipleDocumentsFound):
+                TestModel1.get(_id=AN_OBJECT_ID)
 
     def test_get_or_create_create(self):
         """Test the `get_or_create()` method for creating documents."""
@@ -323,31 +351,33 @@ class TestDatabase(unittest.TestCase):
     def test_get_nodocumentfound(self):
         """Test that `get()` raises `NoDocumentFound`."""
 
-        with self.assertRaises(TestModel1.NoDocumentFound):
-            TestModel1.get(a=2)
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            mock_query_set = mock.Mock()
+            mock_query_set.count.return_value = 0
+
+            find.return_value = mock_query_set
+
+            with self.assertRaises(TestModel1.NoDocumentFound):
+                TestModel1.get(_id=AN_OBJECT_ID)
 
     def test_get_with_q(self):
         """Test the `get()` method with `Q` objects."""
 
-        m = TestModel1.get(query.Q(a=1))
-        self.assertEqual(m._document['a'], 1)
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            mock_query_set = mock.MagicMock()
+            mock_query_set.__iter__ = [{'_id': AN_OBJECT_ID}]
+            mock_query_set.count.return_value = 1
 
-        m = TestModel1.get(query.Q(a=1) | query.Q(a=2))
-        self.assertEqual(m._document['a'], 1)
+            find.return_value = mock_query_set
 
-        with self.assertRaises(TestModel1.NoDocumentFound):
-            TestModel1.get(query.Q(a=1) & query.Q(a=2))
+            TestModel1.get(query.Q(a=1))
+            find.assert_called_with({'a': 1})
 
-        m = TestModel1.get(query.Q(a=2) | query.Q(b=2))
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
+            TestModel1.get(query.Q(a=1) | query.Q(b=2))
+            find.assert_called_with({'$or': [{'a': 1}, {'b': 2}]})
 
-        m = TestModel1.get(query.Q(a=1) & query.Q(b=2))
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
-
-        with self.assertRaises(TestModel1.NoDocumentFound):
-            TestModel1.get(query.Q(b=1) & query.Q(b=2))
+            TestModel1.get(query.Q(a=1) & query.Q(b=2))
+            find.assert_called_with({'$and': [{'a': 1}, {'b': 2}]})
 
     def test_increment(self):
         """Test the `increment()` method."""
@@ -431,7 +461,7 @@ class TestDatabase(unittest.TestCase):
     def test_increment_valueerror(self):
         """Test that `increment()` raises `ValueError`."""
 
-        m = TestModel1.get(id=self._id)
+        m = TestModel1(_id=AN_OBJECT_ID)
 
         with self.assertRaises(ValueError):
             m.increment()
@@ -529,8 +559,8 @@ class TestDatabase(unittest.TestCase):
     def test_save_field_map(self):
         """Test the `save()` method with a name in `field_map`."""
 
-        with mock.patch('simon.base._current_datetime') as _current_datetime:
-            _current_datetime.return_value = 1
+        with mock.patch('simon.base.current_datetime') as current_datetime:
+            current_datetime.return_value = 1
 
             with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
                 insert.return_value = 1
@@ -593,9 +623,7 @@ class TestDatabase(unittest.TestCase):
     def test_save_fields_attributeerror(self):
         """Test that `save_fields()` raises `AttributeError`."""
 
-        doc = self.collection.find_one({'_id': self._id})
-
-        m = TestModel1(**doc)
+        m = TestModel1(_id=AN_OBJECT_ID)
 
         with self.assertRaises(AttributeError):
             m.save_fields('field_that_doesnt_exist')
@@ -611,8 +639,8 @@ class TestDatabase(unittest.TestCase):
     def test_save_insert(self):
         """Test the `save()` method for new documents."""
 
-        with mock.patch('simon.base._current_datetime') as _current_datetime:
-            _current_datetime.return_value = 1
+        with mock.patch('simon.base.current_datetime') as current_datetime:
+            current_datetime.return_value = 1
 
             with mock.patch.object(TestModel1._meta.db, 'insert') as insert:
                 m = TestModel1(a=1, b=2)
@@ -647,9 +675,9 @@ class TestDatabase(unittest.TestCase):
     def test_save_update(self):
         """Test the `save()` method for existing documents."""
 
-        with mock.patch('simon.base._current_datetime') as _current_datetime:
+        with mock.patch('simon.base.current_datetime') as current_datetime:
             with mock.patch.object(TestModel1._meta.db, 'update') as update:
-                _current_datetime.return_value = 1
+                current_datetime.return_value = 1
 
                 m = TestModel1(_id=AN_OBJECT_ID, created=1, modified=0)
                 m.c = 3

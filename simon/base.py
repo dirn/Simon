@@ -1,21 +1,12 @@
 """The base Simon models"""
 
-from datetime import datetime
-
 from .connection import get_database
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import Q, QuerySet
-from .utils import (get_nested_key, guarantee_object_id, map_fields,
-                    remove_nested_key, update_nested_keys)
+from .utils import (current_datetime, get_nested_key, guarantee_object_id,
+                    map_fields, remove_nested_key, update_nested_keys)
 
 __all__ = ('Model',)
-
-
-def _current_datetime():
-    """"""
-
-    now = datetime.utcnow()
-    return now.replace(microsecond=(now.microsecond / 1000 * 1000))
 
 
 class Meta(object):
@@ -448,9 +439,16 @@ class Model(object):
         fields = dict((k, 1) for k in update.keys())
         doc = self._meta.db.find_one({'_id': id}, fields)
 
+        # There's no need to update the _id
+        doc.pop('_id')
+
         doc = update_nested_keys(self._document, doc)
 
-        for k, v in doc.items():
+        for k, v in doc.iteritems():
+            # Normally I'd use self._document[k] = v, but if a value
+            # has already been associated with an attribute, assigning
+            # the new value through _document won't update the
+            # attribute's value.
             setattr(self, k, v)
 
     def raw_update(self, fields, safe=False):
@@ -495,6 +493,11 @@ class Model(object):
         # After saving the document, the entire document must be
         # reloaded in order to update the instance.
         doc = self._meta.db.find_one({'_id': self.id})
+
+        # There's no need to update the _id
+        doc.pop('_id')
+
+        doc = update_nested_keys(self._document, doc)
 
         for k, v in doc.iteritems():
             # Normally I'd use self._document[k] = v, but if a value
@@ -583,7 +586,7 @@ class Model(object):
         # from the Python datetime before associating it with the
         # instance.
         if self._meta.auto_timestamp:
-            now = _current_datetime()
+            now = current_datetime()
             if not ('_id' in self._document and 'created' in self):
                 self.created = now
             self.modified = now

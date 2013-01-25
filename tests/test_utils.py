@@ -3,12 +3,15 @@ try:
 except ImportError:
     import unittest
 
+from datetime import datetime
+
 from bson import ObjectId
 from bson.errors import InvalidId
 
 from simon import Model
-from simon.utils import (get_nested_key, guarantee_object_id, map_fields,
-                         parse_kwargs, remove_nested_key, update_nested_keys)
+from simon.utils import (current_datetime, get_nested_key, guarantee_object_id,
+                         map_fields, parse_kwargs, remove_nested_key,
+                         update_nested_keys)
 
 
 AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
@@ -23,6 +26,17 @@ class TestModel(Model):
 
 
 class TestUtils(unittest.TestCase):
+    def test_current_datetime(self):
+        """Test teh `current_datetime()` method."""
+
+        now = current_datetime()
+
+        self.assertTrue(isinstance(now, datetime))
+
+        # Because now.microsecond should have any value smaller than a
+        # millisecond record, its value should be evenly divisible by 0
+        self.assertEqual(now.microsecond % 1000, 0)
+
     def test_get_nested_key(self):
         """Test the `get_nested_key()` method."""
 
