@@ -63,31 +63,19 @@ class TestDatabase(unittest.TestCase):
     def setUpClass(cls):
         cls.connection = connection.connect('localhost', name='test-simon')
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.connection.drop_database('test-simon')
-
-    def setUp(self):
-        self.database = self.__class__.connection['test-simon']
-        self.collection = self.database['test-simon']
-
-        self._id = self.collection.insert({'a': 1, 'b': 2,
-                                           'c': {'d': 3, 'e': 4}},
-                                          safe=True)
-
-    def tearDown(self):
-        self.database.drop_collection('test-simon')
-
     def test___init__(self):
         """Test the `__init__()` method."""
 
-        doc = self.collection.find_one({'_id': self._id})
+        m = TestModel1(_id=AN_OBJECT_ID, a=1, b=2)
 
-        m = TestModel1(**doc)
+        self.assertEqual(m._id, AN_OBJECT_ID)
+        self.assertEqual(m._document['_id'], AN_OBJECT_ID)
 
-        for k, v in doc.items():
-            self.assertTrue(hasattr(m, k))
-            self.assertEqual(m._document[k], v)
+        self.assertEqual(m.a, 1)
+        self.assertEqual(m._document['a'], 1)
+
+        self.assertEqual(m.b, 2)
+        self.assertEqual(m._document['b'], 2)
 
     def test_all(self):
         """Test the `all()` method."""
@@ -142,110 +130,82 @@ class TestDatabase(unittest.TestCase):
         """Test the `find()` method."""
 
         with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            find.return_value = [{'_id': self._id}]
+            find.return_value = [{'_id': AN_OBJECT_ID}]
 
-            qs = TestModel1.find(id=self._id)
+            qs = TestModel1.find(id=AN_OBJECT_ID)
 
-            find.assert_called_with({'_id': self._id})
+            find.assert_called_with({'_id': AN_OBJECT_ID})
 
-        qs = TestModel1.find(id=self._id)
-
-        self.assertTrue(isinstance(qs, query.QuerySet))
-        self.assertEqual(qs.count(), 1)
-
-        m = qs[0]
-
-        self.assertTrue(isinstance(m, TestModel1))
-
-        self.assertEqual(m.id, self._id)
-
-        self.assertEqual(m._document['_id'], self._id)
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
+            self.assertTrue(isinstance(qs, query.QuerySet))
 
     def test_find_comparison(self):
         """Test the `find()` method with comparison operators."""
 
-        qs = TestModel1.find(a__gt=1)
-        self.assertEqual(len(qs), 0)
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            find.return_value = [{'_id': AN_OBJECT_ID}]
 
-        qs = TestModel1.find(a__lte=1, b=2)
-        self.assertEqual(len(qs), 1)
+            TestModel1.find(a__gt=1)
+            find.assert_called_with({'a': {'$gt': 1}})
+
+            TestModel1.find(a__lte=1, b=2)
+            find.assert_called_with({'a': {'$lte': 1}, 'b': 2})
 
     def test_find_embedded_document(self):
         """Test the `find()` method with an embedded document."""
 
-        qs = TestModel1.find(c__d=3)
-        self.assertEqual(len(qs), 1)
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            find.return_value = [{'_id': AN_OBJECT_ID}]
+
+            TestModel1.find(a__b=1)
+
+            find.assert_called_with({'a.b': 1})
 
     def test_find_id_string(self):
         """Test the `find()` method with a string `_id`."""
 
-        qs = TestModel1.find(id=str(self._id))
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            find.return_value = [{'_id': AN_OBJECT_ID}]
 
-        self.assertTrue(isinstance(qs, query.QuerySet))
-        self.assertEqual(qs.count(), 1)
+            TestModel1.find(_id=AN_OBJECT_ID_STR)
 
-        m = qs[0]
-
-        self.assertTrue(isinstance(m, TestModel1))
-
-        self.assertEqual(m.id, self._id)
-
-        self.assertEqual(m._document['_id'], self._id)
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
+            find.assert_called_with({'_id': AN_OBJECT_ID})
 
     def test_find_sorted(self):
         """Test the `find()` method with a sort on the class."""
 
-        self.collection.insert({'a': 2})
-        self.collection.insert({'a': 0})
+        with mock.patch('simon.base.QuerySet') as QuerySet:
+            with mock.patch.object(TestModel1._meta.db, 'find') as find:
+                find.return_value = [{'_id': AN_OBJECT_ID}]
 
-        # Unsorted
-        qs = TestModel1.find()
-        self.assertEqual(qs[0]._document['a'], 1)
-        self.assertEqual(qs[1]._document['a'], 2)
-        self.assertEqual(qs[2]._document['a'], 0)
+                TestModel1.find()
+                QuerySet.sort.assert_not_called()
 
-        # Ascending
-        qs = TestModel3.find()
-        self.assertEqual(qs[0]._document['a'], 0)
-        self.assertEqual(qs[1]._document['a'], 1)
-        self.assertEqual(qs[2]._document['a'], 2)
+            with mock.patch.object(TestModel3._meta.db, 'find') as find:
+                find.return_value = [{'_id': AN_OBJECT_ID}]
 
-        # Descending
-        qs = TestModel4.find()
-        self.assertEqual(qs[0]._document['a'], 2)
-        self.assertEqual(qs[1]._document['a'], 1)
-        self.assertEqual(qs[2]._document['a'], 0)
+                TestModel3.find()
+                QuerySet().sort.assert_called_with('a')
+
+            with mock.patch.object(TestModel4._meta.db, 'find') as find:
+                find.return_value = [{'_id': AN_OBJECT_ID}]
+
+                TestModel4.find()
+                QuerySet().sort.assert_called_with('-a')
 
     def test_find_with_q(self):
         """Test the `find()` method with `Q` objects."""
 
-        qs = TestModel1.find(query.Q(a=1))
-        m = qs[0]
-        self.assertEqual(m._document['a'], 1)
+        with mock.patch.object(TestModel1._meta.db, 'find') as find:
+            find.return_value = [{'_id': AN_OBJECT_ID}]
 
-        qs = TestModel1.find(query.Q(a=1) | query.Q(a=2))
-        m = qs[0]
-        self.assertEqual(m._document['a'], 1)
+            TestModel1.find(query.Q(a=1))
+            find.assert_called_with({'a': 1})
 
-        qs = TestModel1.find(query.Q(a=1) & query.Q(a=2))
-        self.assertEqual(qs.count(), 0)
+            TestModel1.find(query.Q(a=1) | query.Q(b=2))
+            find.assert_called_with({'$or': [{'a': 1}, {'b': 2}]})
 
-        qs = TestModel1.find(query.Q(a=2) | query.Q(b=2))
-        m = qs[0]
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
-
-        qs = TestModel1.find(query.Q(a=1) & query.Q(b=2))
-        m = qs[0]
-        self.assertEqual(m._document['a'], 1)
-        self.assertEqual(m._document['b'], 2)
-
-        qs = TestModel1.find(query.Q(b=1) & query.Q(b=2))
-        self.assertEqual(qs.count(), 0)
+            TestModel1.find(query.Q(a=1) & query.Q(b=2))
+            find.assert_called_with({'$and': [{'a': 1}, {'b': 2}]})
 
     def test_get(self):
         """Test the `get()` method."""
