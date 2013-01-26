@@ -741,8 +741,12 @@ class TestQuery(unittest.TestCase):
     def test_count(self):
         """Test the `count()` method."""
 
-        self.assertEqual(self.qs.count(), self.cursor.count())
-        self.assertEqual(self.qs._count, self.cursor.count())
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor)
+        qs.count()
+
+        cursor.count.assert_called_with(with_limit_and_skip=True)
 
     def test_count_typeerror(self):
         """Test that `count()` raises `TypeError`."""
@@ -754,256 +758,101 @@ class TestQuery(unittest.TestCase):
     def test_distinct(self):
         """Test the `distinct()` method."""
 
-        self.assertEqual(sorted(self.qs.distinct('a')), [1, 2])
-        self.assertEqual(sorted(self.qs.distinct('b')), [1, 2])
-        self.assertEqual(sorted(self.qs.distinct('c')), [1, 2])
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor)
+        qs.distinct('a')
+
+        cursor.distinct.assert_called_with('a')
 
     def test_limit(self):
         """Test the `limit()` method."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
 
-        limit1 = self.qs.limit(1)
-        limit2 = self.qs.limit(2)
-        limit3 = self.qs.limit(3)
+        qs = query.QuerySet(cursor=cursor)
 
-        # Fill the result caches, using a bigger number to ensure
-        # everything gets loaded
-        limit1._fill_to(3)
-        limit2._fill_to(3)
-        limit3._fill_to(3)
+        qs.limit(1)
+        cursor.clone.assert_called_with()
+        cursor.clone().limit.assert_called_with(1)
 
-        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
-        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
-        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
-
-        self.assertTrue(doc1 in limit1._items)
-        self.assertFalse(doc2 in limit1._items)
-        self.assertFalse(doc3 in limit1._items)
-
-        self.assertTrue(doc1 in limit2._items)
-        self.assertTrue(doc2 in limit2._items)
-        self.assertFalse(doc3 in limit2._items)
-
-        self.assertTrue(doc1 in limit3._items)
-        self.assertTrue(doc2 in limit3._items)
-        self.assertTrue(doc3 in limit3._items)
-
-    def test_limit_count(self):
-        """Test that `limit()` correctly handles counts."""
-
-        limit1 = self.qs.limit(1)
-        limit2 = self.qs.limit(2)
-        limit3 = self.qs.limit(3)
-
-        self.assertEqual(limit1.count(), 1)
-        self.assertEqual(limit2.count(), 2)
-        self.assertEqual(limit3.count(), 3)
+        qs.limit(2)
+        cursor.clone.assert_called_with()
+        cursor.clone().limit.assert_called_with(2)
 
     def test_skip(self):
         """Test the `skip()` method."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
 
-        skip1 = self.qs.skip(1)
-        skip2 = self.qs.skip(2)
-        skip3 = self.qs.skip(3)
+        qs = query.QuerySet(cursor=cursor)
 
-        # Fill the result caches, using a bigger number to ensure
-        # everything gets loaded
-        skip1._fill_to(3)
-        skip2._fill_to(3)
-        skip3._fill_to(3)
+        qs.skip(1)
+        cursor.clone.assert_called_with()
+        cursor.clone().skip.assert_called_with(1)
 
-        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
-        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
-        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
-
-        self.assertFalse(doc1 in skip1._items)
-        self.assertTrue(doc2 in skip1._items)
-        self.assertTrue(doc3 in skip1._items)
-
-        self.assertFalse(doc1 in skip2._items)
-        self.assertFalse(doc2 in skip2._items)
-        self.assertTrue(doc3 in skip2._items)
-
-        self.assertFalse(doc1 in skip3._items)
-        self.assertFalse(doc2 in skip3._items)
-        self.assertFalse(doc3 in skip3._items)
-
-    def test_skip_count(self):
-        """Test that `skip()` correctly handles counts."""
-
-        skip1 = self.qs.skip(1)
-        skip2 = self.qs.skip(2)
-        skip3 = self.qs.skip(3)
-
-        self.assertEqual(skip1.count(), 2)
-        self.assertEqual(skip2.count(), 1)
-        self.assertEqual(skip3.count(), 0)
+        qs.skip(2)
+        cursor.clone.assert_called_with()
+        cursor.clone().skip.assert_called_with(2)
 
     def test_sort(self):
         """Test the `sort()` method."""
 
-        qs = self.qs.sort('id')
+        cursor = mock.Mock()
 
-        qs._fill_to(3)
+        qs = query.QuerySet(cursor=cursor)
 
-        self.assertTrue(qs[0].id < qs[1].id < qs[2].id)
+        qs.sort('_id')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('_id', 1)])
 
-    def test_sort_single_ascending(self):
-        """Test the `sort()` method for a single ascending key."""
-
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
-
-        qs = self.qs.sort('a')
-
-        # Fill the result cache, using a bigger number to ensure
-        # everything gets loaded
-        qs._fill_to(3)
-
-        # Documents without the key should appear first, followed by
-        # documents with the key with its value in ascending order
-        self.assertEqual(qs[0]['_id'], self._id3)
-        self.assertEqual(qs[1]['_id'], self._id1)
-        self.assertEqual(qs[2]['_id'], self._id2)
-
-    def test_sort_single_descending(self):
-        """Test the `sort()` method for a single descending key."""
-
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
-
-        qs = self.qs.sort('-a')
-
-        # Fill the result cache, using a bigger number to ensure
-        # everything gets loaded
-        qs._fill_to(3)
-
-        # Documents with the key should appear first, with the value
-        # in descending order, following by documents without the key
-        self.assertEqual(qs[2]['_id'], self._id3)
-        self.assertEqual(qs[1]['_id'], self._id1)
-        self.assertEqual(qs[0]['_id'], self._id2)
+        qs.sort('-_id')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('_id', -1)])
 
     def test_sort_multiple_ascending(self):
         """Test the `sort()` method for multiple ascending keys."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
 
-        # In order to really test this, some new documents are needed
-        # because all current key/value combinations used are unique
-        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
-        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+        qs = query.QuerySet(cursor=cursor)
 
-        # The cursor is live, so it should pick up the new documents
-        qs = self.qs.sort('a', 'b')
-
-        # Fill the result cache, using a bigger number to ensure
-        # everything gets loaded
-        qs._fill_to(5)
-
-        # Documents will be sorted with both keys in ascending order.
-        # Any document without a key will appear before documents with
-        # that key
-        self.assertEqual(qs[0]['_id'], self._id3)
-        self.assertEqual(qs[1]['_id'], self._id5)
-        self.assertEqual(qs[2]['_id'], self._id4)
-        self.assertEqual(qs[3]['_id'], self._id1)
-        self.assertEqual(qs[4]['_id'], self._id2)
+        qs.sort('a', 'b')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('a', 1), ('b', 1)])
 
     def test_sort_multiple_descending(self):
         """Test the `sort()` method for multiple descending keys."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
 
-        # In order to really test this, some new documents are needed
-        # because all current key/value combinations used are unique
-        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
-        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+        qs = query.QuerySet(cursor=cursor)
 
-        # The cursor is live, so it should pick up the new documents
-        qs = self.qs.sort('-a', '-b')
-
-        # Fill the result cache, using a bigger number to ensure
-        # everything gets loaded
-        qs._fill_to(5)
-
-        # Documents will be sorted with both keys in descending order.
-        # Any document without a key will appear after documents with
-        # that key
-        self.assertEqual(qs[4]['_id'], self._id3)
-        self.assertEqual(qs[3]['_id'], self._id5)
-        self.assertEqual(qs[2]['_id'], self._id4)
-        self.assertEqual(qs[1]['_id'], self._id1)
-        self.assertEqual(qs[0]['_id'], self._id2)
+        qs.sort('-a', '-b')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('a', -1), ('b', -1)])
 
     def test_sort_multiple_ascending_then_descending(self):
         """Test the `sort()` method for multiple keys ascending first."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
 
-        # In order to really test this, some new documents are needed
-        # because all current key/value combinations used are unique
-        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
-        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+        qs = query.QuerySet(cursor=cursor)
 
-        # The cursor is live, so it should pick up the new documents
-        qs = self.qs.sort('a', '-b')
-
-        # Fill the result cache, using a bigger number to ensure
-        # everything gets loaded
-        qs._fill_to(5)
-
-        # Documents will be sorted with both keys in ascending order.
-        # Any document without a key will appear before documents with
-        # that key
-        self.assertEqual(qs[0]['_id'], self._id5)
-        self.assertEqual(qs[1]['_id'], self._id3)
-        self.assertEqual(qs[2]['_id'], self._id1)
-        self.assertEqual(qs[3]['_id'], self._id4)
-        self.assertEqual(qs[4]['_id'], self._id2)
+        qs.sort('a', '-b')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('a', 1), ('b', -1)])
 
     def test_sort_multiple_descending_then_ascending(self):
         """Test the `sort()` method for multiple keys descending first."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
 
-        # In order to really test this, some new documents are needed
-        # because all current key/value combinations used are unique
-        self._id4 = self.collection.insert({'a': 1, 'b': 1}, safe=True)
-        self._id5 = self.collection.insert({'b': 2, 'c': 2}, safe=True)
+        qs = query.QuerySet(cursor=cursor)
 
-        # The cursor is live, so it should pick up the new documents
-        qs = self.qs.sort('-a', 'b')
-
-        # Fill the result cache, using a bigger number to ensure
-        # everything gets loaded
-        qs._fill_to(5)
-
-        # Documents will be sorted with both keys in descending order.
-        # Any document without a key will appear after documents with
-        # that key
-        self.assertEqual(qs[4]['_id'], self._id5)
-        self.assertEqual(qs[3]['_id'], self._id3)
-        self.assertEqual(qs[2]['_id'], self._id1)
-        self.assertEqual(qs[1]['_id'], self._id4)
-        self.assertEqual(qs[0]['_id'], self._id2)
+        qs.sort('-a', 'b')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('a', -1), ('b', 1)])
 
     def test__fill_to(self):
         """Test the `_fill_to()` method."""
@@ -1088,117 +937,66 @@ class TestQuery(unittest.TestCase):
     def test___getitem__(self):
         """Test the `__getitem__()` method."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
 
-        docs = [{'_id': self._id1, 'a': 1, 'b': 2},
-                {'_id': self._id2, 'a': 2, 'c': 1},
-                {'_id': self._id3, 'b': 1, 'c': 2}]
+        qs = query.QuerySet(cursor=cursor)
 
-        for x in range(3):
-            self.assertEqual(self.qs[x], docs[x])
-            self.assertEqual(self.qs[x], self.qs._items[x])
-            self.assertEqual(len(self.qs._items), x + 1)
+        # qs._fill_to() would normally populate qs._items
+        qs._items = range(3)
+
+        with mock.patch.object(qs, '_fill_to') as _fill_to:
+            for x in range(3):
+                self.assertEqual(qs[x], qs._items[x])
+                _fill_to.assert_called_with(x)
 
     def test___getitem___slice(self):
         """Test the `__getitem__()` method with slices."""
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.Mock()
+        cursor.count.return_value = 3
 
-        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
-        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
-        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
+        qs = query.QuerySet(cursor=cursor)
 
-        # For these tests, use skip() so each slice is created based on
-        # a fresh cursor.
+        # qs._fill_to() would normally populate qs._items
+        qs._items = range(3)
 
-        qs1 = self.qs.skip(0)
-        slice1 = qs1[1:]
+        with mock.patch.object(qs, '_fill_to') as _fill_to:
+            self.assertEqual(qs[1:], qs._items[1:])
+            _fill_to.assert_called_with(2)
 
-        # Skips the first document and returns the rest, so all
-        # documents need to be loaded from the cursor.
-        self.assertEqual(len(qs1._items), 3)
+            self.assertEqual(qs[:1], qs._items[:1])
+            _fill_to.assert_called_with(0)
 
-        self.assertEqual(len(slice1), 2)
-        self.assertFalse(doc1 in slice1)
-        self.assertTrue(doc2 in slice1)
-        self.assertTrue(doc3 in slice1)
+            self.assertEqual(qs[1:2], qs._items[1:2])
+            _fill_to.assert_called_with(1)
 
-        qs2 = self.qs.skip(0)
-        slice2 = qs2[:1]
+            self.assertEqual(qs[::2], qs._items[::2])
+            _fill_to.assert_called_with(2)
 
-        # Loads the first document, so only one should be loaded from
-        # the cursor.
-        self.assertEqual(len(qs2._items), 1)
+            self.assertEqual(qs[1::2], qs._items[1::2])
+            _fill_to.assert_called_with(2)
 
-        self.assertEqual(len(slice2), 1)
-        self.assertTrue(doc1 in slice2)
-        self.assertFalse(doc2 in slice2)
-        self.assertFalse(doc2 in slice2)
-
-        qs3 = self.qs.skip(0)
-        slice3 = qs3[1:2]
-
-        # Loads the second document, so the first two should be loaded
-        # from the cursor.
-        self.assertEqual(len(qs3._items), 2)
-
-        self.assertEqual(len(slice3), 1)
-        self.assertFalse(doc1 in slice3)
-        self.assertTrue(doc2 in slice3)
-        self.assertFalse(doc3 in slice3)
-
-        qs4 = self.qs.skip(0)
-        slice4 = qs4[::2]
-
-        # Loads all documents, skipping every other one, so all
-        # documents need to be loaded from the cursor.
-        self.assertEqual(len(qs4._items), 3)
-
-        self.assertEqual(len(slice4), 2)
-        self.assertTrue(doc1 in slice4)
-        self.assertFalse(doc2 in slice4)
-        self.assertTrue(doc3 in slice4)
-
-        qs5 = self.qs.skip(0)
-        slice5 = qs5[1::2]
-
-        # Loads all documents, skipping every other one, so all
-        # documents need to be loaded from the cursor.
-        self.assertEqual(len(qs5._items), 3)
-
-        self.assertEqual(len(slice5), 1)
-        self.assertFalse(doc1 in slice5)
-        self.assertTrue(doc2 in slice5)
-        self.assertFalse(doc3 in slice5)
-
-        qs6 = self.qs.skip(0)
-        slice6 = qs6[::]
-
-        # Loads all documents, so all documents need to be loaded from
-        # the cursor.
-        self.assertEqual(len(qs6._items), 3)
-
-        self.assertEqual(len(slice6), 3)
-        self.assertTrue(doc1 in slice6)
-        self.assertTrue(doc2 in slice6)
-        self.assertTrue(doc3 in slice6)
+            self.assertEqual(qs[::], qs._items[::])
+            _fill_to.assert_called_with(2)
 
     def test___getitem___indexerror(self):
         """Test that `__getitem__()` raises `IndexError`."""
 
+        cursor = mock.Mock()
+        cursor.count.return_value = 3
+
+        qs = query.QuerySet(cursor=cursor, cls=TestModel1)
+
         with self.assertRaises(IndexError) as e:
-            self.qs[3]
+            qs[3]
 
         expected = "No such item in 'QuerySet' for 'TestModel1' object"
         self.assertEqual(e.exception.message, expected)
 
-        self.qs._cls = None
+        qs = query.QuerySet(cursor=cursor)
+
         with self.assertRaises(IndexError) as e:
-            self.qs[3]
+            qs[3]
 
         expected = "No such item in 'QuerySet'"
         self.assertEqual(e.exception.message, expected)
