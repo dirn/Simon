@@ -13,7 +13,7 @@ from simon import connection
 class TestConnection(unittest.TestCase):
     """Test database connections"""
 
-    def setUp(self):
+    def tearDown(self):
         # Reset the cached connections and databases so the ones added
         # during one test don't affect another
         connection._connections = None

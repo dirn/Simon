@@ -42,6 +42,13 @@ class TestBase(unittest.TestCase):
                 'test-simon': None,
             }
 
+    @classmethod
+    def tearDownClass(cls):
+        # Reset the cached connections and databases so the ones added
+        # during one test don't affect another
+        connection._connections = None
+        connection._databases = None
+
     def test_contains(self):
         """Test the `__contains__()` method."""
 

@@ -62,6 +62,13 @@ class TestDatabase(unittest.TestCase):
     def setUpClass(cls):
         cls.connection = connection.connect('localhost', name='test-simon')
 
+    @classmethod
+    def tearDownClass(cls):
+        # Reset the cached connections and databases so the ones added
+        # during one test don't affect another
+        connection._connections = None
+        connection._databases = None
+
     def test___init__(self):
         """Test the `__init__()` method."""
 
@@ -97,15 +104,6 @@ class TestDatabase(unittest.TestCase):
             insert.assert_called_with({'d': 1, 'e': 2, 'f': 3, 'created': 1,
                                        'modified': 1},
                                       safe=True)
-
-    def test_db_attribute(self):
-        ("Test that the `db` attribute of classes and instances is the "
-         "right type.")
-
-        self.assertTrue(isinstance(TestModel1._meta.db, Collection))
-
-        m = TestModel1()
-        self.assertTrue(isinstance(m._meta.db, Collection))
 
     def test_delete(self):
         """Test the `delete()` method."""

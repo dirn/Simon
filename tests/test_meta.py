@@ -130,8 +130,6 @@ class TestMetaClass(unittest.TestCase):
     def test_db(self):
         """Test the `_meta.db` attribute."""
 
-        self.assertTrue(isinstance(DefaultModel._meta.db, Collection))
-
         with mock.patch('simon.base.get_database') as get_database:
             # Make a new class here to ensure that the database hasn't
             # yet been set.
