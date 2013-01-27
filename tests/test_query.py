@@ -281,7 +281,7 @@ class TestQuerySet(unittest.TestCase):
 
         self.qs._fill_to(0)
 
-        self.assertTrue(isinstance(self.qs._items[0], dict))
+        self.assertIsInstance(self.qs._items[0], dict)
 
     def test__fill_to_as_model(self):
         """Test that `_fill_to()` stores model instances."""
@@ -290,8 +290,7 @@ class TestQuerySet(unittest.TestCase):
 
         self.model_qs._fill_to(0)
 
-        self.assertTrue(isinstance(self.model_qs._items[0],
-                                   self.model_qs._cls))
+        self.assertIsInstance(self.model_qs._items[0], self.model_qs._cls)
 
     def test__fill_to_indexes(self):
         ("Test that `_fill_to()` property fills to the specified "
@@ -396,7 +395,7 @@ class TestQuerySet(unittest.TestCase):
     def test___iter__(self):
         """Test the `__iter__()` method."""
 
-        self.assertTrue(isinstance(self.qs.__iter__(), collections.Iterable))
+        self.assertIsInstance(self.qs.__iter__(), collections.Iterable)
 
     def test___iter___fills_cache(self):
         """Test that `__iter__()` fills the result cache."""

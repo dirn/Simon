@@ -58,9 +58,9 @@ class TestBase(unittest.TestCase):
         m._document['a'] = 1
         m._document['b'] = 2
 
-        self.assertTrue('a' in m)
-        self.assertTrue('b' in m)
-        self.assertFalse('c' in m)
+        self.assertIn('a', m)
+        self.assertIn('b', m)
+        self.assertNotIn('c', m)
 
     def test_contains_field_map(self):
         """Test the `__contains__()` method with a mapped field."""
@@ -68,9 +68,9 @@ class TestBase(unittest.TestCase):
         m = TestModel1()
         m._document['y'] = 1
 
-        self.assertTrue('x' in m)
-        self.assertTrue('y' in m)
-        self.assertFalse('x' in m._document)
+        self.assertIn('x', m)
+        self.assertIn('y', m)
+        self.assertNotIn('x', m._document)
 
     def test_db(self):
         ("Test that the `db` attribute is associated with classes and "
@@ -91,7 +91,7 @@ class TestBase(unittest.TestCase):
 
         del m.a
         self.assertFalse(hasattr(m, 'a'))
-        self.assertFalse('a' in m._document)
+        self.assertNotIn('a', m._document)
 
         with self.assertRaises(AttributeError):
             del m.attribute
@@ -103,7 +103,7 @@ class TestBase(unittest.TestCase):
         m._document['y'] = 1
 
         del m.x
-        self.assertFalse('y' in m._document)
+        self.assertNotIn('y', m._document)
 
     def test_eq(self):
         """Test the `__eq__()` method."""
@@ -214,7 +214,7 @@ class TestBase(unittest.TestCase):
         m = TestModel1(**fields)
         self.assertTrue(all(getattr(m, k) == v for k, v in fields.items()))
 
-        self.assertTrue(isinstance(m._document, dict))
+        self.assertIsInstance(m._document, dict)
 
     def test_ne(self):
         """Test the `__ne__()` method."""
@@ -262,18 +262,18 @@ class TestBase(unittest.TestCase):
 
         m = TestModel1()
         m._document['a'] = 1
-        self.assertFalse('b' in m._document)
+        self.assertNotIn('b', m._document)
         with self.assertRaises(AttributeError):
             m.b
 
         m.b = 2
-        self.assertTrue('b' in m._document)
+        self.assertIn('b', m._document)
         self.assertEqual(m.b, 2)
         self.assertEqual(m.b, m._document['b'])
 
         m.attribute = 3
         self.assertEqual(m.attribute, 3)
-        self.assertFalse('attribute' in m._document)
+        self.assertNotIn('attribute', m._document)
 
         with self.assertRaises(AttributeError):
             m._meta = 'this better not work'
@@ -284,7 +284,7 @@ class TestBase(unittest.TestCase):
         m = TestModel1()
         setattr(m, 'x', 1)
 
-        self.assertTrue('y' in m._document)
+        self.assertIn('y', m._document)
         self.assertEqual(m._document['y'], 1)
 
     def test_str(self):

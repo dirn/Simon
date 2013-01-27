@@ -125,7 +125,7 @@ class TestDatabase(unittest.TestCase):
 
             find.assert_called_with({'_id': AN_OBJECT_ID})
 
-            self.assertTrue(isinstance(qs, query.QuerySet))
+            self.assertIsInstance(qs, query.QuerySet)
 
     def test_find_comparison(self):
         """Test the `find()` method with comparison operators."""
@@ -457,8 +457,8 @@ class TestDatabase(unittest.TestCase):
                                       {'$unset': {'a': True, 'b': True}},
                                       safe=True)
 
-            self.assertFalse('a' in m._document)
-            self.assertFalse('b' in m._document)
+            self.assertNotIn('a', m._document)
+            self.assertNotIn('b', m._document)
 
     def test_remove_fields_nested_multiple(self):
         """Test the `remove_fields()` method with nested fields."""
@@ -472,9 +472,9 @@ class TestDatabase(unittest.TestCase):
                                       {'$unset': {'b': True, 'c.e': True}},
                                       safe=True)
 
-            self.assertFalse('b' in m._document)
-            self.assertTrue('d' in m._document['c'])
-            self.assertFalse('e' in m._document['c'])
+            self.assertNotIn('b', m._document)
+            self.assertIn('d', m._document['c'])
+            self.assertNotIn('e', m._document['c'])
 
     def test_remove_fields_nested_one(self):
         """Test the `remove_fields()` method with nested fields."""
@@ -487,8 +487,8 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$unset': {'f.h': True}}, safe=True)
 
-            self.assertTrue('g' in m._document['f'])
-            self.assertFalse('h' in m._document['f'])
+            self.assertIn('g', m._document['f'])
+            self.assertNotIn('h', m._document['f'])
 
     def test_remove_fields_one(self):
         """Test the `remove_fields()` method for one field."""
@@ -500,8 +500,8 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$unset': {'b': True}}, safe=True)
 
-            self.assertTrue('a' in m._document)
-            self.assertFalse('b' in m._document)
+            self.assertIn('a', m._document)
+            self.assertNotIn('b', m._document)
 
     def test_remove_fields_typeerror(self):
         """Test that `remove_fields()` raises `TypeError`."""
@@ -613,11 +613,11 @@ class TestDatabase(unittest.TestCase):
             m1 = TestModel1()
             m1.save()
 
-            self.assertTrue('created' in m1._document)
-            self.assertTrue('modified' in m1._document)
+            self.assertIn('created', m1._document)
+            self.assertIn('modified', m1._document)
 
-            self.assertTrue(isinstance(m1._document['created'], datetime))
-            self.assertTrue(isinstance(m1._document['modified'], datetime))
+            self.assertIsInstance(m1._document['created'], datetime)
+            self.assertIsInstance(m1._document['modified'], datetime)
 
         with mock.patch.object(TestModel2._meta.db, 'insert') as insert:
             m2 = TestModel2(a=2)
@@ -625,8 +625,8 @@ class TestDatabase(unittest.TestCase):
 
             insert.assert_called_with({'a': 2}, safe=True)
 
-            self.assertFalse('created' in m2._document)
-            self.assertFalse('modified' in m2._document)
+            self.assertNotIn('created', m2._document)
+            self.assertNotIn('modified', m2._document)
 
     def test_save_update(self):
         """Test the `save()` method for existing documents."""

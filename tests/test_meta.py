@@ -102,25 +102,25 @@ class TestMetaClass(unittest.TestCase):
     def test_core_attributes(self):
         """Test the `_meta.core_attributes` attribute."""
 
-        self.assertTrue('_document' in DefaultModel._meta.core_attributes)
-        self.assertTrue('_meta' in DefaultModel._meta.core_attributes)
-        self.assertFalse('Meta' in DefaultModel._meta.core_attributes)
-        self.assertTrue(
-            'MultipleDocumentsFound' in DefaultModel._meta.core_attributes)
-        self.assertTrue(
-            'NoDocumentFound' in DefaultModel._meta.core_attributes)
+        self.assertIn('_document', DefaultModel._meta.core_attributes)
+        self.assertIn('_meta', DefaultModel._meta.core_attributes)
+        self.assertNotIn('Meta', DefaultModel._meta.core_attributes)
+        self.assertIn('MultipleDocumentsFound',
+                      DefaultModel._meta.core_attributes)
+        self.assertIn('NoDocumentFound',
+                      DefaultModel._meta.core_attributes)
 
-        self.assertTrue('_document' in TestModel1._meta.core_attributes)
-        self.assertTrue('_meta' in TestModel1._meta.core_attributes)
-        self.assertTrue('Meta' in TestModel1._meta.core_attributes)
-        self.assertTrue(
-            'MultipleDocumentsFound' in TestModel1._meta.core_attributes)
-        self.assertTrue('NoDocumentFound' in TestModel1._meta.core_attributes)
+        self.assertIn('_document', TestModel1._meta.core_attributes)
+        self.assertIn('_meta', TestModel1._meta.core_attributes)
+        self.assertIn('Meta', TestModel1._meta.core_attributes)
+        self.assertIn('MultipleDocumentsFound',
+                      TestModel1._meta.core_attributes)
+        self.assertIn('NoDocumentFound', TestModel1._meta.core_attributes)
 
-        self.assertTrue('some_junk_value' in TestModel2._meta.core_attributes)
+        self.assertIn('some_junk_value', TestModel2._meta.core_attributes)
 
-        self.assertTrue('Meta' in TestModel3._meta.core_attributes)
-        self.assertFalse('Meta' in TestModel4._meta.core_attributes)
+        self.assertIn('Meta', TestModel3._meta.core_attributes)
+        self.assertNotIn('Meta', TestModel4._meta.core_attributes)
 
     def test_database(self):
         """Test the `_meta.database` attribute."""
@@ -139,7 +139,7 @@ class TestMetaClass(unittest.TestCase):
                 pass
 
             # At this point the internal _db should be None.
-            self.assertTrue(TestModel1._meta._db is None)
+            self.assertIsNone(TestModel1._meta._db)
 
             # Once the mock is called, _db should always be set to this
             # value.
@@ -210,9 +210,9 @@ class TestMetaClass(unittest.TestCase):
     def test_sort(self):
         """Test the `_meta.sort` attribute."""
 
-        self.assertTrue(DefaultModel._meta.sort is None)
-        self.assertTrue(TestModel1._meta.sort is None)
-        self.assertTrue(TestModel2._meta.sort is None)
+        self.assertIsNone(DefaultModel._meta.sort)
+        self.assertIsNone(TestModel1._meta.sort)
+        self.assertIsNone(TestModel2._meta.sort)
         self.assertEqual(TestModel3._meta.sort, ('-id',))
         self.assertEqual(TestModel5._meta.sort, ['id', '-name'])
 

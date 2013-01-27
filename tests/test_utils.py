@@ -31,7 +31,7 @@ class TestUtils(unittest.TestCase):
 
         now = current_datetime()
 
-        self.assertTrue(isinstance(now, datetime))
+        self.assertIsInstance(now, datetime)
 
         # Because now.microsecond should have any value smaller than a
         # millisecond record, its value should be evenly divisible by 0

@@ -77,15 +77,15 @@ class TestConnection(unittest.TestCase):
             mock_method.assert_called_with(host=url, port=None,
                                            replica_set='simonrs')
 
-        self.assertTrue('test' in connection._databases)
-        self.assertTrue('test2' in connection._databases)
-        self.assertTrue('test3' in connection._databases)
-        self.assertTrue('simon' in connection._databases)
-        self.assertTrue('remote_uri' in connection._databases)
-        self.assertTrue('replica1' in connection._databases)
-        self.assertTrue('replica2' in connection._databases)
+        self.assertIn('test', connection._databases)
+        self.assertIn('test2', connection._databases)
+        self.assertIn('test3', connection._databases)
+        self.assertIn('simon', connection._databases)
+        self.assertIn('remote_uri', connection._databases)
+        self.assertIn('replica1', connection._databases)
+        self.assertIn('replica2', connection._databases)
 
-        self.assertTrue('default' in connection._databases)
+        self.assertIn('default', connection._databases)
 
         self.assertEqual(connection._databases['test'],
                          connection._databases['default'])
@@ -110,7 +110,7 @@ class TestConnection(unittest.TestCase):
 
             mock_conn.assert_called_with(host='localhost', port=None)
 
-            self.assertTrue('localhost:27017' in connection._connections)
+            self.assertIn('localhost:27017', connection._connections)
 
             # When calling _get_connection() the second time, the
             # connection should be returned right from _connections
@@ -190,11 +190,9 @@ class TestConnection(unittest.TestCase):
             self.assertEqual(settings['username'], 'simonuser')
             self.assertEqual(settings['password'], 'simonpassword')
 
-        self.assertTrue('simon.mongo.com:27017' in connection._connections)
-        self.assertTrue('simon.m0.mongo.com:simonrs' in
-                        connection._connections)
-        self.assertTrue('{0}:simonrs'.format(url3) in
-                        connection._connections)
+        self.assertIn('simon.mongo.com:27017', connection._connections)
+        self.assertIn('simon.m0.mongo.com:simonrs', connection._connections)
+        self.assertIn('{0}:simonrs'.format(url3), connection._connections)
 
     def test__get_connection_connectionerror(self):
         """Test that `_get_connection()` raises `ConnectionError`."""
