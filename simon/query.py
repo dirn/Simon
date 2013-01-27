@@ -1,5 +1,7 @@
 """Query functionality"""
 
+from .utils import map_fields
+
 __all__ = ('Q', 'QuerySet')
 
 
@@ -148,7 +150,9 @@ class QuerySet(object):
         # If the QuerySet has a model class, check for key in the
         # class's field map
         if self._cls:
-            key = self._cls._meta.field_map.get(key, key)
+            query = map_fields(self._cls, {key: 1}, flatten_keys=True,
+                               with_operators=True)
+            key = query.keys()[0]
 
         return self._cursor.distinct(key)
 
@@ -211,7 +215,9 @@ class QuerySet(object):
                 direction = 1
 
             if self._cls:
-                key = self._cls._meta.field_map.get(key, key)
+                query = map_fields(self._cls, {key: 1}, flatten_keys=True,
+                                   with_operators=True)
+                key = query.keys()[0]
 
             sorting.append((key, direction))
 

@@ -753,6 +753,26 @@ class TestQuery(unittest.TestCase):
 
         cursor.distinct.assert_called_with('a')
 
+    def test_distinct_field_map(self):
+        """Test the `distinct()` method with a name in `field_map`."""
+
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor, cls=TestModel1)
+        qs.distinct('fake')
+
+        cursor.distinct.assert_called_with('real')
+
+    def test_distinct_nested_field(self):
+        """Test the `distinct()` method with a nested field."""
+
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor, cls=TestModel1)
+        qs.distinct('a__b')
+
+        cursor.distinct.assert_called_with('a.b')
+
     def test_limit(self):
         """Test the `limit()` method."""
 
@@ -798,6 +818,17 @@ class TestQuery(unittest.TestCase):
         cursor.clone.assert_called_with()
         cursor.clone().sort.assert_called_with([('_id', -1)])
 
+    def test_sort_field_map(self):
+        """Test the `sort()` method with a name in `field_map`."""
+
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor, cls=TestModel1)
+
+        qs.sort('fake')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('real', 1)])
+
     def test_sort_multiple_ascending(self):
         """Test the `sort()` method for multiple ascending keys."""
 
@@ -841,6 +872,17 @@ class TestQuery(unittest.TestCase):
         qs.sort('-a', 'b')
         cursor.clone.assert_called_with()
         cursor.clone().sort.assert_called_with([('a', -1), ('b', 1)])
+
+    def test_sort_nested_field(self):
+        """Test the `sort()` method with a nested field."""
+
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor, cls=TestModel1)
+
+        qs.sort('a__b')
+        cursor.clone.assert_called_with()
+        cursor.clone().sort.assert_called_with([('a.b', 1)])
 
     def test__fill_to(self):
         """Test the `_fill_to()` method."""
