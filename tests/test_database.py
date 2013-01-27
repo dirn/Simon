@@ -345,7 +345,7 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'a': 1}}, safe=True)
 
-            self.assertTrue(m._document['a'], 1)
+            self.assertEqual(m._document['a'], 1)
 
             find_one.return_value = {'_id': AN_OBJECT_ID, 'b': 2}
             m.increment('b', 2, safe=True)
@@ -353,8 +353,8 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'b': 2}}, safe=True)
 
-            self.assertTrue(m._document['a'], 1)
-            self.assertTrue(m._document['b'], 2)
+            self.assertEqual(m._document['a'], 1)
+            self.assertEqual(m._document['b'], 2)
 
     def test_increment_embedded_document(self):
         """Test the `increment()` method with an embedded document."""
@@ -370,7 +370,7 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'a.c': 3}}, safe=True)
 
-            self.assertTrue(m._document['a']['c'], 3)
+            self.assertEqual(m._document['a']['c'], 3)
 
     def test_increment_field_map(self):
         """Test the `increment()` method with a name in `field_map`."""
@@ -386,7 +386,7 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'real': 2}}, safe=True)
 
-            self.assertTrue(m._document['real'], 2)
+            self.assertEqual(m._document['real'], 2)
 
     def test_increment_kwargs(self):
         """Test the `increment()` method with **kwargs."""
@@ -402,8 +402,8 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'a': 1, 'b': 5}}, safe=True)
 
-            self.assertTrue(m._document['a'], 1)
-            self.assertTrue(m._document['b'], 5)
+            self.assertEqual(m._document['a'], 1)
+            self.assertEqual(m._document['b'], 5)
 
     def test_increment_typeerror(self):
         """Test that `increment()` raises `TypeError`."""
