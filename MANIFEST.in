@@ -6,6 +6,7 @@ include setup.cfg
 include tox.ini
 recursive-include docs *
 recursive-include tests *
+exclude tests/integration_settings.py
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * .tox
