@@ -1,3 +1,5 @@
+"""Tests of the base module that don't use the database"""
+
 try:
     import unittest2 as unittest
 except ImportError:

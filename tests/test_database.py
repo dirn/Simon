@@ -1,13 +1,4 @@
-"""Tests of the database functionality
-
-These tests require a connection to a MongoDB instance.
-
-Most of these tests will use safe mode when updating the database. This
-will cause the tests to take longer, but will provide more reliable
-tests. The only time safe mode will be turned off is when a method's
-behavior is different for each mode. When that is the case, both modes
-will be tested.
-"""
+"""Tests of the database functionality"""
 
 try:
     import unittest2 as unittest

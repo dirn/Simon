@@ -1,4 +1,4 @@
-"""Tests of connecting to a database."""
+"""Tests of connecting to a database"""
 
 try:
     import unittest2 as unittest
