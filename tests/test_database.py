@@ -51,7 +51,8 @@ class TestDatabase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.connection = connection.connect('localhost', name='test-simon')
+        with mock.patch('simon.connection.MongoClient'):
+            cls.connection = connection.connect('localhost', name='test-simon')
 
     @classmethod
     def tearDownClass(cls):
