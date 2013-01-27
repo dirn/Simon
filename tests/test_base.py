@@ -118,27 +118,32 @@ class TestBase(unittest.TestCase):
         m1 = TestModel2(_id=1)
         m2 = TestModel1(_id=1)
         self.assertFalse(m1 == m2)
+        self.assertFalse(m2 == m1)
 
         # Even a subclass shouldn't be equal ...
         # ... when the collection is different
         m1 = TestModel2(_id=3)
         m2 = TestModel2Subclass1(_id=3)
         self.assertFalse(m1 == m2)
+        self.assertFalse(m2 == m1)
 
         # ... when the database is different
         m1 = TestModel2(_id=4)
         m2 = TestModel2Subclass2(_id=4)
         self.assertFalse(m1 == m2)
+        self.assertFalse(m2 == m1)
 
         # Unless they use the same database and collection
         m1 = TestModel2(_id=1)
         m2 = TestModel2Subclass3(_id=1)
         self.assertTrue(m1 == m2)
+        self.assertTrue(m2 == m1)
 
         # No _id's shouldn't be equal
         m1 = TestModel2()
         m2 = TestModel2()
         self.assertFalse(m1 == m2)
+        self.assertFalse(m2 == m1)
 
         # Only one _id shouldn't be equal
         m1 = TestModel2(_id=1)
@@ -150,15 +155,18 @@ class TestBase(unittest.TestCase):
         m1 = TestModel2(_id=1)
         m2 = TestModel2(_id=2)
         self.assertFalse(m1 == m2)
+        self.assertFalse(m2 == m1)
 
         # The same _id should be equal
         m1 = TestModel2(_id=1)
         m2 = TestModel2(_id=1)
         self.assertTrue(m1 == m2)
+        self.assertTrue(m2 == m1)
 
         # And just for the heck of it...
         m1 = TestModel2(_id=1)
         self.assertFalse(m1 == 'abc')
+        self.assertFalse('abc' == m1)
 
     def test_getattr(self):
         """Test the `__getattr__()` method."""
@@ -216,10 +224,14 @@ class TestBase(unittest.TestCase):
         m1 = TestModel1(_id=1)
         m2 = TestModel1(_id=1)
         self.assertNotEqual(m1 == m2, m1 != m2)
+        self.assertNotEqual(m2 == m1, m2 != m1)
+        self.assertEqual(m1 != m2, m2 != m1)
 
         m1 = TestModel1(_id=1)
         m2 = TestModel1(_id=2)
         self.assertNotEqual(m1 == m2, m1 != m2)
+        self.assertNotEqual(m2 == m1, m2 != m1)
+        self.assertEqual(m1 != m2, m2 != m1)
 
     def test_repr(self):
         """Test the `__repr__()` method."""
