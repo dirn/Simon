@@ -21,6 +21,7 @@ from datetime import datetime
 from bson import ObjectId
 import mock
 from pymongo.collection import Collection
+from pymongo.cursor import Cursor
 
 from simon import Model, connection, query
 
@@ -720,24 +721,6 @@ class TestQuery(unittest.TestCase):
     def setUpClass(cls):
         cls.connection = connection.connect('localhost', name='test-simon')
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.connection.drop_database('test-simon')
-
-    def setUp(self):
-        self.database = self.__class__.connection['test-simon']
-        self.collection = self.database['test-simon']
-
-        self._id1 = self.collection.insert({'a': 1, 'b': 2}, safe=True)
-        self._id2 = self.collection.insert({'a': 2, 'c': 1}, safe=True)
-        self._id3 = self.collection.insert({'b': 1, 'c': 2}, safe=True)
-
-        self.cursor = self.collection.find()
-        self.qs = query.QuerySet(cursor=self.cursor, cls=TestModel1)
-
-    def tearDown(self):
-        self.database.drop_collection('test-simon')
-
     def test_count(self):
         """Test the `count()` method."""
 
@@ -747,6 +730,11 @@ class TestQuery(unittest.TestCase):
         qs.count()
 
         cursor.count.assert_called_with(with_limit_and_skip=True)
+
+        # cursor.count() should get cached as qs._count, so it should
+        # only be called once by qs.count()
+        qs.count()
+        cursor.count.assert_not_called()
 
     def test_count_typeerror(self):
         """Test that `count()` raises `TypeError`."""
@@ -857,82 +845,84 @@ class TestQuery(unittest.TestCase):
     def test__fill_to(self):
         """Test the `_fill_to()` method."""
 
-        self.qs._cls = None
+        cursor = mock.MagicMock(spec=Cursor)
+        cursor.count.return_value = 3
 
-        # Fill the whole result cache and make sure that all documents
-        # are loaded and in the correct order
-        self.qs._fill_to(2)
+        qs = query.QuerySet(cursor=cursor)
 
-        doc1 = {'_id': self._id1, 'a': 1, 'b': 2}
-        doc2 = {'_id': self._id2, 'a': 2, 'c': 1}
-        doc3 = {'_id': self._id3, 'b': 1, 'c': 2}
+        qs._fill_to(2)
 
-        self.assertTrue(doc1 in self.qs._items)
-        self.assertTrue(doc2 in self.qs._items)
-        self.assertTrue(doc3 in self.qs._items)
+        self.assertEqual(len(qs._items), 3)
 
     def test__fill_to_as_documents(self):
         """Test that `_fill_to()` stores documents."""
 
-        # When no class is associated with the QuerySet, documents
-        # should be used
-        self.qs._cls = None
+        cursor = mock.MagicMock(spec=Cursor)
+        cursor.next.return_value = {'_id': AN_OBJECT_ID}
 
-        self.qs._fill_to(3)
+        qs = query.QuerySet(cursor=cursor)
 
-        for x in range(3):
-            self.assertTrue(isinstance(self.qs._items[x], dict))
+        qs._fill_to(0)
+
+        self.assertTrue(isinstance(qs._items[0], dict))
 
     def test__fill_to_as_model(self):
         """Test that `_fill_to()` stores model instances."""
 
-        self.qs._fill_to(3)
+        cursor = mock.MagicMock(spec=Cursor)
+        cursor.next.return_value = {'_id': AN_OBJECT_ID}
 
-        for x in range(3):
-            self.assertTrue(isinstance(self.qs._items[x], TestModel1))
+        qs = query.QuerySet(cursor=cursor, cls=TestModel1)
+
+        qs._fill_to(0)
+
+        self.assertTrue(isinstance(qs._items[0], TestModel1))
 
     def test__fill_to_indexes(self):
-        """Test that `_fill_to()` property fills to the specified index."""
+        ("Test that `_fill_to()` property fills to the specified "
+         "index.")
 
-        # Disable the model class associated with the model so that
-        # the result cache can be compared directly to dictionaries
-        self.qs._cls = None
+        cursor = mock.MagicMock(spec=Cursor)
+        cursor.count.return_value = 3
 
-        docs = [{'_id': self._id1, 'a': 1, 'b': 2},
-                {'_id': self._id2, 'a': 2, 'c': 1},
-                {'_id': self._id3, 'b': 1, 'c': 2}]
+        qs = query.QuerySet(cursor=cursor)
 
         for x in range(3):
-            self.qs._fill_to(x)
-            self.assertEqual(self.qs._items[x], docs[x])
-            self.assertEqual(len(self.qs._items), x + 1)
+            qs._fill_to(x)
+            self.assertEqual(len(qs._items), x + 1)
 
     def test__fill_to_overfill(self):
         ("Test that `_fill_to()` correctly handles indexes greater than"
          " the maximum index of the result cache.")
 
-        # count() will always be 1 greater than the last index
-        self.qs._fill_to(self.qs.count())
+        cursor = mock.MagicMock(spec=Cursor)
+        cursor.count.return_value = 3
 
-        # 3 is being used here because if will fail if the total number
-        # of documents is changed, whereas using 3 above wouldn't
-        # necessarily lead to problems
-        self.assertEqual(len(self.qs._items), 3)
+        qs = query.QuerySet(cursor=cursor)
+
+        qs._fill_to(3)
+
+        self.assertEqual(len(qs._items), 3)
 
     def test__fill_to_twice(self):
         """Test that `_fill_to()` can be called multiple times."""
 
-        self.qs._fill_to(0)
-        self.assertEqual(len(self.qs._items), 1)
+        cursor = mock.MagicMock(spec=Cursor)
+        cursor.count.return_value = 3
 
-        self.qs._fill_to(0)
-        self.assertEqual(len(self.qs._items), 1)
+        qs = query.QuerySet(cursor=cursor)
 
-        self.qs._fill_to(self.qs.count())
-        self.assertEqual(len(self.qs._items), self.qs._count)
+        qs._fill_to(0)
+        self.assertEqual(len(qs._items), 1)
 
-        self.qs._fill_to(self.qs._count)
-        self.assertEqual(len(self.qs._items), self.qs._count)
+        qs._fill_to(0)
+        self.assertEqual(len(qs._items), 1)
+
+        qs._fill_to(3)
+        self.assertEqual(len(qs._items), 3)
+
+        qs._fill_to(3)
+        self.assertEqual(len(qs._items), 3)
 
     def test___getitem__(self):
         """Test the `__getitem__()` method."""
@@ -1004,44 +994,75 @@ class TestQuery(unittest.TestCase):
     def test___getitem___typeerror(self):
         """Test that `__getitem__()` raises `TypeError`."""
 
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor)
+
         with self.assertRaises(TypeError):
-            self.qs[-1]
+            qs[-1]
 
     def test___iter__(self):
         """Test the `__iter__()` method."""
 
-        self.assertTrue(isinstance(self.qs.__iter__(), collections.Iterable))
+        cursor = mock.Mock()
+
+        qs = query.QuerySet(cursor=cursor)
+
+        self.assertTrue(isinstance(qs.__iter__(), collections.Iterable))
 
     def test___iter___fills_cache(self):
         """Test that `__iter__()` fills the result cache."""
 
-        # Sanity check
-        self.assertEqual(len(self.qs._items), 0)
+        cursor = mock.Mock()
+        cursor.count.return_value = 3
 
-        for x in self.qs:
-            pass
+        qs = query.QuerySet(cursor=cursor)
 
-        self.assertEqual(len(self.qs._items), 3)
+        def append_to_cache(v):
+            qs._items.append(v)
+
+        with mock.patch.object(qs, '_fill_to') as _fill_to:
+            _fill_to.side_effect = append_to_cache
+
+            i = 0
+            for x in qs:
+                _fill_to.assert_called_with(i)
+                i += 1
+
+        self.assertEqual(len(qs._items), 3)
 
     def test__iter___fills_cache_partial(self):
         """Test that `__iter__()` fills the rest of the result cache."""
 
-        # Put a record into the result cache
-        self.qs[0]
+        cursor = mock.Mock()
+        cursor.count.return_value = 3
 
-        for x in self.qs:
-            pass
+        qs = query.QuerySet(cursor=cursor)
+        qs._items = [0]
 
-        self.assertEqual(len(self.qs._items), 3)
+        def append_to_cache(v):
+            qs._items.append(v)
+
+        with mock.patch.object(qs, '_fill_to') as _fill_to:
+            _fill_to.side_effect = append_to_cache
+
+            i = 0
+            for x in qs:
+                if i == 0:
+                    # qs._fill_to(0) will already have been called
+                    _fill_to.assert_not_called()
+                else:
+                    _fill_to.assert_called_with(i)
+                i += 1
+
+        self.assertEqual(len(qs._items), 3)
 
     def test___len__(self):
         """Test the `__len__()` method."""
 
-        # Mock __len__() to make sure it's called for len()
-        with mock.patch('simon.query.QuerySet.__len__') as mock_len:
-            mock_len.return_value = 1
+        cursor = mock.Mock()
+        cursor.count.return_value = 3
 
-            self.assertEqual(len(self.qs), 1)
+        qs = query.QuerySet(cursor=cursor)
 
-        # Also test the real value
-        self.assertEqual(len(self.qs), 3)
+        self.assertEqual(len(qs), cursor.count())

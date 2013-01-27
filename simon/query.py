@@ -251,7 +251,7 @@ class QuerySet(object):
         # otherwise store the raw document
         try:
             for x in range(len(self._items), index + 1):
-                item = next(self._cursor)
+                item = self._cursor.next()
                 if self._cls:
                     item = self._cls(**item)
                 self._items.append(item)
