@@ -39,6 +39,7 @@ class TestModel3(Model):
         database = 'simon'
         field_map = {'python_key': 'mongo_key'}
         map_id = False
+        required_fields = 'email'
         safe = False
         sort = '-id'
 
@@ -49,6 +50,7 @@ class TestModel4(TestModel3):
 
 class TestModel5(Model):
     class Meta:
+        required_fields = ['email', 'name']
         sort = ['id', '-name']
 
 
@@ -193,6 +195,14 @@ class TestMetaClass(unittest.TestCase):
         self.assertTrue(TestModel1._meta.map_id)
         self.assertFalse(TestModel3._meta.map_id)
 
+    def test_required_fields(self):
+        """Test the `_meta.required_fields` attribute."""
+
+        self.assertIsNone(DefaultModel._meta.required_fields)
+        self.assertIsNone(TestModel1._meta.required_fields)
+        self.assertEqual(TestModel3._meta.required_fields, ('email',))
+        self.assertEqual(TestModel5._meta.required_fields, ['email', 'name'])
+
     def test_repr(self):
         """Test the `__repr__()` method."""
 
@@ -234,6 +244,7 @@ class TestMetaClass(unittest.TestCase):
         self.assertEqual(meta3.database, meta4.database)
         self.assertEqual(meta3.field_map, meta4.field_map)
         self.assertEqual(meta3.map_id, meta4.map_id)
+        self.assertEqual(meta3.required_fields, meta4.required_fields)
         self.assertEqual(meta3.safe, meta4.safe)
         self.assertEqual(meta3.sort, meta4.sort)
 

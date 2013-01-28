@@ -25,6 +25,7 @@ class Meta(object):
         self.database = 'default'
         self.field_map = {}
         self.map_id = True
+        self.required_fields = None
         self.safe = False
         self.sort = None
 
@@ -45,7 +46,8 @@ class Meta(object):
 
             # Add the known attributes to the instance
             for name in ('auto_timestamp', 'collection', 'database',
-                         'field_map', 'map_id', 'safe', 'sort'):
+                         'field_map', 'map_id', 'required_fields', 'safe',
+                         'sort'):
                 if name in meta_attrs:
                     setattr(self, name, meta_attrs.pop(name))
 
@@ -72,6 +74,14 @@ class Meta(object):
         if self.map_id and 'id' not in self.field_map:
             # If map_id is True and id isn't in field_map, add it.
             self.field_map['id'] = '_id'
+
+        # Any of the methods that check for required fields are looking
+        # for something like a list or tuple of fields, not a string
+        # of one field. If a single field name has been provided as a
+        # string, switch it to a tuple now.
+        if self.required_fields and not isinstance(self.required_fields,
+                                                   (list, tuple)):
+            self.required_fields = (self.required_fields,)
 
         # When calling QuerySet.sort(), it accepts the sort fields as
         # *args. Forcing Meta.sort into an iterable now allows it to
