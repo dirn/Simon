@@ -143,7 +143,7 @@ More information about write concern is available in the
 By default, calls to :meth:`~simon.Model.all` and
 :meth:`~simon.Model.find` will use natural order for sorting. If you
 want to have a model default to a different sort order, you can do so
-by defining the ``sort`` option on the ``Meta`` class.
+by defining the ``sort`` option in the ``Meta`` class.
 
 .. code-block:: python
 
