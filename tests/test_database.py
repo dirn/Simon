@@ -46,6 +46,12 @@ class TestModel4(Model):
         sort = '-a'
 
 
+class TestModel5(Model):
+    class Meta:
+        auto_timestamp = False
+        required_fields = ('a', 'b')
+
+
 class TestDatabase(unittest.TestCase):
     """Test database interaction"""
 
@@ -96,6 +102,42 @@ class TestDatabase(unittest.TestCase):
             insert.assert_called_with({'d': 1, 'e': 2, 'f': 3, 'created': 1,
                                        'modified': 1},
                                       safe=True)
+
+    def test_create_required_fields(self):
+        """Test the `create()` method with `required_fields`."""
+
+        with mock.patch.object(TestModel5._meta.db, 'insert') as insert:
+            TestModel5.create(a=1, b=2, safe=True)
+
+            insert.assert_called_with({'a': 1, 'b': 2}, safe=True)
+
+            TestModel5.create(a=1, b=2, c=3, safe=True)
+
+            insert.assert_called_with({'a': 1, 'b': 2, 'c': 3}, safe=True)
+
+    def test_create_required_fields_typeerror(self):
+        ("Test that `create()` raises `TypeError` with "
+         "`required_fields`.")
+
+        with self.assertRaises(TypeError) as e:
+            TestModel5.create()
+
+        expected = ("The 'TestModel5' object cannot be created because it must"
+                    " contain all of the required fields: a, b")
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        with self.assertRaises(TypeError):
+            TestModel5.create(a=1)
+
+        with self.assertRaises(TypeError):
+            TestModel5.create(b=2)
+
+        with self.assertRaises(TypeError):
+            TestModel5.create(a=1, c=3)
+
+        with self.assertRaises(TypeError):
+            TestModel5.create(c=3)
 
     def test_delete(self):
         """Test the `delete()` method."""
@@ -503,6 +545,36 @@ class TestDatabase(unittest.TestCase):
             self.assertIn('a', m._document)
             self.assertNotIn('b', m._document)
 
+    def test_remove_fields_required_fields(self):
+        """Test the `remove_fields()` method with `required_fields`."""
+
+        with mock.patch.object(TestModel5._meta.db, 'update') as update:
+            m = TestModel5(_id=AN_OBJECT_ID, a=1, b=2, c=3)
+            m.remove_fields('c', safe=True)
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'c': 1}}, safe=True)
+
+    def test_remove_fields_required_fields_typeerror(self):
+        ("Test that `remove_fields()` raises `TypeError` with "
+         "`required_fields`.")
+
+        m = TestModel5(_id=AN_OBJECT_ID, a=1, b=2)
+
+        with self.assertRaises(TypeError) as e:
+            m.remove_fields(('a', 'b'))
+
+        expected = ("The 'TestModel5' object cannot be updated because it must"
+                    " contain all of the required fields: a, b")
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        with self.assertRaises(TypeError):
+            m.remove_fields('a')
+
+        with self.assertRaises(TypeError):
+            m.remove_fields('b')
+
     def test_remove_fields_typeerror(self):
         """Test that `remove_fields()` raises `TypeError`."""
 
@@ -605,6 +677,85 @@ class TestDatabase(unittest.TestCase):
             insert.assert_called_with({'a': 1, 'b': 2, 'created': 1,
                                        'modified': 1},
                                       safe=True)
+
+    def test_save_insert_required_fields(self):
+        ("Test the `save()` method with `required_fields` for new "
+         "documents.")
+
+        with mock.patch.object(TestModel5._meta.db, 'insert') as insert:
+            m = TestModel5(a=1, b=2)
+            m.save(safe=True)
+
+            insert.assert_called_with({'a': 1, 'b': 2}, safe=True)
+
+            m = TestModel5(a=1, b=2, c=3)
+            m.save(safe=True)
+
+            insert.assert_called_with({'a': 1, 'b': 2, 'c': 3}, safe=True)
+
+    def test_save_insert_required_fields_typeerror(self):
+        ("Test that `save()` raises `TypeError` with "
+         "`required_fields` for new documents.")
+
+        m = TestModel5(a=1)
+
+        with self.assertRaises(TypeError) as e:
+            m.save()
+
+        expected = ("The 'TestModel5' object cannot be saved because it must"
+                    " contain all of the required fields: a, b")
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        m = TestModel5(b=2)
+
+        with self.assertRaises(TypeError):
+            m.save()
+
+        m = TestModel5(c=3)
+
+        with self.assertRaises(TypeError):
+            m.save()
+
+    def test_save_required_fields(self):
+        """Test the `save()` method with `required_fields`."""
+
+        with mock.patch.object(TestModel5._meta.db, 'update') as update:
+            m = TestModel5(_id=AN_OBJECT_ID, a=1, b=2)
+            m.save(safe=True)
+
+            update.assert_called_with({'_id': AN_OBJECT_ID}, {'a': 1, 'b': 2},
+                                      safe=True)
+
+            m = TestModel5(_id=AN_OBJECT_ID, a=1, b=2, c=3)
+            m.save(safe=True)
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'a': 1, 'b': 2, 'c': 3}, safe=True)
+
+    def test_save_required_fields_typeerror(self):
+        ("Test that `save()` raises `TypeError` with "
+         "`required_fields`.")
+
+        m = TestModel5(_id=AN_OBJECT_ID, a=1)
+
+        with self.assertRaises(TypeError) as e:
+            m.save()
+
+        expected = ("The 'TestModel5' object cannot be saved because it must"
+                    " contain all of the required fields: a, b")
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+        m = TestModel5(_id=AN_OBJECT_ID, b=2)
+
+        with self.assertRaises(TypeError):
+            m.save()
+
+        m = TestModel5(_id=AN_OBJECT_ID, c=3)
+
+        with self.assertRaises(TypeError):
+            m.save()
 
     def test_save_timestamps(self):
         """Test that `save()` properly handles adding timestamps."""

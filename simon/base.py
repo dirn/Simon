@@ -210,15 +210,28 @@ class Model(object):
         instantiate a new ``Model`` from the keyword arguments,
         call ``save()``, and return the instance.
 
+        If the model has the ``required_fields`` options set, a
+        :class:`TypeError` will be raised if any of the fields are not
+        provided.
+
         :param safe: (optional) Whether to perform the create in safe
                      mode.
         :type safe: bool.
         :param \*\*fields: Keyword arguments to add to the document.
         :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.Model` -- the new document.
+        :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0
         """
+
+        if cls._meta.required_fields and any(k not in fields for k
+                                             in cls._meta.required_fields):
+            message = ("The '{0}' object cannot be created because it must "
+                       "contain all of the required fields: {1}")
+            message = message.format(cls.__name__,
+                                     ', '.join(cls._meta.required_fields))
+            raise TypeError(message)
 
         new = cls(**fields)
         new.save(safe=safe)
@@ -530,6 +543,10 @@ class Model(object):
         Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
+        If the model has the ``required_fields`` options set, a
+        :class:`TypeError` will be raised if attempting to remove one of
+        the required fields.
+
         :param fields: The names of the fields to remove.
         :type fields: str, list, or tuple.
         :param safe: (optional) Whether to perform the save in safe
@@ -545,6 +562,14 @@ class Model(object):
             raise TypeError("The '{0}' object cannot be updated because its "
                             "'{1}' attribute has not been set.".format(
                                 self.__class__.__name__, '_id'))
+
+        if self._meta.required_fields and any(k in fields for k
+                                              in self._meta.required_fields):
+            message = ("The '{0}' object cannot be updated because it must "
+                       "contain all of the required fields: {1}")
+            message = message.format(self.__class__.__name__,
+                                     ', '.join(self._meta.required_fields))
+            raise TypeError(message)
 
         # fields can contain a single item as a string. If it's not a
         # list or tuple, make it one. Otherwise the generators below
@@ -582,12 +607,25 @@ class Model(object):
         added with the current datetime in UTC. ``modified`` will
         always be set with the current datetime in UTC.
 
+        If the model has the ``required_fields`` options set, a
+        :class:`TypeError` will be raised if any of the fields have not
+        been associated with the instance.
+
         :param safe: (optional) Whether to perform the save in safe
                      mode.
         :type safe: bool.
+        :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0
         """
+
+        if self._meta.required_fields and any(k not in self._document for k
+                                              in self._meta.required_fields):
+            message = ("The '{0}' object cannot be saved because it must "
+                       "contain all of the required fields: {1}")
+            message = message.format(self.__class__.__name__,
+                                     ', '.join(self._meta.required_fields))
+            raise TypeError(message)
 
         # Associate the current datetime (in UTC) with the created
         # and modified fields. While Python can store datetimes with
