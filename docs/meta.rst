@@ -119,6 +119,34 @@ This query executing in the mongo Shell would look a little different:
     db.users.insert({fname: 'Simon', lname: 'Seville', loc: 'Fresno, CA'})
 
 
+``required_fields``
+-------------------
+
+While Simon tries to expose MongoDB's dynamic schema by not enforcing a
+schema on a model, there may be times when you wish to make sure that a
+document contains certain fields before it is saved. You can designate a
+field as required by adding it to the ``required_fields`` option in the
+``Meta`` class.
+
+.. code-block:: python
+
+    class Meta:
+        required_fields = 'email'
+
+With this setting, you wouldn't be able to save a document unless it
+contained an ``email`` field.
+
+You can also require multiple fields.
+
+.. code-block:: python
+
+    class Meta:
+        required_fields = ('email', 'name')
+
+If you try to save a document that is missing andy of the required
+fields, :class:`TypeError` will be raised.
+
+
 ``safe``
 --------
 
