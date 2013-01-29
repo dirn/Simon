@@ -7,8 +7,6 @@ except ImportError:
 
 import mock
 
-from pymongo.collection import Collection
-
 from simon import Model
 
 
