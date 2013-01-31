@@ -210,8 +210,8 @@ class TestMetaClass(unittest.TestCase):
     def test_safe(self):
         """Test the `_meta.safe` attribute."""
 
-        self.assertFalse(DefaultModel._meta.safe)
-        self.assertFalse(TestModel1._meta.safe)
+        self.assertTrue(DefaultModel._meta.safe)
+        self.assertTrue(TestModel1._meta.safe)
         self.assertTrue(TestModel2._meta.safe)
         self.assertFalse(TestModel3._meta.safe)
 

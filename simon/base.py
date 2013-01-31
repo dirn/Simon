@@ -26,7 +26,7 @@ class Meta(object):
         self.field_map = {}
         self.map_id = True
         self.required_fields = None
-        self.safe = False
+        self.safe = True
         self.sort = None
 
     def add_to_original(self, cls, name):

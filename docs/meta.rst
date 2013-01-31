@@ -15,7 +15,7 @@ their default values, as show below.
             database = 'default'
             field_map = {'id': '_id'}
             map_id = True
-            safe = False
+            safe = True
             sort = None
 
 ``auto_timestamp``
@@ -150,16 +150,19 @@ fields, :class:`TypeError` will be raised.
 ``safe``
 --------
 
-By default updates to the database are performed without write concern
-enabled. While it is possible to provide ``safe=True`` as a parameter
-to each call, setting the ``safe`` option in the ``Meta`` class to
-``True`` will cause all updates for that model to use write concern
-without the need for using the ``safe`` parameter.
+With the introduction of
+:class:`MongoClient <pymongo:pymongo.mongo_client.MongoClient>`, updates
+are performed with write concern enabled. Simon mimics this behavior by
+setting the ``safe`` option in the ``Meta`` class to ``True``. To revert
+to the previous behavior seen in versions of PyMongo prior to 2.4, set
+the ``safe`` option to ``False``. When write concern is disabled at the
+model level, it can still be used on a case by case basis by providing
+``safe=True`` as a parameter to method calls.
 
 .. code-block:: python
 
     class Meta:
-        safe = True  # always use write concern for this model
+        safe = False  # don't use write concern for this model by default
 
 More information about write concern is available in the
 `MongoDB Docs <http://docs.mongodb.org/manual/core/write-operations/#write-concern>`_.
