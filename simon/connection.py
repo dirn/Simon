@@ -39,6 +39,9 @@ def connect(host='localhost', name=None, username=None, password=None,
     :returns: :class:`pymongo.database.Database` -- the database.
     :raises: :class:`ConnectionError`
 
+    .. versionchanged:: 0.2.0
+       ``connect()`` now accepts ``replica_set`` as a kwarg, it is
+       preferred over ``replicaSet``
     .. versionadded:: 0.1.0
     """
 
@@ -56,9 +59,18 @@ def connect(host='localhost', name=None, username=None, password=None,
 
     # Get replicaSet out of **kwargs because it can be passed in as its
     # own parameter
+    #
+    # NOTE
+    # Version 0.1.0 wanted a warnted named replicaSet. 0.2.0 changed it
+    # to replica_set (replicaSet was meant for parody with PyMongo).
+    # This is to maintain backwards compatibility.
+    replica_set = kwargs.pop('replica_set', None)
+    throw_away = kwargs.pop('replicaSet', None)
+    if replica_set is None:
+        replica_set = throw_away
+
     connection, parsed_settings = _get_connection(
-        host=host, port=port, replica_set=kwargs.pop('replicaSet', None),
-        **kwargs)
+        host=host, port=port, replica_set=replica_set, **kwargs)
     if parsed_settings:
         settings.update(parsed_settings)
 

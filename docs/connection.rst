@@ -67,12 +67,11 @@ Replica Sets
 
 Another good idea when working with MongoDB is to use replica sets.
 :meth:`~simon.connection.connect` accepts a parameter named
-``replicaSet``--stylized this way to match the `URI Connection String`_
-parameter--with the name of the replica set to use.
+``replica_set`` with the name of the replica set to use.
 
 .. code-block:: python
 
-    connect(name='simon', replicaSet='simon-rs')
+    connect(name='simon', replica_set='simon-rs')
 
 
 URI Connection String

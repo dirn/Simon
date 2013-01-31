@@ -61,7 +61,7 @@ class TestConnection(unittest.TestCase):
                 'password': 'simon',
             })
             url = 'mongodb://simon:simon@simon.m0.mongo.com:27017/simon-rs'
-            connection.connect(host=url, replicaSet='simonrs',
+            connection.connect(host=url, replica_set='simonrs',
                                alias='replica1')
             mock_method.assert_called_with(host=url, port=None,
                                            replica_set='simonrs')
@@ -72,7 +72,7 @@ class TestConnection(unittest.TestCase):
                 'password': 'simon',
             })
             url = 'mongodb://simon:simon@simon.m0.mongo.com:27017,simon.m1.mongo.com:27017/simon-rs'
-            connection.connect(host=url, replicaSet='simonrs',
+            connection.connect(host=url, replica_set='simonrs',
                                alias='replica2')
             mock_method.assert_called_with(host=url, port=None,
                                            replica_set='simonrs')
