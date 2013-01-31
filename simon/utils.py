@@ -1,4 +1,11 @@
-"""Helper utilities"""
+"""Helper utilities
+
+WARNING
+The functionality in this module is intended for internal use by Simon.
+If using anything in this module directly, be careful when updating
+versions of Simon as no guarantees are made about the backward
+compatability of its API.
+"""
 
 import collections
 from datetime import datetime
