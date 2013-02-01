@@ -36,6 +36,7 @@ class TestModel3(Model):
     class Meta:
         collection = 'test-simon'
         database = 'test-simon'
+        safe = False
         sort = 'a'
 
 
@@ -97,7 +98,7 @@ class TestDatabase(unittest.TestCase):
                     ) as (current_datetime, insert):
             current_datetime.return_value = 1
 
-            TestModel1.create(d=1, e=2, f=3, safe=True)
+            TestModel1.create(d=1, e=2, f=3)
 
             insert.assert_called_with({'d': 1, 'e': 2, 'f': 3, 'created': 1,
                                        'modified': 1},
@@ -107,11 +108,11 @@ class TestDatabase(unittest.TestCase):
         """Test the `create()` method with `required_fields`."""
 
         with mock.patch.object(TestModel5._meta.db, 'insert') as insert:
-            TestModel5.create(a=1, b=2, safe=True)
+            TestModel5.create(a=1, b=2)
 
             insert.assert_called_with({'a': 1, 'b': 2}, safe=True)
 
-            TestModel5.create(a=1, b=2, c=3, safe=True)
+            TestModel5.create(a=1, b=2, c=3)
 
             insert.assert_called_with({'a': 1, 'b': 2, 'c': 3}, safe=True)
 
@@ -145,7 +146,7 @@ class TestDatabase(unittest.TestCase):
         m = TestModel1(_id=AN_OBJECT_ID)
 
         with mock.patch.object(TestModel1._meta.db, 'remove') as remove:
-            m.delete(safe=True)
+            m.delete()
 
             remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=True)
 
@@ -156,6 +157,24 @@ class TestDatabase(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             m.delete()
+
+    def test_delete_write_concern(self):
+        """Test that `delete()` respects write concern."""
+
+        with mock.patch.object(TestModel3._meta.db, 'remove') as remove:
+            m = TestModel3(_id=AN_OBJECT_ID)
+            m.delete()
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=False)
+
+            # m needs to be given its _id again because delete() strips
+            # it to prevent attempts to resave a deleted document
+            m = TestModel3(_id=AN_OBJECT_ID)
+            m.delete(safe=False)
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=False)
+
+            m = TestModel3(_id=AN_OBJECT_ID)
+            m.delete(safe=True)
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=True)
 
     def test_find(self):
         """Test the `find()` method."""
@@ -322,11 +341,13 @@ class TestDatabase(unittest.TestCase):
 
             create.return_value = mock.Mock()
 
-            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID,
-                                                  safe=True)
+            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID)
 
             get.assert_called_with(_id=AN_OBJECT_ID)
-            create.assert_called_with(_id=AN_OBJECT_ID, safe=True)
+            # Because get_or_create() is being called without explicity
+            # setting a value for safe, safe's default value will be
+            # passed along to creates()
+            create.assert_called_with(_id=AN_OBJECT_ID, safe=False)
 
             self.assertTrue(created)
 
@@ -336,7 +357,7 @@ class TestDatabase(unittest.TestCase):
         with mock.patch.object(TestModel1, 'get') as get:
             get.return_value = mock.Mock()
 
-            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID, safe=True)
+            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID)
 
             get.assert_called_with(_id=AN_OBJECT_ID)
 
@@ -382,7 +403,7 @@ class TestDatabase(unittest.TestCase):
             m = TestModel1(_id=AN_OBJECT_ID)
 
             find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
-            m.increment('a', safe=True)
+            m.increment('a')
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'a': 1}}, safe=True)
@@ -390,7 +411,7 @@ class TestDatabase(unittest.TestCase):
             self.assertEqual(m._document['a'], 1)
 
             find_one.return_value = {'_id': AN_OBJECT_ID, 'b': 2}
-            m.increment('b', 2, safe=True)
+            m.increment('b', 2)
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'b': 2}}, safe=True)
@@ -407,7 +428,7 @@ class TestDatabase(unittest.TestCase):
             find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'c': 3}}
 
             m = TestModel1(_id=AN_OBJECT_ID)
-            m.increment(a__c=3, safe=True)
+            m.increment(a__c=3)
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'a.c': 3}}, safe=True)
@@ -423,7 +444,7 @@ class TestDatabase(unittest.TestCase):
             find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 2}
 
             m = TestModel1(_id=AN_OBJECT_ID)
-            m.increment(fake=2, safe=True)
+            m.increment(fake=2)
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'real': 2}}, safe=True)
@@ -439,7 +460,7 @@ class TestDatabase(unittest.TestCase):
             find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 5}
 
             m = TestModel1(_id=AN_OBJECT_ID)
-            m.increment(a=1, b=5, safe=True)
+            m.increment(a=1, b=5)
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$inc': {'a': 1, 'b': 5}}, safe=True)
@@ -463,6 +484,35 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(ValueError):
             m.increment()
 
+    def test_increment_write_concern(self):
+        """Test that `increment()` respects write concern."""
+
+        with nested(mock.patch.object(TestModel3._meta.db, 'find_one'),
+                    mock.patch.object(TestModel3._meta.db, 'update'),
+                    ) as (find_one, update):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+
+            m = TestModel3(_id=AN_OBJECT_ID)
+
+            m.increment('a')
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$inc': {'a': 1}}, safe=False)
+
+            # Because the return value of find_one() doesn't matter
+            # beyond its one-time use, _id gets popped off, so for the
+            # purposes of testing it needs to be put back
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+
+            m.increment('a', safe=False)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$inc': {'a': 1}}, safe=False)
+
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+
+            m.increment('a', safe=True)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$inc': {'a': 1}}, safe=True)
+
     def test_raw_update(self):
         """Test the `raw_update()` method."""
 
@@ -472,7 +522,7 @@ class TestDatabase(unittest.TestCase):
             find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
 
             m = TestModel1(_id=AN_OBJECT_ID)
-            m.raw_update({'$set': {'a': 1, 'b': 2}}, safe=True)
+            m.raw_update({'$set': {'a': 1, 'b': 2}})
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'a': 1, 'b': 2}}, safe=True)
@@ -488,12 +538,43 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.raw_update({'a': 1})
 
+    def test_raw_update_write_concern(self):
+        """Test that `raw_update()` respects write concern."""
+
+        with nested(mock.patch.object(TestModel3._meta.db, 'find_one'),
+                    mock.patch.object(TestModel3._meta.db, 'update'),
+                    ) as (find_one, update):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
+
+            m = TestModel3(_id=AN_OBJECT_ID)
+            m.raw_update({'$set': {'a': 1}})
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=False)
+
+            # Because the return value of find_one() doesn't matter
+            # beyond its one-time use, _id gets popped off, so for the
+            # purposes of testing it needs to be put back
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
+
+            m.raw_update({'$set': {'a': 1}}, safe=False)
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=False)
+
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
+
+            m.raw_update({'$set': {'a': 1}}, safe=True)
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=True)
+
     def test_remove_fields_multiple(self):
         """Test the `remove_fields()` method for multiple fields."""
 
         with mock.patch.object(TestModel1._meta.db, 'update') as update:
             m = TestModel1(_id=AN_OBJECT_ID, a=1, b=2)
-            m.remove_fields(('a', 'b'), safe=True)
+            m.remove_fields(('a', 'b'))
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$unset': {'a': True, 'b': True}},
@@ -508,7 +589,7 @@ class TestDatabase(unittest.TestCase):
         with mock.patch.object(TestModel1._meta.db, 'update') as update:
             m = TestModel1(_id=AN_OBJECT_ID, b=1)
             m.c = {'d': 2, 'e': 3}
-            m.remove_fields(('b', 'c__e'), safe=True)
+            m.remove_fields(('b', 'c__e'))
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$unset': {'b': True, 'c.e': True}},
@@ -524,7 +605,7 @@ class TestDatabase(unittest.TestCase):
         with mock.patch.object(TestModel1._meta.db, 'update') as update:
             m = TestModel1(_id=AN_OBJECT_ID)
             m.f = {'g': 1, 'h': 2}
-            m.remove_fields('f__h', safe=True)
+            m.remove_fields('f__h')
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$unset': {'f.h': True}}, safe=True)
@@ -537,7 +618,7 @@ class TestDatabase(unittest.TestCase):
 
         with mock.patch.object(TestModel1._meta.db, 'update') as update:
             m = TestModel1(_id=AN_OBJECT_ID, a=1, b=2)
-            m.remove_fields('b', safe=True)
+            m.remove_fields('b')
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$unset': {'b': True}}, safe=True)
@@ -550,7 +631,7 @@ class TestDatabase(unittest.TestCase):
 
         with mock.patch.object(TestModel5._meta.db, 'update') as update:
             m = TestModel5(_id=AN_OBJECT_ID, a=1, b=2, c=3)
-            m.remove_fields('c', safe=True)
+            m.remove_fields('c')
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$unset': {'c': 1}}, safe=True)
@@ -583,6 +664,28 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.remove_fields('a')
 
+    def test_remove_fields_write_concern(self):
+        """Test that `remove_fields()` respects write concern."""
+
+        with mock.patch.object(TestModel3._meta.db, 'update') as update:
+            m = TestModel3(_id=AN_OBJECT_ID, a=1)
+            m.remove_fields('a')
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'a': 1}}, safe=False)
+
+            m = TestModel3(_id=AN_OBJECT_ID, a=1)
+            m.remove_fields('a', safe=False)
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'a': 1}}, safe=False)
+
+            m = TestModel3(_id=AN_OBJECT_ID, a=1)
+            m.remove_fields('a', safe=True)
+
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$unset': {'a': 1}}, safe=True)
+
     def test_save_field_map(self):
         """Test the `save()` method with a name in `field_map`."""
 
@@ -594,7 +697,7 @@ class TestDatabase(unittest.TestCase):
             insert.return_value = 1
 
             m = TestModel1(fake=1)
-            m.save(safe=True)
+            m.save()
 
             insert.assert_called_with({'real': 1, 'created': 1, 'modified': 1},
                                       safe=True)
@@ -607,7 +710,7 @@ class TestDatabase(unittest.TestCase):
         with mock.patch.object(TestModel1._meta.db, 'update') as update:
             m = TestModel1(_id=AN_OBJECT_ID)
             m.fake = 1
-            m.save_fields('fake', safe=True)
+            m.save_fields('fake')
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'real': 1}}, safe=True)
@@ -619,7 +722,7 @@ class TestDatabase(unittest.TestCase):
             m = TestModel1(_id=AN_OBJECT_ID)
             m.a = 1
             m.b = 2
-            m.save_fields(('a', 'b'), safe=True)
+            m.save_fields(('a', 'b'))
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'a': 1, 'b': 2}}, safe=True)
@@ -630,7 +733,7 @@ class TestDatabase(unittest.TestCase):
         with mock.patch.object(TestModel1._meta.db, 'update') as update:
             m = TestModel1(_id=AN_OBJECT_ID)
             m.f = {'g': 1}
-            m.save_fields('f__g', safe=True)
+            m.save_fields('f__g')
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'f.g': 1}}, safe=True)
@@ -642,7 +745,7 @@ class TestDatabase(unittest.TestCase):
             m = TestModel1(_id=AN_OBJECT_ID)
             m.a = 1
             m.b = 2
-            m.save_fields('b', safe=True)
+            m.save_fields('b')
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'b': 2}}, safe=True)
@@ -663,6 +766,24 @@ class TestDatabase(unittest.TestCase):
         with self.assertRaises(TypeError):
             m.save_fields('a')
 
+    def test_save_fields_write_concern(self):
+        """Test that `save_fields()` respects write concern."""
+
+        with mock.patch.object(TestModel3._meta.db, 'update') as update:
+            m = TestModel3(_id=AN_OBJECT_ID, a=1)
+
+            m.save_fields('a')
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=False)
+
+            m.save_fields('a', safe=False)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=False)
+
+            m.save_fields('a', safe=True)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=True)
+
     def test_save_insert(self):
         """Test the `save()` method for new documents."""
 
@@ -672,7 +793,7 @@ class TestDatabase(unittest.TestCase):
             current_datetime.return_value = 1
 
             m = TestModel1(a=1, b=2)
-            m.save(safe=True)
+            m.save()
 
             insert.assert_called_with({'a': 1, 'b': 2, 'created': 1,
                                        'modified': 1},
@@ -684,12 +805,12 @@ class TestDatabase(unittest.TestCase):
 
         with mock.patch.object(TestModel5._meta.db, 'insert') as insert:
             m = TestModel5(a=1, b=2)
-            m.save(safe=True)
+            m.save()
 
             insert.assert_called_with({'a': 1, 'b': 2}, safe=True)
 
             m = TestModel5(a=1, b=2, c=3)
-            m.save(safe=True)
+            m.save()
 
             insert.assert_called_with({'a': 1, 'b': 2, 'c': 3}, safe=True)
 
@@ -722,13 +843,13 @@ class TestDatabase(unittest.TestCase):
 
         with mock.patch.object(TestModel5._meta.db, 'update') as update:
             m = TestModel5(_id=AN_OBJECT_ID, a=1, b=2)
-            m.save(safe=True)
+            m.save()
 
             update.assert_called_with({'_id': AN_OBJECT_ID}, {'a': 1, 'b': 2},
                                       safe=True)
 
             m = TestModel5(_id=AN_OBJECT_ID, a=1, b=2, c=3)
-            m.save(safe=True)
+            m.save()
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'a': 1, 'b': 2, 'c': 3}, safe=True)
@@ -772,7 +893,7 @@ class TestDatabase(unittest.TestCase):
 
         with mock.patch.object(TestModel2._meta.db, 'insert') as insert:
             m2 = TestModel2(a=2)
-            m2.save(safe=True)
+            m2.save()
 
             insert.assert_called_with({'a': 2}, safe=True)
 
@@ -789,10 +910,35 @@ class TestDatabase(unittest.TestCase):
 
             m = TestModel1(_id=AN_OBJECT_ID, created=1, modified=0)
             m.c = 3
-            m.save(safe=True)
+            m.save()
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'c': 3, 'created': 1, 'modified': 1},
+                                      safe=True)
+
+    def test_save_write_concern(self):
+        """Test that `save()` respects write concern."""
+
+        with nested(mock.patch('simon.base.current_datetime'),
+                    mock.patch.object(TestModel3._meta.db, 'update'),
+                    ) as (current_datetime, update):
+            current_datetime.return_value = 1
+
+            m = TestModel3(_id=AN_OBJECT_ID)
+
+            m.save()
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'created': 1, 'modified': 1},
+                                      safe=False)
+
+            m.save(safe=False)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'created': 1, 'modified': 1},
+                                      safe=False)
+
+            m.save(safe=True)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'created': 1, 'modified': 1},
                                       safe=True)
 
     def test_update(self):
@@ -804,7 +950,7 @@ class TestDatabase(unittest.TestCase):
             find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 2, 'b': 3}
 
             m = TestModel1(_id=AN_OBJECT_ID)
-            m.update(a=2, b=3, safe=True)
+            m.update(a=2, b=3)
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'a': 2, 'b': 3}}, safe=True)
@@ -821,7 +967,7 @@ class TestDatabase(unittest.TestCase):
             find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
 
             m = TestModel1(_id=AN_OBJECT_ID)
-            m.update(fake=1, safe=True)
+            m.update(fake=1)
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'real': 1}}, safe=True)
@@ -837,7 +983,7 @@ class TestDatabase(unittest.TestCase):
             find_one.return_value = {'_id': AN_OBJECT_ID, 'c': {'d': 1}}
 
             m = TestModel1(_id=AN_OBJECT_ID)
-            m.update(c__d=1, safe=True)
+            m.update(c__d=1)
 
             update.assert_called_with({'_id': AN_OBJECT_ID},
                                       {'$set': {'c.d': 1}}, safe=True)
@@ -851,3 +997,25 @@ class TestDatabase(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             m.update(a=1)
+
+    def test_update_write_concern(self):
+        """Test that `update()` respects write concern."""
+
+        with nested(mock.patch.object(TestModel3._meta.db, 'find_one'),
+                    mock.patch.object(TestModel3._meta.db, 'update'),
+                    ) as (find_one, update):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+
+            m = TestModel3(_id=AN_OBJECT_ID)
+
+            m.update(a=1)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=False)
+
+            m.update(a=1, safe=False)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=False)
+
+            m.update(a=1, safe=True)
+            update.assert_called_with({'_id': AN_OBJECT_ID},
+                                      {'$set': {'a': 1}}, safe=True)
