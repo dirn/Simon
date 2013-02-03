@@ -10,7 +10,6 @@ from datetime import datetime
 
 from bson import ObjectId
 import mock
-from pymongo.collection import Collection
 
 from simon import Model, connection, query
 
