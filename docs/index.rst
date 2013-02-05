@@ -65,7 +65,6 @@ For more information, check out the `PyMongo docs`_ and the
 Changelog
 ---------
 
-
 0.2.0 (2013-02-03)
 ++++++++++++++++++
 
@@ -74,7 +73,6 @@ Changelog
 - Add equality comparisons for models
 - Add support for required fields
 - Use write concern by default
-
 
 0.1.0 (2013-01-18)
 ++++++++++++++++++
