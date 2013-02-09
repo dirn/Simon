@@ -10,8 +10,8 @@ from bson.errors import InvalidId
 
 from simon import Model
 from simon.utils import (current_datetime, get_nested_key, guarantee_object_id,
-                         map_fields, parse_kwargs, remove_nested_key,
-                         update_nested_keys)
+                         is_atomic, map_fields, parse_kwargs,
+                         remove_nested_key, update_nested_keys)
 
 
 AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
@@ -143,6 +143,13 @@ class TestUtils(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             guarantee_object_id([AN_OBJECT_ID_STR])
+
+    def test_is_atomic(self):
+        """Test the `is_atomic()` method."""
+
+        self.assertTrue(is_atomic({'$set': {'a': 1}}))
+
+        self.assertFalse(is_atomic({'a': 1}))
 
     def test_map_fields(self):
         """Test the `map_fields()` method."""

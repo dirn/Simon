@@ -13,7 +13,7 @@ from datetime import datetime
 from bson import ObjectId
 
 __all__ = ('current_datetime', 'get_nested_key', 'guarantee_object_id',
-           'map_fields', 'parse_kwargs', 'remove_nested_key',
+           'is_atomic', 'map_fields', 'parse_kwargs', 'remove_nested_key',
            'update_nested_keys')
 
 
@@ -129,6 +129,25 @@ def guarantee_object_id(value):
         value = ObjectId(value)
 
     return value
+
+
+def is_atomic(document):
+    """Checks for atomic update operators.
+
+    This method checks for operators in ``document``. If a spec
+    document is provided instead of a document to save or update, a
+    false positive will be reported if a logical operator such as
+    ``$and`` or ``$or`` is used.
+
+    :param document: The document to containing the update.
+    :type document: dict.
+    :returns: bool -- ``True`` if ``document`` is an atomic
+              update.
+
+    .. versionadded:: 0.3.0
+    """
+
+    return any(k[0] == '$' for k in document.keys())
 
 
 def map_fields(cls, fields, with_operators=False, flatten_keys=False):
