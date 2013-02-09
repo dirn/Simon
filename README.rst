@@ -6,6 +6,18 @@ Simon: Simple MongoDB Models
    :target: http://travis-ci.org/dirn/Simon
 
 
+Note About Releases
+===================
+
+Simon is not yet considered production-ready. While I will do my best to
+maintain backward compatibility between now and version 1.0, I cannot
+guarantee it will happen.
+
+The original development releases may eventually be pulled from Read the
+Docs and PyPI. You are encouraged to keep your version up-to-date until
+the release of 1.0 to avoid running into problems.
+
+
 Getting Started
 ===============
 
