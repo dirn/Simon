@@ -680,7 +680,7 @@ class Model(object):
         ======== =======================================================
         Name     Description
         ======== =======================================================
-        ``safe`` (optional) **DECPRECATED** use ``w`` instead
+        ``safe`` (optional) **DEPRECATED** use ``w`` instead
         ``w``    (optional) int -- the number of servers in a replica
                  set that must receive the update for it to be
                  successful
