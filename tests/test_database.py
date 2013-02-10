@@ -94,14 +94,6 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(m.b, 2)
         self.assertEqual(m._document['b'], 2)
 
-    def test_all(self):
-        """Test the `all()` method."""
-
-        with mock.patch('simon.Model.find') as mock_find:
-            TestModel1.all()
-
-            mock_find.assert_called_with()
-
     def test_delete(self):
         """Test the `delete()` method."""
 
@@ -138,223 +130,156 @@ class TestDatabase(unittest.TestCase):
             m.delete(safe=True)
             remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=True)
 
-    def test_find(self):
-        """Test the `find()` method."""
+    def test__find(self):
+        """Test the `_find()` method."""
 
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            find.return_value = [{'_id': AN_OBJECT_ID}]
+        with nested(mock.patch.object(TestModel1._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
 
-            qs = TestModel1.find(id=AN_OBJECT_ID)
-
-            find.assert_called_with({'_id': AN_OBJECT_ID})
-
-            self.assertIsInstance(qs, query.QuerySet)
-
-    def test_find_comparison(self):
-        """Test the `find()` method with comparison operators."""
-
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            find.return_value = [{'_id': AN_OBJECT_ID}]
-
-            TestModel1.find(a__gt=1)
-            find.assert_called_with({'a': {'$gt': 1}})
-
-            TestModel1.find(a__lte=1, b=2)
-            find.assert_called_with({'a': {'$lte': 1}, 'b': 2})
-
-    def test_find_embedded_document(self):
-        """Test the `find()` method with an embedded document."""
-
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            find.return_value = [{'_id': AN_OBJECT_ID}]
-
-            TestModel1.find(a__b=1)
-
-            find.assert_called_with({'a.b': 1})
-
-    def test_find_id_string(self):
-        """Test the `find()` method with a string `_id`."""
-
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            find.return_value = [{'_id': AN_OBJECT_ID}]
-
-            TestModel1.find(_id=AN_OBJECT_ID_STR)
+            TestModel1._find(_id=AN_OBJECT_ID)
 
             find.assert_called_with({'_id': AN_OBJECT_ID})
 
-    def test_find_sorted(self):
-        """Test the `find()` method with a sort on the class."""
+    def test__find_field_map(self):
+        """Test the `_find()` method with a name in `field_map`."""
 
-        with mock.patch('simon.base.QuerySet') as QuerySet:
-            with mock.patch.object(TestModel1._meta.db, 'find') as find:
-                find.return_value = [{'_id': AN_OBJECT_ID}]
+        with nested(mock.patch.object(TestModel1._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
 
-                TestModel1.find()
-                QuerySet.sort.assert_not_called()
+            TestModel1._find(fake=1)
 
-            with mock.patch.object(TestModel3._meta.db, 'find') as find:
-                find.return_value = [{'_id': AN_OBJECT_ID}]
+            find.assert_called_with({'real': 1})
 
-                TestModel3.find()
-                QuerySet().sort.assert_called_with('a')
-
-            with mock.patch.object(TestModel4._meta.db, 'find') as find:
-                find.return_value = [{'_id': AN_OBJECT_ID}]
-
-                TestModel4.find()
-                QuerySet().sort.assert_called_with('-a')
-
-    def test_find_with_q(self):
-        """Test the `find()` method with `Q` objects."""
+    def test__find_find_one(self):
+        """Test the `_find()` method with `find_one`."""
 
         with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            find.return_value = [{'_id': AN_OBJECT_ID}]
+            QuerySet = mock.MagicMock(spec=query.QuerySet)
+            QuerySet.__getitem__.return_value = {'_id': AN_OBJECT_ID}
+            QuerySet.count.return_value = 1
 
-            TestModel1.find(query.Q(a=1))
-            find.assert_called_with({'a': 1})
+            find.return_value = QuerySet
 
-            TestModel1.find(query.Q(a=1) | query.Q(b=2))
-            find.assert_called_with({'$or': [{'a': 1}, {'b': 2}]})
-
-            TestModel1.find(query.Q(a=1) & query.Q(b=2))
-            find.assert_called_with({'$and': [{'a': 1}, {'b': 2}]})
-
-    def test_get(self):
-        """Test the `get()` method."""
-
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            mock_query_set = mock.MagicMock()
-            mock_query_set.__getitem__.return_value = {'_id': AN_OBJECT_ID}
-            mock_query_set.count.return_value = 1
-
-            find.return_value = mock_query_set
-
-            m = TestModel1.get(_id=AN_OBJECT_ID)
+            m = TestModel1._find(find_one=True, _id=AN_OBJECT_ID)
 
             find.assert_called_with({'_id': AN_OBJECT_ID})
 
             self.assertEqual(m._document['_id'], AN_OBJECT_ID)
 
-    def test_get_comparison(self):
-        """Test the `get()` method with comparison operators."""
+    def test__find_find_one_multipledocumentsfound(self):
+        """Test that `_find()` raises `MultipleDocumentsFound`."""
 
         with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            mock_query_set = mock.MagicMock()
-            mock_query_set.__getitem__.return_value = {'_id': AN_OBJECT_ID}
-            mock_query_set.count.return_value = 1
+            QuerySet = mock.MagicMock(spec=query.QuerySet)
+            QuerySet.count.return_value = 2
 
-            find.return_value = mock_query_set
+            find.return_value = QuerySet
+            with self.assertRaises(TestModel1.MultipleDocumentsFound) as e:
+                TestModel1._find(find_one=True, _id=AN_OBJECT_ID)
 
-            TestModel1.get(a__gt=1)
+            actual = e.exception.message
 
-            find.assert_called_with({'a': {'$gt': 1}})
+            # Check the exception for the pieces
+            expected = "The query returned more than one 'TestModel1'."
+            self.assertIn(expected, actual)
 
-            TestModel1.get(a__lte=1, b=2)
+            expected = "It returned 2!"
+            self.assertIn(expected, actual)
 
-            find.assert_called_with({'a': {'$lte': 1}, 'b': 2})
+            expected = "The document spec was:"
+            self.assertIn(expected, actual)
 
-    def test_get_embedded_document(self):
-        """Test the `get()` method with an embedded document."""
+            expected = "'_id'"
+            self.assertIn(expected, actual)
+
+            expected = "ObjectId"
+            self.assertIn(expected, actual)
+
+            expected = AN_OBJECT_ID_STR
+            self.assertIn(expected, actual)
+
+    def test__find_find_one_nodocumentfound(self):
+        """Test that `_find()` raises `NoDocumentFound`."""
 
         with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            mock_query_set = mock.MagicMock()
-            mock_query_set.__getitem__.return_value = {'_id': AN_OBJECT_ID}
-            mock_query_set.count.return_value = 1
+            QuerySet = mock.MagicMock(spec=query.QuerySet)
+            QuerySet.count.return_value = 0
 
-            find.return_value = mock_query_set
+            find.return_value = QuerySet
+            with self.assertRaises(TestModel1.NoDocumentFound) as e:
+                TestModel1._find(find_one=True, _id=AN_OBJECT_ID)
 
-            TestModel1.get(a__b=1)
+            expected = "'TestModel1' matching query does not exist."
+            actual = e.exception.message
+            self.assertEqual(actual, expected)
+
+    def test__find_nested_field(self):
+        """The the `_find()` method with an embedded document."""
+
+        with nested(mock.patch.object(TestModel1._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
+
+            TestModel1._find(a__b=1)
 
             find.assert_called_with({'a.b': 1})
 
-    def test_get_id_string(self):
-        """Test the `get()` method with a string `_id`."""
+    def test__find_objectid_string(self):
+        """Test the `_find()` method with a string `_id`."""
 
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            mock_query_set = mock.MagicMock()
-            mock_query_set.__iter__ = [{'_id': AN_OBJECT_ID}]
-            mock_query_set.count.return_value = 1
+        with nested(mock.patch.object(TestModel1._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
 
-            find.return_value = mock_query_set
-
-            TestModel1.get(_id=AN_OBJECT_ID_STR)
+            TestModel1._find(_id=AN_OBJECT_ID_STR)
 
             find.assert_called_with({'_id': AN_OBJECT_ID})
 
-    def test_get_multipledocumentsfound(self):
-        """Test that `get()` raises `MultipleDocumentsFound`."""
+    def test__find_q(self):
+        """Test the `_find()` method with a `Q` object."""
 
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            mock_query_set = mock.Mock()
-            mock_query_set.count.return_value = 2
+        with nested(mock.patch.object(TestModel1._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
 
-            find.return_value = mock_query_set
+            TestModel1._find(query.Q(a=1), _id=AN_OBJECT_ID)
 
-            with self.assertRaises(TestModel1.MultipleDocumentsFound):
-                TestModel1.get(_id=AN_OBJECT_ID)
+            find.assert_called_with({'_id': AN_OBJECT_ID, 'a': 1})
 
-    def test_get_or_create_create(self):
-        """Test the `get_or_create()` method for creating documents."""
+    def test__find_q_alone(self):
+        """Test the `_find()` method with nothing but a `Q` object."""
 
-        with nested(mock.patch.object(TestModel1, 'get'),
-                    mock.patch.object(TestModel1, 'create'),
-                    ) as (get, create):
-            get.side_effect = TestModel1.NoDocumentFound
+        with nested(mock.patch.object(TestModel1._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
 
-            create.return_value = mock.Mock()
+            TestModel1._find(query.Q(a=1))
 
-            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID)
-
-            get.assert_called_with(_id=AN_OBJECT_ID)
-            # Because get_or_create() is being called without explicity
-            # setting a value for safe, safe's default value will be
-            # passed along to creates()
-            create.assert_called_with(_id=AN_OBJECT_ID, safe=False)
-
-            self.assertTrue(created)
-
-    def test_get_or_create_get(self):
-        """Test the `get_or_create()` method for getting documents."""
-
-        with mock.patch.object(TestModel1, 'get') as get:
-            get.return_value = mock.Mock()
-
-            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID)
-
-            get.assert_called_with(_id=AN_OBJECT_ID)
-
-            self.assertFalse(created)
-
-    def test_get_nodocumentfound(self):
-        """Test that `get()` raises `NoDocumentFound`."""
-
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            mock_query_set = mock.Mock()
-            mock_query_set.count.return_value = 0
-
-            find.return_value = mock_query_set
-
-            with self.assertRaises(TestModel1.NoDocumentFound):
-                TestModel1.get(_id=AN_OBJECT_ID)
-
-    def test_get_with_q(self):
-        """Test the `get()` method with `Q` objects."""
-
-        with mock.patch.object(TestModel1._meta.db, 'find') as find:
-            mock_query_set = mock.MagicMock()
-            mock_query_set.__iter__ = [{'_id': AN_OBJECT_ID}]
-            mock_query_set.count.return_value = 1
-
-            find.return_value = mock_query_set
-
-            TestModel1.get(query.Q(a=1))
             find.assert_called_with({'a': 1})
 
-            TestModel1.get(query.Q(a=1) | query.Q(b=2))
-            find.assert_called_with({'$or': [{'a': 1}, {'b': 2}]})
+    def test__find_sorted(self):
+        """Test the `_find()` method with a sort."""
 
-            TestModel1.get(query.Q(a=1) & query.Q(b=2))
-            find.assert_called_with({'$and': [{'a': 1}, {'b': 2}]})
+        with mock.patch('simon.base.QuerySet') as QuerySet:
+            with mock.patch.object(TestModel1._meta.db, 'find') as find:
+                find.return_value = [{'_id': AN_OBJECT_ID}]
+
+                TestModel1._find()
+                QuerySet.sort.assert_not_called()
+
+            with mock.patch.object(TestModel3._meta.db, 'find') as find:
+                find.return_value = [{'_id': AN_OBJECT_ID}]
+
+                TestModel3._find()
+                QuerySet().sort.assert_called_with('a')
+
+            with mock.patch.object(TestModel4._meta.db, 'find') as find:
+                find.return_value = [{'_id': AN_OBJECT_ID}]
+
+                TestModel4._find()
+                QuerySet().sort.assert_called_with('-a')
 
     def test__update(self):
         """Test the `_update()` method."""

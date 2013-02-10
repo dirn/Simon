@@ -1,5 +1,7 @@
 """The base Simon models"""
 
+import warnings
+
 from .connection import get_database, pymongo_supports_mongoclient
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import Q, QuerySet
@@ -300,57 +302,47 @@ class Model(object):
         self._document = {}
 
     @classmethod
-    def find(cls, *qs, **fields):
+    def find(cls, q=None, *qs, **fields):
         """Gets multiple documents from the database.
 
         This will find a return multiple documents matching the query
         specified through ``**fields``. If ``sort`` has been defined on
         the ``Meta`` class it will be used to order the records.
 
-        :param \*qs: :class:`~simon.query.Q` objects to use with the
-                      query.
+        :param q: (optional) A logical query to use with the query.
+        :type q: :class:`~simon.query.Q`.
+        :param \*qs: **DEPRECATED** Use ``q`` instead.
         :type \*qs: \*args.
         :param \*\*fields: Keyword arguments specifying the query.
         :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.base.QuerySet` -- query set containing
                   objects matching ``query``.
 
+        .. versionchanged:: 0.3.0
+           Deprecating ``qs`` in favor of ``q``
+
         .. versionadded:: 0.1.0
         """
 
-        # Add all Q objects to the filter
-        for q in qs:
-            if isinstance(q, Q):
-                fields.update(q._filter)
+        if qs:
+            warnings.warn('qs has been deprecated. Please use q instead.',
+                          DeprecationWarning)
+            for filter in qs:
+                q._filter.update(filter._filter)
 
-        query = map_fields(cls, fields, flatten_keys=True,
-                           with_operators=True)
-
-        # If querying by the _id, make sure it's an Object ID
-        if '_id' in query:
-            query['_id'] = guarantee_object_id(query['_id'])
-
-        # Find all of the matching documents.
-        docs = cls._meta.db.find(query)
-
-        qs = QuerySet(docs, cls)
-
-        if cls._meta.sort:
-            # If the model has a default sort, apply it.
-            qs = qs.sort(*cls._meta.sort)
-
-        return qs
+        return cls._find(q=q, **fields)
 
     @classmethod
-    def get(cls, *qs, **fields):
+    def get(cls, q=None, *qs, **fields):
         """Gets a single document from the database.
 
         This will find and return a single document matching the
         query specified through ``**fields``. An exception will be
         raised if any number of documents other than one is found.
 
-        :param \*qs: :class:`~simon.query.Q` objects to use with the
-                     query.
+        :param q: (optional) A logical query to use with the query.
+        :type q: :class:`~simon.query.Q`.
+        :param \*qs: **DEPRECATED** Use ``q`` instead.
         :type \*qs: \*args.
         :param \*\*fields: Keyword arguments specifying the query.
         :type \*\*fields: \*\*kwargs.
@@ -358,43 +350,19 @@ class Model(object):
         :raises: :class:`~simon.Model.MultipleDocumentsFound`,
                  :class:`~simon.Model.NoDocumentFound`
 
+        .. versionchanged:: 0.3.0
+           Deprecating ``qs`` in favor of ``q``
+
         .. versionadded:: 0.1.0
         """
 
-        # Add all Q objects to the filter
-        for q in qs:
-            if isinstance(q, Q):
-                fields.update(q._filter)
+        if qs:
+            warnings.warn('qs has been deprecated. Please use q instead.',
+                          DeprecationWarning)
+            for filter in qs:
+                q._filter.update(filter._filter)
 
-        # Convert the field spec into a query by mapping any necessary
-        # fields.
-        query = map_fields(cls, fields, flatten_keys=True,
-                           with_operators=True)
-
-        # If querying by the _id, make sure it's an Object ID
-        if '_id' in query:
-            query['_id'] = guarantee_object_id(query['_id'])
-
-        # Find all of the matching documents. find_one() could be used
-        # here instead, but that would return the *first* matching
-        # document, not the *only* matching document. In order to know
-        # if a number of documents other than one was found, find()
-        # and count() must be used instead. Because MongoDB uses
-        # cursors, not data needs to be transferred until the result
-        # set is sliced later on.
-        docs = cls._meta.db.find(query)
-        count = docs.count()
-        if not count:
-            raise cls.NoDocumentFound(
-                "'{0}' matching query does not exist.".format(cls.__name__))
-        elif count > 1:
-            raise cls.MultipleDocumentsFound(
-                '`get()` returned more than one "{0}". It returned {1}!'
-                ' The document spec was: {2}'.format(
-                    cls.__name__, count, fields))
-
-        # Return an instantiated object for the retrieved document
-        return cls(**docs[0])
+        return cls._find(find_one=True, q=q, **fields)
 
     @classmethod
     def get_or_create(cls, safe=False, **fields):
@@ -660,6 +628,62 @@ class Model(object):
         self._update({'$set': fields}, safe=safe)
 
     # Database interaction methods
+
+    @classmethod
+    def _find(cls, q=None, find_one=False, **fields):
+        """Find documents in the database
+
+        :param q:
+        :type q:
+        :param find_one:
+        :type find_one:
+        :param \*\*fields:
+        :type \*\*fields:
+        :raises:
+        :returns:
+
+        .. versionadded:: 0.3.0
+        """
+
+        # If there is a Q object, add it to the spec document.
+        if isinstance(q, Q):
+            fields.update(q._filter)
+
+        query = map_fields(cls, fields, flatten_keys=True, with_operators=True)
+
+        # If querying by the _id, make sure it's an Object ID.
+        if '_id' in query:
+            query['_id'] = guarantee_object_id(query['_id'])
+
+        # Find all of the matching documents.
+        docs = cls._meta.db.find(query)
+
+        if find_one:
+            count = docs.count()
+
+            exception = None
+            if not count:
+                exception = cls.NoDocumentFound
+                message = "'{0}' matching query does not exist."
+                message = message.format(cls.__name__)
+            elif count > 1:
+                exception = cls.MultipleDocumentsFound
+                message = ("The query returned more than one '{0}'. It "
+                           "returned {1}! The document spec was: {2}.")
+                message = message.format(cls.__name__, count, fields)
+
+            if exception:
+                raise exception(message)
+
+            result = cls(**docs[0])
+        else:
+            result = QuerySet(docs, cls)
+
+            if cls._meta.sort:
+                # Apply the default sort for the model.
+                result = result.sort(*cls._meta.sort)
+
+        return result
 
     def _update(self, fields, upsert=False, use_internal=False, **kwargs):
         """Update documents in the database.
