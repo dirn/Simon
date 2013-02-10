@@ -44,6 +44,7 @@ def connect(host='localhost', name=None, username=None, password=None,
     .. versionchanged:: 0.2.0
        ``connect()`` now accepts ``replica_set`` as a kwarg, it is
        preferred over ``replicaSet``
+
     .. versionadded:: 0.1.0
     """
 
