@@ -387,8 +387,8 @@ class TestDatabase(unittest.TestCase):
             self.assertEqual(m._document['a'], 1)
 
     def test__update_atomic_nested_field(self):
-        ("Test the `_update()` method with an atomic update of a nested"
-         " document.")
+        ("Test the `_update()` method with an atomic update of an "
+         "embedded document.")
 
         m = TestModel1(_id=AN_OBJECT_ID)
 
