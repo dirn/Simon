@@ -29,7 +29,7 @@ class TestModel2(Model):
 
 class TestBase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         # Use a dummy connection so that these tests can be run even
         # when there is no MongoDB server. In order to do that, the
         # connection module needs _databases to be a dictionary--
