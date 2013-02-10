@@ -851,8 +851,24 @@ class Model(object):
             object.__setattr__(self, name, value)
         else:
             # Set the attribute in the internal document.
-            name = self._meta.field_map.get(name, name)
-            self._document[name] = value
+
+            # map_fields() requires a dict, so make a simple one and
+            # then capture the first (only) key in the resulting
+            # dict.
+            mapped_name = map_fields(self.__class__, {name: 1},
+                                     flatten_keys=True)
+            mapped_name = mapped_name.keys()[0]
+
+            # Build a dictionary that can be applied to the internal
+            # document dictionary with update_nested_keys().  Do this
+            # by iterating through the fields in mapped_name from right
+            # to left.
+            keys = mapped_name.split('.')
+            keys.reverse()
+            for x in keys:
+                value = {x: value}
+
+            self._document = update_nested_keys(self._document, value)
 
     # Rich comparison methods
 

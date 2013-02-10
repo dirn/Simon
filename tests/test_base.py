@@ -271,8 +271,20 @@ class TestBase(unittest.TestCase):
         self.assertEqual(m.b, 2)
         self.assertEqual(m.b, m._document['b'])
 
-        m.attribute = 3
-        self.assertEqual(m.attribute, 3)
+        m.c__d = 3
+        self.assertIn('c', m._document)
+        self.assertIn('d', m._document['c'])
+        self.assertEqual(m.c['d'], 3)
+        self.assertEqual(m.c['d'], m._document['c']['d'])
+
+        setattr(m, 'd.e', 4)
+        self.assertIn('d', m._document)
+        self.assertIn('e', m._document['d'])
+        self.assertEqual(m.d['e'], 4)
+        self.assertEqual(m.d['e'], m._document['d']['e'])
+
+        m.attribute = 5
+        self.assertEqual(m.attribute, 5)
         self.assertNotIn('attribute', m._document)
 
         with self.assertRaises(AttributeError):
