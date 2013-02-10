@@ -704,6 +704,38 @@ class Model(object):
         # Save characters
         cls = self.__class__
 
+        def map_field_names_and_values(fields):
+            """Maps field names and values.
+
+            This method will take care of mapping the keys of ``fields``
+            to the correct syntax for the query.
+
+            When the  ``use_internal`` argument of
+            :meth:`~simon.Model._update()` is set to ``True``, it will
+            also update the values of ``fields`` from the internal
+            document. If a field does not exist in the internal
+            document, :class:`AttributeError` will be raised.
+
+            :param fields: The document containing keys to map.
+            :type fields: dict.
+            :raises: :class:`AttributeError`
+
+            .. versionadded:: 0.3.0
+            """
+
+            fields = map_fields(cls, fields, flatten_keys=True)
+            if use_internal:
+                try:
+                    fields = dict((k, get_nested_key(self._document, k))
+                                  for k in fields.keys())
+                except KeyError:
+                    # KeyError will be raised by get_nested_key() when a
+                    # field isn't part of the internal document.
+                    message = ("The '{0}' object does not have all of the "
+                               "specified fields.".format(cls.__name__))
+                    raise AttributeError(message)
+            return fields
+
         # _id is required for updates unless the upsert flag has been
         # set by the caller.
         if not (upsert or '_id' in self._document):
@@ -719,24 +751,11 @@ class Model(object):
             kwargs['spec'] = {'_id': id}
 
         # Map all the field names and values
-        try:
-            if is_atomic(fields):
-                for k, v in fields.iteritems():
-                    fields[k] = map_fields(cls, v, flatten_keys=True)
-                    if use_internal:
-                        fields[k] = dict((key, get_nested_key(self._document,
-                                                              key)) for key in
-                                         fields[k].keys())
-            else:
-                fields = map_fields(cls, fields, flatten_keys=True)
-                if use_internal:
-                    fields = dict((key, get_nested_key(self._document, key))
-                                  for key in fields.keys())
-        except KeyError:
-            # KeyError will be raised by get_nested_key() when a field
-            # isn't part of the internal document.
-            raise AttributeError("The '{0}' object does not have all of the "
-                                 "specified fields.".format(cls.__name__))
+        if is_atomic(fields):
+            for k, v in fields.iteritems():
+                fields[k] = map_field_names_and_values(v)
+        else:
+            fields = map_field_names_and_values(fields)
         # When placing fields in kwargs, make a copy so changes to
         # fields don't affect kwargs
         kwargs['document'] = fields.copy()
