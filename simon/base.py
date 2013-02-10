@@ -1,12 +1,54 @@
 """The base Simon models"""
 
-from .connection import get_database
+from .connection import get_database, pymongo_supports_mongoclient
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .query import Q, QuerySet
 from .utils import (current_datetime, get_nested_key, guarantee_object_id,
-                    map_fields, remove_nested_key, update_nested_keys)
+                    is_atomic, map_fields, remove_nested_key,
+                    update_nested_keys)
 
 __all__ = ('Model',)
+
+
+# In version 2.4, PyMongo introduced MongoClient as a
+# replcaement for Connection. Part of the new class is that the
+# safe argument was deprecated in favor of the w argument.
+# Whereas safe was a boolean, w is an integer representing the
+# number of servers in a replica set that must receive the
+# update before the write is considered successful.
+
+def _set_write_concern_as_safe(options, force_safe):
+    safe = options.pop('safe', None)
+    w = options.pop('w', None)
+
+    if force_safe:
+        safe = True
+    else:
+        if safe is None and w:
+            safe = True
+        else:
+            safe = safe or False
+    options['safe'] = safe
+
+
+def _set_write_concern_as_w(options, force_safe):
+    safe = options.pop('safe', None)
+    w = options.pop('w', None)
+
+    if force_safe:
+        w = int(force_safe)  # use int() in case force_safe is True
+    else:
+        if w is None and safe:
+            w = 1
+        else:
+            w = w or 0
+    options['w'] = w
+
+
+if pymongo_supports_mongoclient:
+    _set_write_concern = _set_write_concern_as_w
+else:
+    _set_write_concern = _set_write_concern_as_safe
 
 
 class Meta(object):
@@ -225,14 +267,6 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        if cls._meta.required_fields and any(k not in fields for k
-                                             in cls._meta.required_fields):
-            message = ("The '{0}' object cannot be created because it must "
-                       "contain all of the required fields: {1}")
-            message = message.format(cls.__name__,
-                                     ', '.join(cls._meta.required_fields))
-            raise TypeError(message)
-
         new = cls(**fields)
         new.save(safe=safe)
 
@@ -427,12 +461,6 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = self._document.get('_id')
-        if not id:
-            raise TypeError("The '{0}' object cannot be updated because its "
-                            "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, '_id'))
-
         # There needs to be something to update
         if field is None and not fields:
             raise ValueError('No fields have been specified.')
@@ -447,32 +475,7 @@ class Model(object):
         for k, v in fields.items():
             update[k] = v
 
-        update = map_fields(self.__class__, update, flatten_keys=True)
-
-        safe = safe or self._meta.safe
-        self._meta.db.update({'_id': id}, {'$inc': update}, safe=safe)
-
-        # After updating the document in the database, the instance
-        # needs to be updated as well. Depending on the size of the
-        # document, it may be time consuming to reload the entire thing.
-        # Fortunately there is a way to just load the fields that have
-        # been updated. Build a dictionary containing the keys of the
-        # fields that need to be reloaded and retrieve them from the
-        # database. Then apply the new values to the instance
-        fields = dict((k, 1) for k in update.keys())
-        doc = self._meta.db.find_one({'_id': id}, fields)
-
-        # There's no need to update the _id
-        doc.pop('_id')
-
-        doc = update_nested_keys(self._document, doc)
-
-        for k, v in doc.iteritems():
-            # Normally I'd use self._document[k] = v, but if a value
-            # has already been associated with an attribute, assigning
-            # the new value through _document won't update the
-            # attribute's value.
-            setattr(self, k, v)
+        self._update({'$inc': update}, safe=safe)
 
     def raw_update(self, fields, safe=False):
         """Performs an update using a raw document.
@@ -503,31 +506,7 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = self._document.get('_id')
-        if not id:
-            raise TypeError("The '{0}' object cannot be updated because its "
-                            "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, '_id'))
-
-        safe = safe or self._meta.safe
-
-        self._meta.db.update({'_id': id}, fields, safe=safe)
-
-        # After saving the document, the entire document must be
-        # reloaded in order to update the instance.
-        doc = self._meta.db.find_one({'_id': self.id})
-
-        # There's no need to update the _id
-        doc.pop('_id')
-
-        doc = update_nested_keys(self._document, doc)
-
-        for k, v in doc.iteritems():
-            # Normally I'd use self._document[k] = v, but if a value
-            # has already been associated with an attribute, assigning
-            # the new value through _document won't update the
-            # attribute's value.
-            setattr(self, k, v)
+        self._update(fields, safe=safe)
 
     def remove_fields(self, fields, safe=False):
         """Removes the specified fields from the document.
@@ -557,20 +536,6 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        id = self._document.get('_id')
-        if not id:
-            raise TypeError("The '{0}' object cannot be updated because its "
-                            "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, '_id'))
-
-        if self._meta.required_fields and any(k in fields for k
-                                              in self._meta.required_fields):
-            message = ("The '{0}' object cannot be updated because it must "
-                       "contain all of the required fields: {1}")
-            message = message.format(self.__class__.__name__,
-                                     ', '.join(self._meta.required_fields))
-            raise TypeError(message)
-
         # fields can contain a single item as a string. If it's not a
         # list or tuple, make it one. Otherwise the generators below
         # would iterate over each character in the string rather than
@@ -578,26 +543,9 @@ class Model(object):
         if not isinstance(fields, (list, tuple)):
             fields = (fields,)
 
-        update = dict((k, 1) for k in fields)
-        update = map_fields(self.__class__, update, flatten_keys=True)
+        fields = dict((k, 1) for k in fields)
 
-        safe = safe or self._meta.safe
-        self._meta.db.update({'_id': id}, {'$unset': update}, safe=safe)
-
-        # The fields also need to be removed from the object
-        for k, v in update.items():
-            if '.' in k:
-                # If the key contains a ., it is pointing to an embedded
-                # document, so remove the nested key from the
-                # dictionary; there is no attribute to remove from the
-                # instance
-                self._document = remove_nested_key(self._document, k)
-            else:
-                try:
-                    delattr(self, k)
-                except AttributeError:
-                    # Silently handle attributes that don't exist
-                    pass
+        self._update({'$unset': fields}, safe=safe)
 
     def save(self, safe=False):
         """Saves the object to the database.
@@ -619,14 +567,6 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        if self._meta.required_fields and any(k not in self._document for k
-                                              in self._meta.required_fields):
-            message = ("The '{0}' object cannot be saved because it must "
-                       "contain all of the required fields: {1}")
-            message = message.format(self.__class__.__name__,
-                                     ', '.join(self._meta.required_fields))
-            raise TypeError(message)
-
         # Associate the current datetime (in UTC) with the created
         # and modified fields. While Python can store datetimes with
         # microseconds, BSON only supports milliseconds. Rather than
@@ -635,29 +575,17 @@ class Model(object):
         # instance.
         if self._meta.auto_timestamp:
             now = current_datetime()
-            if not ('_id' in self._document and 'created' in self):
-                self.created = now
-            self.modified = now
+            if not ('_id' in self._document or 'created' in self):
+                self._document['created'] = now
+            self._document['modified'] = now
 
-        # _id should never be overwritten. In order to do that, it's a
-        # good idea to pop it out of the document. Popping it out of
-        # the real document could lead to bad things happening. Instead,
-        # capture a reference to the document and pop it out of that.
-        doc = self._document.copy()
-        id = doc.pop('_id', None)
+        # Use a copy of the internal document so _id can be safely
+        # removed.
+        fields = self._document.copy()
+        fields.pop('_id', None)
 
-        doc = map_fields(self.__class__, doc)
-
-        safe = safe or self._meta.safe
-
-        if id:
-            # The document already exists, so it can just be updated.
-            id = guarantee_object_id(id)
-            self._meta.db.update({'_id': id}, doc, safe=safe)
-        else:
-            # When the document doesn't exist, insert() can be used to
-            # created it and get back the _id.
-            self._document['_id'] = self._meta.db.insert(doc, safe=safe)
+        # Use upsert=True so new documents can be inserted.
+        self._update(fields, upsert=True, safe=safe)
 
     def save_fields(self, fields, safe=False):
         """Saves only the specified fields.
@@ -690,13 +618,6 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        # Make sure the document has already been saved
-        id = self._document.get('_id')
-        if not id:
-            raise TypeError("The '{0}' object cannot be updated because its "
-                            "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, '_id'))
-
         # fields can contain a single item as a string. If it's not a
         # list or tuple, make it one. Otherwise the generators below
         # would iterate over each character in the string rather than
@@ -705,22 +626,10 @@ class Model(object):
             fields = (fields,)
 
         update = dict((k, 1) for k in fields)
-        update = map_fields(self.__class__, update, flatten_keys=True)
 
-        # Failing to make sure all of the fields exist before saving
-        # them would result in assigning blank values to keys. In some
-        # cases this could result in unexpected documents being returned
-        # in queries.
-        try:
-            update = dict((k, get_nested_key(self._document, k)) for
-                          k, v in update.items())
-        except KeyError:
-            raise AttributeError("The '{0}' object does not have all of the "
-                                 "specified fields.".format(
-                                     self.__class__.__name__))
-
-        safe = safe or self._meta.safe
-        self._meta.db.update({'_id': id}, {'$set': update}, safe=safe)
+        # Set use_internal so that the real values will come from
+        # self._document instead of the document passed to _update().
+        self._update({'$set': update}, use_internal=True, safe=safe)
 
     def update(self, safe=False, **fields):
         """Performs an atomic update.
@@ -748,31 +657,169 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
+        self._update({'$set': fields}, safe=safe)
+
+    # Database interaction methods
+
+    def _update(self, fields, upsert=False, use_internal=False, **kwargs):
+        """Update documents in the database.
+
+        There are a few actions that need to be done in conjunction with
+        performing an update. Other methods can call this one to ensure
+        that:
+
+        - ``_id`` is checked (can be overridden by ``upsert``)
+        - ``Meta.required_fields`` is enforced
+        - field names are mapped according to ``Meta.field_map``
+        - ``w`` and ``safe`` are correctly handled
+        - atomic updates that go directly to the database also update
+          the instance
+
+        This method currently supports the following optional settings:
+
+        ======== =======================================================
+        Name     Description
+        ======== =======================================================
+        ``safe`` (optional) **DECPRECATED** use ``w`` instead
+        ``w``    (optional) int -- the number of servers in a replica
+                 set that must receive the update for it to be
+                 successful
+        ======== =======================================================
+
+        :param fields: The update to perform.
+        :type fields: dict.
+        :param upsert: (optional) Whether or not to insert new
+                       documents.
+        :type upsert: bool.
+        :param use_internal: (optional) Whether or not to use the values
+                             in the internal document.
+        :type use_internal: bool.
+        :param \*\*kwargs: The optional settings.
+        :type \*\*kwargs: \*\*kwargs.
+        :raises: :class:`TypeError`
+
+        .. versionadded:: 0.3.0
+        """
+
+        # Save characters
+        cls = self.__class__
+
+        # _id is required for updates unless the upsert flag has been
+        # set by the caller.
+        if not (upsert or '_id' in self._document):
+            message = ("The '{0}' object cannot be updated because its '_id' "
+                       "attribute has not been set.".format(cls.__name__))
+            raise TypeError(message)
+
+        # Capture the _id and make sure it's an Object ID
         id = self._document.get('_id')
+        if id:
+            id = guarantee_object_id(id)
+            # Updates (as opposed to inserts) need spec to match against
+            kwargs['spec'] = {'_id': id}
+
+        # Map all the field names and values
+        try:
+            if is_atomic(fields):
+                for k, v in fields.iteritems():
+                    fields[k] = map_fields(cls, v, flatten_keys=True)
+                    if use_internal:
+                        fields[k] = dict((key, get_nested_key(self._document,
+                                                              key)) for key in
+                                         fields[k].keys())
+            else:
+                fields = map_fields(cls, fields, flatten_keys=True)
+                if use_internal:
+                    fields = dict((key, get_nested_key(self._document, key))
+                                  for key in fields.keys())
+        except KeyError:
+            # KeyError will be raised by get_nested_key() when a field
+            # isn't part of the internal document.
+            raise AttributeError("The '{0}' object does not have all of the "
+                                 "specified fields.".format(cls.__name__))
+        # When placing fields in kwargs, make a copy so changes to
+        # fields don't affect kwargs
+        kwargs['document'] = fields.copy()
+
+        # Enforce the required fields
+        if self._meta.required_fields:
+            has_required_fields = True
+
+            if is_atomic(fields):
+                # If performing an update that would result in fields
+                # being removed, make sure that none of the required
+                # fields are being removed.
+                if '$unset' in fields:
+                    if any(k in self._meta.required_fields for k
+                            in fields['$unset']):
+                        has_required_fields = False
+            else:
+                # For a document replacement, all of the required fields
+                # must appear in the update.
+                if any(k not in fields for k in self._meta.required_fields):
+                    has_required_fields = False
+
+            if not has_required_fields:
+                message = ("The '{0}' object cannot be updated because it "
+                           "must contain all of the required fields: {1}.")
+                message = message.format(cls.__name__,
+                                         ', '.join(self._meta.required_fields))
+                raise TypeError(message)
+
+        # Handling the write concern argument has been pushed off to
+        # another method that is aware of what PyMongo supports.
+        _set_write_concern(kwargs, self._meta.safe)
+
+        # Which function are we calling?
         if not id:
-            raise TypeError("The '{0}' object cannot be updated because its "
-                            "'{1}' attribute has not been set.".format(
-                                self.__class__.__name__, '_id'))
+            f = self._meta.db.insert
+        else:
+            f = self._meta.db.update
 
-        update = map_fields(self.__class__, fields, flatten_keys=True)
+        result = f(**kwargs)
 
-        safe = safe or self._meta.safe
-        self._meta.db.update({'_id': id}, {'$set': update}, safe=safe)
+        if not id:
+            # insert() will return the _id
+            self._document['_id'] = result
 
-        # After updating the document in the database, the instance
-        # needs to be updated as well. Depending on the size of the
-        # document, it may be time consuming to reload the entire thing.
-        # Fortunately there is a way to just load the fields that have
-        # been updated. Build a dictionary containing the keys of the
-        # fields that need to be reloaded and retrieve them from the
-        # database. Then apply the new values to the instance
-        fields = dict((k, 1) for k in update.keys())
-        doc = self._meta.db.find_one({'_id': id}, fields)
+        # For atomic updates, make sure the updates find their way back
+        # to the internal document.
+        # Right now this happens for all atomic updates, including when
+        # called from save_fields(). I'd like to turn that one off.
+        if is_atomic(fields):
+            # After updating the document in the database, the instance
+            # needs to be updated as well. Depending on the size of the
+            # document, it may be time consuming to reload the entire
+            # thing. Fortunately there is a way to just load the fields
+            # that have been updated. Build a dictionary containing the
+            # keys of the fields that need to be reloaded and retrieve
+            # them from the database. Then apply the new values to the
+            # instance's interal document.
 
-        doc = update_nested_keys(self._document, doc)
+            unset = fields.pop('$unset', None)
+            if unset:
+                # The fields also need to be removed from the object
+                for k, v in unset.items():
+                    if '.' in k:
+                        # If the key contains a ., it is pointing to an
+                        # embedded document, so remove the nested key
+                        # from the dictionary; there is no attribute to
+                        # remove from the instance.
+                        self._document = remove_nested_key(self._document, k)
+                    else:
+                        self._document.pop(k, None)
 
-        for k, v in doc.items():
-            setattr(self, k, v)
+            # If the only operation was an $unset, we're done.
+            if not fields:
+                return
+
+            fields = dict((k, 1) for v in fields.values() for k in v.keys())
+            doc = self._meta.db.find_one({'_id': id}, fields)
+
+            # There's no need to update the _id
+            doc.pop('_id', None)
+
+            self._document = update_nested_keys(self._document, doc)
 
     # String representation methods
 
@@ -818,7 +865,7 @@ class Model(object):
             if '__' in name:
                 # map_fields() requires a dict, so make a simple one and
                 # then capture the first (only) key in the resulting
-                # dict
+                # dict.
                 mapped_name = map_fields(self.__class__, {name: 1},
                                          flatten_keys=True)
                 mapped_name = mapped_name.keys()[0]
