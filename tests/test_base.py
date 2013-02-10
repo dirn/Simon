@@ -5,9 +5,16 @@ try:
 except ImportError:
     import unittest
 
+from contextlib import nested
+from datetime import datetime
+
+from bson import ObjectId
 import mock
 
 from simon import Model, connection
+
+AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
+AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
 
 
 class TestModel1(Model):
@@ -71,6 +78,19 @@ class TestBase(unittest.TestCase):
         self.assertIn('x', m)
         self.assertIn('y', m)
         self.assertNotIn('x', m._document)
+
+    def test_create(self):
+        """Test the `create()` method."""
+
+        with nested(mock.patch.object(TestModel1, '_update'),
+                    mock.patch('simon.base.current_datetime'),
+                    ) as (_update, current_datetime):
+            current_datetime.return_value = 1
+
+            TestModel1.create(a=1)
+
+            _update.assert_called_with({'a': 1, 'created': 1, 'modified': 1},
+                                       safe=False, upsert=True)
 
     def test_db(self):
         ("Test that the `db` attribute is associated with classes and "
@@ -207,6 +227,38 @@ class TestBase(unittest.TestCase):
 
         self.assertEqual(getattr(m, 'x'), 1)
 
+    def test_increment(self):
+        """Test the `increment()` method."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.increment('a')
+
+            _update.assert_called_with({'$inc': {'a': 1}}, safe=False)
+
+            m.increment('a', 2)
+
+            _update.assert_called_with({'$inc': {'a': 2}}, safe=False)
+
+    def test_increment_multiple(self):
+        """Test the `increment()` method with multiple fields."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.increment(a=1, b=2)
+
+            _update.assert_called_with({'$inc': {'a': 1, 'b': 2}}, safe=False)
+
+    def test_increment_valueerror(self):
+        """Test that `increment()` raises `ValueError`."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with self.assertRaises(ValueError):
+            m.increment()
+
     def test_init(self):
         """Test the `__init__()` method."""
 
@@ -242,6 +294,37 @@ class TestBase(unittest.TestCase):
         self.assertNotEqual(m2 == m1, m2 != m1)
         self.assertEqual(m1 != m2, m2 != m1)
 
+    def test_raw_update(self):
+        """Test the `raw_update()` method."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.raw_update({'$set': {'a': 1}})
+
+            _update.assert_called_with({'$set': {'a': 1}}, safe=False)
+
+    def test_remove_fields(self):
+        """Test the `remove_fields()` method."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.remove_fields('a')
+
+            _update.assert_called_with({'$unset': {'a': 1}}, safe=False)
+
+    def test_remove_fields_multiple(self):
+        """Test the `remove_fields()` method with multiple fields."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.remove_fields(('a', 'b'))
+
+            _update.assert_called_with({'$unset': {'a': 1, 'b': 1}},
+                                       safe=False)
+
     def test_repr(self):
         """Test the `__repr__()` method."""
 
@@ -256,6 +339,74 @@ class TestBase(unittest.TestCase):
         expected = '<TestModel2: this is the __str__>'
         actual = '{0!r}'.format(m2)
         self.assertEqual(actual, expected)
+
+    def test_save(self):
+        """Test the `save()` method."""
+
+        m = TestModel1(a=1)
+
+        with nested(mock.patch.object(TestModel1, '_update'),
+                    mock.patch('simon.base.current_datetime'),
+                    ) as (_update, current_datetime):
+            current_datetime.return_value = 1
+
+            m.save()
+
+            _update.assert_called_with({'a': 1, 'created': 1, 'modified': 1},
+                                       safe=False, upsert=True)
+
+    def test_save_fields(self):
+        """Test the `save_fields()` method."""
+
+        m = TestModel1(_id=AN_OBJECT_ID, a=1)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.save_fields('a')
+
+            _update.assert_called_with({'$set': {'a': 1}}, use_internal=True,
+                                       safe=False)
+
+    def test_save_fields_attributeerror(self):
+        """Test that `save_fields()` raises `AttributeError`."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with self.assertRaises(AttributeError) as e:
+            m.save_fields('a')
+
+        expected = ("The 'TestModel1' object does not have all of the "
+                    "specified fields.")
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+    def test_save_fields_multiple(self):
+        """Test the `save_fields()` method with multiple fields."""
+
+        m = TestModel1(_id=AN_OBJECT_ID, a=1, b=2)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.save_fields(('a', 'b'))
+
+            _update.assert_called_with({'$set': {'a': 1, 'b': 1}},
+                                       use_internal=True, safe=False)
+
+    def test_save_timestamps(self):
+        """Test that `save()` properly handles adding timestamps."""
+
+        with mock.patch.object(TestModel1, '_update'):
+            # Insert
+            m1 = TestModel1()
+            m1.save()
+
+            self.assertIsInstance(m1._document['created'], datetime)
+            self.assertIsInstance(m1._document['modified'], datetime)
+
+            # Update
+            m2 = TestModel1(_id=AN_OBJECT_ID)
+            m2.save()
+
+            self.assertNotIn('created', m2._document)
+            self.assertIsInstance(m2._document['modified'], datetime)
 
     def test_setattr(self):
         """Test the `__setattr__()` method."""
@@ -328,3 +479,13 @@ class TestBase(unittest.TestCase):
         expected = u'this is the __unicode__'
         actual = u'{0}'.format(m2)
         self.assertEqual(actual, expected)
+
+    def test_update(self):
+        """Test the `update()` method."""
+
+        m = TestModel1(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(TestModel1, '_update') as _update:
+            m.update(a=1)
+
+            _update.assert_called_with({'$set': {'a': 1}}, safe=False)
