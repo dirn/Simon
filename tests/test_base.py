@@ -7,11 +7,13 @@ except ImportError:
 
 from contextlib import nested
 from datetime import datetime
+import warnings
 
 from bson import ObjectId
 import mock
 
 from simon import Model, connection
+from simon.query import Q
 
 AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
 AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
@@ -57,6 +59,14 @@ class TestBase(unittest.TestCase):
         # during one test don't affect another
         connection._connections = None
         connection._databases = None
+
+    def test_all(self):
+        """Test the `all()` method."""
+
+        with mock.patch('simon.Model.find') as mock_find:
+            TestModel1.all()
+
+            mock_find.assert_called_with()
 
     def test_contains(self):
         """Test the `__contains__()` method."""
@@ -196,6 +206,70 @@ class TestBase(unittest.TestCase):
         m1 = TestModel2(_id=1)
         self.assertFalse(m1 == 'abc')
         self.assertFalse('abc' == m1)
+
+    def test_find_deprecationwarning(self):
+        """Test that `find()` triggers `DeprecationWarning`."""
+
+        warnings.simplefilter('error', DeprecationWarning)
+
+        with mock.patch.object(TestModel1, '_find'):
+            with self.assertRaises(DeprecationWarning) as e:
+                TestModel1.find(Q(a=1), Q(b=2))
+
+        warnings.resetwarnings()
+        warnings.simplefilter('default')
+
+        expected = 'qs has been deprecated. Please use q instead.'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+    def test_get_deprecationwarning(self):
+        """Test that `get()` triggers `DeprecationWarning`."""
+
+        warnings.simplefilter('error', DeprecationWarning)
+
+        with mock.patch.object(TestModel1, '_find'):
+            with self.assertRaises(DeprecationWarning) as e:
+                TestModel1.get(Q(a=1), Q(b=2))
+
+        warnings.resetwarnings()
+        warnings.simplefilter('default')
+
+        expected = 'qs has been deprecated. Please use q instead.'
+        actual = e.exception.message
+        self.assertEqual(actual, expected)
+
+    def test_get_or_create_create(self):
+        """Test the `get_or_create()` method for creating documents."""
+
+        with nested(mock.patch.object(TestModel1, 'get'),
+                    mock.patch.object(TestModel1, 'create'),
+                    ) as (get, create):
+            get.side_effect = TestModel1.NoDocumentFound
+
+            create.return_value = mock.Mock()
+
+            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID)
+
+            get.assert_called_with(_id=AN_OBJECT_ID)
+            # Because get_or_create() is being called without explicity
+            # setting a value for safe, safe's default value will be
+            # passed along to creates()
+            create.assert_called_with(_id=AN_OBJECT_ID, safe=False)
+
+            self.assertTrue(created)
+
+    def test_get_or_create_get(self):
+        """Test the `get_or_create()` method for getting documents."""
+
+        with mock.patch.object(TestModel1, 'get') as get:
+            get.return_value = mock.Mock()
+
+            m, created = TestModel1.get_or_create(_id=AN_OBJECT_ID)
+
+            get.assert_called_with(_id=AN_OBJECT_ID)
+
+            self.assertFalse(created)
 
     def test_getattr(self):
         """Test the `__getattr__()` method."""
