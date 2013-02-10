@@ -6,6 +6,7 @@ except ImportError:
     import unittest
 
 import mock
+import pymongo
 
 from simon import connection
 
@@ -219,3 +220,9 @@ class TestConnection(unittest.TestCase):
         connection._databases = {'first': 1, 'second': 2}
         with self.assertRaises(connection.ConnectionError):
             connection.get_database('invalidnamethatdoesntexist')
+
+    def test_pymongo_supports_mongoclient(self):
+        """Test that `pymongo_supports_mongoclient` is set correctly."""
+
+        self.assertEqual(connection.pymongo_supports_mongoclient,
+                         pymongo.version_tuple[:2] >= (2, 4))

@@ -4,9 +4,11 @@ from pymongo import uri_parser
 try:
     # pymongo 2.4+
     from pymongo import MongoClient, MongoReplicaSetClient
+    pymongo_supports_mongoclient = True
 except ImportError:
     from pymongo import (Connection as MongoClient,
                          ReplicaSetConnection as MongoReplicaSetClient)
+    pymongo_supports_mongoclient = False
 
 from .exceptions import ConnectionError
 
