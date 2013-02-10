@@ -845,11 +845,12 @@ class Model(object):
             raise AttributeError(
                 "The '{0}' attribute cannot be overwritten.".format(name))
 
-        # Set the attribute on the object. Trying to do this with a
-        # simple assignment would result in recursion error.
-        object.__setattr__(self, name, value)
-
-        if name not in self._meta.core_attributes:
+        if name in self._meta.core_attributes:
+            # Set the attribute on the object. Trying to do this with a
+            # simple assignment would result in recursion error.
+            object.__setattr__(self, name, value)
+        else:
+            # Set the attribute in the internal document.
             name = self._meta.field_map.get(name, name)
             self._document[name] = value
 
