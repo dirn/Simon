@@ -631,16 +631,32 @@ class Model(object):
 
     @classmethod
     def _find(cls, q=None, find_one=False, **fields):
-        """Find documents in the database
+        """Find documents in the database.
 
-        :param q:
-        :type q:
-        :param find_one:
-        :type find_one:
-        :param \*\*fields:
-        :type \*\*fields:
-        :raises:
-        :returns:
+        This method will find documents in the database matching the
+        specified query. When ``find_one`` is set to ``False``, a
+        :class:`~simon.query.QuerySet` will be returned containing all
+        of the matching documents. When it is set to ``True``, the
+        single matching document will be returned as an instance of the
+        model.
+
+        When querying with ``find_one`` set to ``True``,
+        ``NoDocumentFound`` will be raised when no documents match the
+        query, ``MultipleDocumentsFound`` will be raised when more than
+        one matches.
+
+        :param q: (optional) A logical query to use with the query.
+        :type q: :class:`~simon.query.Q`.
+        :param find_one: Whether or not the query should only return one
+                         document.
+        :type find_one: bool.
+        :param \*\*fields: Keyword arguments specifying the query.
+        :type \*\*fields: \*\*kwargs.
+        :returns: :class:`~simon.base.Model` or
+                  :class:`~simon.base.QuerySet` -- the document or query
+                  set containing objects matching ``query``.
+        :raises: :class:`~simon.Model.MultipleDocumentsFound`,
+                 :class:`~simon.Model.NoDocumentFound`
 
         .. versionadded:: 0.3.0
         """
