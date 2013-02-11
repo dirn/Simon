@@ -378,13 +378,15 @@ class TestQuerySet(unittest.TestCase):
             self.model_qs[3]
 
         expected = "No such item in 'QuerySet' for 'TestModel1' object"
-        self.assertEqual(e.exception.message, expected)
+        actual = str(e.exception)
+        self.assertEqual(actual, expected)
 
         with self.assertRaises(IndexError) as e:
             self.qs[3]
 
         expected = "No such item in 'QuerySet'"
-        self.assertEqual(e.exception.message, expected)
+        actual = str(e.exception)
+        self.assertEqual(actual, expected)
 
     def test___getitem___typeerror(self):
         """Test that `__getitem__()` raises `TypeError`."""

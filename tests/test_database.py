@@ -179,7 +179,7 @@ class TestDatabase(unittest.TestCase):
             with self.assertRaises(TestModel1.MultipleDocumentsFound) as e:
                 TestModel1._find(find_one=True, _id=AN_OBJECT_ID)
 
-            actual = e.exception.message
+            actual = str(e.exception)
 
             # Check the exception for the pieces
             expected = "The query returned more than one 'TestModel1'."
@@ -212,7 +212,7 @@ class TestDatabase(unittest.TestCase):
                 TestModel1._find(find_one=True, _id=AN_OBJECT_ID)
 
             expected = "'TestModel1' matching query does not exist."
-            actual = e.exception.message
+            actual = str(e.exception)
             self.assertEqual(actual, expected)
 
     def test__find_nested_field(self):
@@ -481,7 +481,7 @@ class TestDatabase(unittest.TestCase):
 
         expected = ("The 'TestModel1' object cannot be updated because its "
                     "'_id' attribute has not been set.")
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
         m2 = TestModel5(_id=AN_OBJECT_ID)
@@ -493,7 +493,7 @@ class TestDatabase(unittest.TestCase):
 
         expected = ("The 'TestModel5' object cannot be updated because it must"
                     " contain all of the required fields: a, b.")
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
         with self.assertRaises(TypeError) as e:
@@ -501,7 +501,7 @@ class TestDatabase(unittest.TestCase):
 
         expected = ("The 'TestModel5' object cannot be updated because it must"
                     " contain all of the required fields: a, b.")
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
     def test__update_use_internal(self):

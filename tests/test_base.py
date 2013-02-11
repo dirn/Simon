@@ -220,7 +220,7 @@ class TestBase(unittest.TestCase):
         warnings.simplefilter('default')
 
         expected = 'qs has been deprecated. Please use q instead.'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
     def test_get_deprecationwarning(self):
@@ -236,7 +236,7 @@ class TestBase(unittest.TestCase):
         warnings.simplefilter('default')
 
         expected = 'qs has been deprecated. Please use q instead.'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
     def test_get_or_create_create(self):
@@ -450,7 +450,7 @@ class TestBase(unittest.TestCase):
 
         expected = ("The 'TestModel1' object does not have all of the "
                     "specified fields.")
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
     def test_save_fields_multiple(self):

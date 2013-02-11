@@ -206,14 +206,14 @@ class TestGeo(unittest.TestCase):
             geo._validate_point(1, 'name')
 
         expected = 'name must be a list containing exactly 2 elements'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
         with self.assertRaises(ValueError) as e:
             geo._validate_point([1], 'name')
 
         expected = 'name must be a list containing exactly 2 elements'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
     def test_validate_point_typeerror(self):
@@ -224,7 +224,7 @@ class TestGeo(unittest.TestCase):
             geo._validate_point('a')
 
         expected = '`point` must be a list containing exactly 2 elements'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
         # Test with an int
@@ -232,7 +232,7 @@ class TestGeo(unittest.TestCase):
             geo._validate_point(1)
 
         expected = '`point` must be a list containing exactly 2 elements'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
     def test_validate_point_valueerror(self):
@@ -243,7 +243,7 @@ class TestGeo(unittest.TestCase):
             geo._validate_point([1])
 
         expected = '`point` must be a list containing exactly 2 elements'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
         # Test with 3 elements
@@ -251,7 +251,7 @@ class TestGeo(unittest.TestCase):
             geo._validate_point([1, 2, 3])
 
         expected = '`point` must be a list containing exactly 2 elements'
-        actual = e.exception.message
+        actual = str(e.exception)
         self.assertEqual(actual, expected)
 
         # The following should not raise an exception
