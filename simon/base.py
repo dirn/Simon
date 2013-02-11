@@ -296,8 +296,10 @@ class Model(object):
                             "'{1}' attribute has not been set.".format(
                                 self.__class__.__name__, '_id'))
 
-        safe = safe or self._meta.safe
-        self._meta.db.remove({'_id': id}, safe=safe)
+        kwargs = {'safe': safe}
+        _set_write_concern(kwargs, self._meta.safe)
+
+        self._meta.db.remove({'_id': id}, **kwargs)
 
         self._document = {}
 
