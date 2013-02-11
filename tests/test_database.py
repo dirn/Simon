@@ -102,7 +102,7 @@ class TestDatabase(unittest.TestCase):
         with mock.patch.object(TestModel1._meta.db, 'remove') as remove:
             m.delete()
 
-            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=True)
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, **wc_on)
 
     def test_delete_typeerror(self):
         """Test that `delete()` raises `TypeError`."""
@@ -118,17 +118,17 @@ class TestDatabase(unittest.TestCase):
         with mock.patch.object(TestModel3._meta.db, 'remove') as remove:
             m = TestModel3(_id=AN_OBJECT_ID)
             m.delete()
-            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=False)
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, **wc_off)
 
             # m needs to be given its _id again because delete() strips
             # it to prevent attempts to resave a deleted document
             m = TestModel3(_id=AN_OBJECT_ID)
             m.delete(safe=False)
-            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=False)
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, **wc_off)
 
             m = TestModel3(_id=AN_OBJECT_ID)
             m.delete(safe=True)
-            remove.assert_called_with({'_id': AN_OBJECT_ID}, safe=True)
+            remove.assert_called_with({'_id': AN_OBJECT_ID}, **wc_on)
 
     def test__find(self):
         """Test the `_find()` method."""
