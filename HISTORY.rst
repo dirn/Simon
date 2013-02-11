@@ -1,7 +1,7 @@
 History
 -------
 
-0.3.0 (2013-02-10)
+0.3.0 (2013-02-11)
 ++++++++++++++++++
 
 - Deprecate ``Model.get()`` and ``Model.find()`` argument ``qs`` in
