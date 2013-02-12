@@ -65,6 +65,12 @@ For more information, check out the `PyMongo docs`_ and the
 Changelog
 ---------
 
+0.4.0 ()
+++++++++++++++++++
+
+- ``created`` will be set for all inserted documents whose model has
+  ``auto_timestamp`` set to ``True``
+
 0.3.0 (2013-02-11)
 ++++++++++++++++++
 

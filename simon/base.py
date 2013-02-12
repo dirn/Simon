@@ -521,9 +521,9 @@ class Model(object):
         """Saves the object to the database.
 
         When saving a new document for a model with ``auto_timestamp``
-        set to ``True``, unless already provided, ``created`` will be
-        added with the current datetime in UTC. ``modified`` will
-        always be set with the current datetime in UTC.
+        set to ``True``, ``created`` will be added with the current
+        datetime in UTC. ``modified`` will always be set with the
+        current datetime in UTC.
 
         If the model has the ``required_fields`` options set, a
         :class:`TypeError` will be raised if any of the fields have not
@@ -534,18 +534,19 @@ class Model(object):
         :type safe: bool.
         :raises: :class:`TypeError`
 
+        .. versionchanged:: 0.4.0
+           ``created`` is always added to inserted documents when
+           ``auto_timestamp`` is ``True``
+
         .. versionadded:: 0.1.0
         """
 
-        # Associate the current datetime (in UTC) with the created
-        # and modified fields. While Python can store datetimes with
-        # microseconds, BSON only supports milliseconds. Rather than
-        # having different data at the time of save, drop the precision
-        # from the Python datetime before associating it with the
-        # instance.
+        # Associate the current datetime (in UTC) with the created and
+        # modified fields. created will only be added to documents that
+        # are being inserted.
         if self._meta.auto_timestamp:
             now = current_datetime()
-            if not ('_id' in self._document or 'created' in self):
+            if '_id' not in self._document:
                 self._document['created'] = now
             self._document['modified'] = now
 
