@@ -1,7 +1,7 @@
 History
 -------
 
-0.4.0 ()
+0.4.0 (2013-02-12)
 ++++++++++++++++++
 
 - ``created`` will be set for all inserted documents whose model has
