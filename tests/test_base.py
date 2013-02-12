@@ -396,17 +396,14 @@ class TestBase(unittest.TestCase):
     def test_save(self):
         """Test the `save()` method."""
 
-        m = DefaultModel(a=1)
+        TestModel = ModelFactory('TestModel', auto_timestamp=False)
 
-        with nested(mock.patch.object(DefaultModel, '_update'),
-                    mock.patch('simon.base.current_datetime'),
-                    ) as (_update, current_datetime):
-            current_datetime.return_value = 1
+        m = TestModel(a=1)
 
+        with mock.patch.object(TestModel, '_update') as _update:
             m.save()
 
-            _update.assert_called_with({'a': 1, 'created': 1, 'modified': 1},
-                                       safe=False, upsert=True)
+            _update.assert_called_with({'a': 1}, safe=False, upsert=True)
 
     def test_save_fields(self):
         """Test the `save_fields()` method."""
