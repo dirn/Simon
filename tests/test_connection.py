@@ -72,7 +72,8 @@ class TestConnection(unittest.TestCase):
                 'username': 'simon',
                 'password': 'simon',
             })
-            url = 'mongodb://simon:simon@simon.m0.mongo.com:27017,simon.m1.mongo.com:27017/simon-rs'
+            url = ('mongodb://simon:simon@simon.m0.mongo.com:27017,'
+                   'simon.m1.mongo.com:27017/simon-rs')
             connection.connect(host=url, replica_set='simonrs',
                                alias='replica2')
             mock_method.assert_called_with(host=url, port=None,
@@ -147,7 +148,8 @@ class TestConnection(unittest.TestCase):
         """Test the `_get_connection()` method with URIs."""
 
         with mock.patch('simon.connection.MongoClient') as mock_conn:
-            url1 = 'mongodb://simonuser:simonpassword@simon.mongo.com:27017/simon'
+            url1 = ('mongodb://simonuser:simonpassword@simon.mongo.com:27017/'
+                    'simon')
             conn, settings = connection._get_connection(host=url1, port=None,
                                                         replica_set=None)
 
@@ -158,7 +160,8 @@ class TestConnection(unittest.TestCase):
             self.assertEqual(settings['password'], 'simonpassword')
 
         with mock.patch('simon.connection.MongoReplicaSetClient') as mock_conn:
-            url2 = 'mongodb://simonuser:simonpassword@simon.m0.mongo.com:27017/simon-rs'
+            url2 = ('mongodb://simonuser:simonpassword@simon.m0.mongo.com:'
+                    '27017/simon-rs')
             conn, settings = connection._get_connection(host=url2, port=None,
                                                         replica_set='simonrs')
 
@@ -169,7 +172,9 @@ class TestConnection(unittest.TestCase):
             self.assertEqual(settings['username'], 'simonuser')
             self.assertEqual(settings['password'], 'simonpassword')
 
-            url3 = 'mongodb://simonuser:simonpassword@simon.m0.mongo.com:27017,simon.m1.mongo.com:27017/simon-rs'
+            url3 = ('mongodb://simonuser:simonpassword@'
+                    'simon.m0.mongo.com:27017,simon.m1.mongo.com:27017/'
+                    'simon-rs')
             conn, settings = connection._get_connection(host=url3, port=None,
                                                         replica_set='simonrs')
 
@@ -180,7 +185,8 @@ class TestConnection(unittest.TestCase):
             self.assertEqual(settings['username'], 'simonuser')
             self.assertEqual(settings['password'], 'simonpassword')
 
-            url4 = 'mongodb://simonuser:simonpassword@simon.m1.mongo.com:27017/simon-rsh?replicaSet=simon-rs'
+            url4 = ('mongodb://simonuser:simonpassword@'
+                    'simon.m1.mongo.com:27017/simon-rsh?replicaSet=simon-rs')
             conn, settings = connection._get_connection(host=url4, port=None,
                                                         replica_set=None)
 
