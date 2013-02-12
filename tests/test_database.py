@@ -485,11 +485,15 @@ class TestDatabase(unittest.TestCase):
 
         m = DefaultModel(_id=AN_OBJECT_ID, a=5)
 
-        with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
+                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
             m._update({'a': 1}, use_internal=True)
 
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a': 5}, **wc_on)
+
+            find_one.assert_not_called()
 
     def test__update_use_internal_atomic(self):
         ("Test the `_update()` method with `use_internal` with an "

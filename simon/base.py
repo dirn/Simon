@@ -863,9 +863,7 @@ class Model(object):
 
         # For atomic updates, make sure the updates find their way back
         # to the internal document.
-        # Right now this happens for all atomic updates, including when
-        # called from save_fields(). I'd like to turn that one off.
-        if is_atomic(fields):
+        if not use_internal and is_atomic(fields):
             # After updating the document in the database, the instance
             # needs to be updated as well. Depending on the size of the
             # document, it may be time consuming to reload the entire
