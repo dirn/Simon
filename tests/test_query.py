@@ -9,17 +9,15 @@ from bson import ObjectId
 import mock
 from pymongo.cursor import Cursor
 
-from simon import Model, connection, query
+from simon import connection, query
+
+from .utils import ModelFactory
 
 AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
 AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
 
-
-class TestModel1(Model):
-    class Meta:
-        collection = 'test-simon'
-        database = 'test-simon'
-        field_map = {'id': '_id', 'fake': 'real'}
+DefaultModel = ModelFactory('DefaultModel')
+MappedModel = ModelFactory('MappedModel', field_map={'fake': 'real'})
 
 
 class TestQ(unittest.TestCase):
@@ -148,7 +146,7 @@ class TestQuerySet(unittest.TestCase):
     def setUp(cls):
         cls.cursor = mock.MagicMock(spec=Cursor)
         cls.qs = query.QuerySet(cursor=cls.cursor)
-        cls.model_qs = query.QuerySet(cursor=cls.cursor, cls=TestModel1)
+        cls.model_qs = query.QuerySet(cursor=cls.cursor, cls=DefaultModel)
 
     def test_count(self):
         """Test the `count()` method."""
@@ -178,6 +176,8 @@ class TestQuerySet(unittest.TestCase):
 
     def test_distinct_field_map(self):
         """Test the `distinct()` method with a name in `field_map`."""
+
+        self.model_qs._cls = MappedModel
 
         self.model_qs.distinct('fake')
 
@@ -225,6 +225,8 @@ class TestQuerySet(unittest.TestCase):
 
     def test_sort_field_map(self):
         """Test the `sort()` method with a name in `field_map`."""
+
+        self.model_qs._cls = MappedModel
 
         self.model_qs.sort('fake')
         self.cursor.clone.assert_called_with()
@@ -377,7 +379,7 @@ class TestQuerySet(unittest.TestCase):
         with self.assertRaises(IndexError) as e:
             self.model_qs[3]
 
-        expected = "No such item in 'QuerySet' for 'TestModel1' object"
+        expected = "No such item in 'QuerySet' for 'DefaultModel' object"
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 
