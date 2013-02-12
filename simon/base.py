@@ -1,5 +1,6 @@
 """The base Simon models"""
 
+import sys
 import warnings
 
 from .connection import get_database, pymongo_supports_mongoclient
@@ -541,22 +542,38 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        # Associate the current datetime (in UTC) with the created and
-        # modified fields. created will only be added to documents that
-        # are being inserted.
-        if self._meta.auto_timestamp:
-            now = current_datetime()
-            if '_id' not in self._document:
-                self._document['created'] = now
-            self._document['modified'] = now
-
         # Use a copy of the internal document so _id can be safely
         # removed.
         fields = self._document.copy()
         fields.pop('_id', None)
 
-        # Use upsert=True so new documents can be inserted.
-        self._update(fields, upsert=True, safe=safe)
+        # Associate the current datetime (in UTC) with the created and
+        # modified fields. created will only be added to documents that
+        # are being inserted. The values are associated with the copy of
+        # the internal document so that the internal document will be in
+        # a consistent state if _update() raises an exception.
+        if self._meta.auto_timestamp:
+            now = current_datetime()
+            if '_id' not in self._document:
+                fields['created'] = now
+            fields['modified'] = now
+
+        try:
+            # Use upsert=True so new documents can be inserted.
+            self._update(fields, upsert=True, safe=safe)
+        except:
+            # Raise the exception that was caught
+            e = sys.exc_info()
+            raise e[1], None, e[2]
+        else:
+            # Because _update() didn't raise an exception, the created
+            # and modified values can be associated with the internal
+            # document.
+            if self._meta.auto_timestamp:
+                if 'created' in fields:
+                    self._document['created'] = fields['created']
+                if 'modified' in fields:
+                    self._document['modified'] = fields['modified']
 
     def save_fields(self, fields, safe=False):
         """Saves only the specified fields.

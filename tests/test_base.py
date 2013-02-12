@@ -405,6 +405,22 @@ class TestBase(unittest.TestCase):
 
             _update.assert_called_with({'a': 1}, safe=False, upsert=True)
 
+    def test_save_exception(self):
+        """Test that `save()` raises the exception it catches."""
+
+        m = DefaultModel(a=1)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            _update.side_effect = ValueError
+
+            with self.assertRaises(ValueError):
+                m.save()
+
+            _update.side_effect = TypeError
+
+            with self.assertRaises(TypeError):
+                m.save()
+
     def test_save_fields(self):
         """Test the `save_fields()` method."""
 
@@ -452,11 +468,36 @@ class TestBase(unittest.TestCase):
             self.assertIsInstance(m1._document['modified'], datetime)
 
             # Update
-            m2 = DefaultModel(_id=AN_OBJECT_ID)
+            m2 = DefaultModel(_id=AN_OBJECT_ID, modified=1)
             m2.save()
 
             self.assertNotIn('created', m2._document)
             self.assertIsInstance(m2._document['modified'], datetime)
+
+    def test_save_timestamps_reset(self):
+        ("Test that `save()` properly resets timestamps after an "
+         "exception.")
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            _update.side_effect = Exception
+
+            m1 = DefaultModel()
+            try:
+                m1.save()
+            except:
+                pass  # Exception will be raised for this test
+
+            self.assertNotIn('created', m1._document)
+            self.assertNotIn('modified', m1._document)
+
+            m2 = DefaultModel(_id=AN_OBJECT_ID, created=1, modified=2)
+            try:
+                m2.save()
+            except:
+                pass  # Exception will be raised for this test
+
+            self.assertEqual(m2._document['created'], 1)
+            self.assertEqual(m2._document['modified'], 2)
 
     def test_setattr(self):
         """Test the `__setattr__()` method."""
