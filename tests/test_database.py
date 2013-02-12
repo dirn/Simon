@@ -370,7 +370,7 @@ class TestDatabase(unittest.TestCase):
 
             m._update({'a': 1}, upsert=True)
 
-            insert.assert_called_with(document={'a': 1}, **wc_on)
+            insert.assert_called_with(doc_or_docs={'a': 1}, **wc_on)
 
             self.assertEqual(m._document['_id'], AN_OBJECT_ID)
 

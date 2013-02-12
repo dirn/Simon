@@ -6,6 +6,7 @@ History
 
 - ``created`` will be set for all inserted documents whose model has
   ``auto_timestamp`` set to ``True``
+- Fix ``create()`` bug
 
 0.3.0 (2013-02-11)
 ++++++++++++++++++
