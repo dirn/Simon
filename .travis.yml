@@ -7,4 +7,7 @@ install:
   - if [[ $TRAVIS_PYTHON_VERSION = 2.6 ]]; then pip install unittest2 --use-mirrors; fi
   - pip install -r tests/requirements.txt
   - pip install .
-script: nosetests -q tests
+script:
+  - nosetests -q tests
+  - nosetests -q tests/integration.py
+services: mongodb
