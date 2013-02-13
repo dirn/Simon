@@ -568,7 +568,6 @@ class TestBase(unittest.TestCase):
         self.assertEqual(actual, expected)
 
         m2 = StringModel()
-        print m2.__str__, str(m2)
 
         expected = u'this is the __unicode__'
         actual = u'{0}'.format(m2)
