@@ -5,7 +5,7 @@ try:
 except ImportError:
     import unittest
 
-from simon import connection
+from simon import Model, connection
 
 
 def skip_without_setting(setting):
@@ -21,8 +21,14 @@ def skip_without_setting(setting):
     return unittest.skip(message)
 
 
-class TestIntegrations(unittest.TestCase):
-    """Integration tests"""
+class TestModel(Model):
+    class Meta:
+        collection = 'simon-integration'
+        database = 'simon-integration'
+
+
+class TestConnectionIntegrations(unittest.TestCase):
+    """Connection integration tests"""
 
     def test__get_connection_with_localhost(self):
         """Test the `_get_connection()` method with localhost."""
@@ -72,3 +78,96 @@ class TestIntegrations(unittest.TestCase):
         self.assertIsInstance(
             connection._connections['{0}:{1}'.format(url, replica_set)],
             connection.MongoReplicaSetClient)
+
+
+class TestDatabaseIntegrations(unittest.TestCase):
+    """Database integration tests"""
+
+    @classmethod
+    def setUpClass(cls):
+        conn = connection.connect(name='simon-integration')
+        cls.db = conn['simon-integration']
+        cls.collection = cls.db['simon-integration']
+
+    def tearDown(self):
+        self.db.drop_collection('simon-integration')
+
+    def test_increment(self):
+        """Test the `increment()` method."""
+
+        _id = self.collection.insert({'a': 1})
+
+        m = TestModel.get(_id=_id)
+        m.increment('a', 2)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(doc['a'], 3)
+
+    def test_raw_update(self):
+        """Test the `raw_update()` method."""
+
+        _id = self.collection.insert({'a': 1})
+
+        m = TestModel.get(_id=_id)
+        m.raw_update({'$set': {'b': 2}})
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(doc['b'], 2)
+
+    def test_remove_fields(self):
+        """Test the `remove_fields()` method."""
+
+        _id = self.collection.insert({'a': 1})
+
+        m = TestModel.get(_id=_id)
+        m.remove_fields('a')
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertNotIn('a', doc)
+
+    def test_save(self):
+        """Test the `save()` method."""
+
+        # Insert
+
+        m = TestModel(a=1)
+        m.save()
+
+        doc = self.collection.find_one({'_id': m._document['_id']})
+
+        self.assertEqual(doc['a'], 1)
+
+        m.b = 2
+        m.save()
+
+        doc = self.collection.find_one({'_id': m._document['_id']})
+
+        self.assertEqual(doc['b'], 2)
+
+    def test_save_fields(self):
+        """Test the `save_fields()` method."""
+
+        _id = self.collection.insert({'a': 1})
+
+        m = TestModel.get(_id=_id)
+        m.b = 2
+        m.save_fields('b')
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(doc['b'], 2)
+
+    def test_update(self):
+        """Test the `update()` method."""
+
+        _id = self.collection.insert({'a': 1})
+
+        m = TestModel.get(_id=_id)
+        m.update(b=2)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(doc['b'], 2)
