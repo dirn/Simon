@@ -34,13 +34,6 @@ class TestBase(unittest.TestCase):
         with mock.patch('simon.connection.MongoClient'):
             cls.connection = connection.connect('localhost', name='test-simon')
 
-    def tearDown(self):
-        # Even though warnings are only checked in a few tests, it's a
-        # good idea to reset them here just in case there's an exception
-        # in one of the tests
-        warnings.resetwarnings()
-        warnings.simplefilter('ignore')
-
     @classmethod
     def tearDownClass(cls):
         # Reset the cached connections and databases so the ones added
@@ -192,28 +185,34 @@ class TestBase(unittest.TestCase):
     def test_find_deprecationwarning(self):
         """Test that `find()` triggers `DeprecationWarning`."""
 
-        warnings.simplefilter('error', DeprecationWarning)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
 
-        with mock.patch.object(DefaultModel, '_find'):
-            with self.assertRaises(DeprecationWarning) as e:
+            with mock.patch.object(DefaultModel, '_find'):
                 DefaultModel.find(Q(a=1), Q(b=2))
 
-        expected = 'qs has been deprecated. Please use q instead.'
-        actual = str(e.exception)
-        self.assertEqual(actual, expected)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+            expected = 'qs has been deprecated. Please use q instead.'
+            actual = str(w[-1].message)
+            self.assertEqual(actual, expected)
 
     def test_get_deprecationwarning(self):
         """Test that `get()` triggers `DeprecationWarning`."""
 
-        warnings.simplefilter('error', DeprecationWarning)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
 
-        with mock.patch.object(DefaultModel, '_find'):
-            with self.assertRaises(DeprecationWarning) as e:
+            with mock.patch.object(DefaultModel, '_find'):
                 DefaultModel.get(Q(a=1), Q(b=2))
 
-        expected = 'qs has been deprecated. Please use q instead.'
-        actual = str(e.exception)
-        self.assertEqual(actual, expected)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+            expected = 'qs has been deprecated. Please use q instead.'
+            actual = str(w[-1].message)
+            self.assertEqual(actual, expected)
 
     def test_get_or_create_create(self):
         """Test the `get_or_create()` method for creating documents."""
