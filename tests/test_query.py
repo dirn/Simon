@@ -5,16 +5,12 @@ except ImportError:
 
 import collections
 
-from bson import ObjectId
 import mock
 from pymongo.cursor import Cursor
 
 from simon import connection, query
 
-from .utils import ModelFactory
-
-AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
-AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
+from .utils import AN_OBJECT_ID, ModelFactory
 
 DefaultModel = ModelFactory('DefaultModel')
 MappedModel = ModelFactory('MappedModel', field_map={'fake': 'real'})

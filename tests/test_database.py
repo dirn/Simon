@@ -7,16 +7,12 @@ except ImportError:
 
 from contextlib import nested
 
-from bson import ObjectId
 import mock
 import pymongo
 
 from simon import connection, query
 
-from .utils import ModelFactory
-
-AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
-AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
+from .utils import AN_OBJECT_ID, AN_OBJECT_ID_STR, ModelFactory
 
 # Set the write concern argument
 if pymongo.version_tuple[:2] >= (2, 4):

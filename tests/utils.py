@@ -1,8 +1,12 @@
 """Helpers for running tests"""
 
+from bson import ObjectId
 from simon import base
 
-__all__ = ('ModelFactory',)
+__all__ = ('AN_OBJECT_ID', 'AN_OBJECT_ID_STR', 'ModelFactory',)
+
+AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
+AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
 
 
 def ModelFactory(name, spec=None, **kwargs):

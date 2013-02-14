@@ -5,7 +5,6 @@ except ImportError:
 
 from datetime import datetime
 
-from bson import ObjectId
 from bson.errors import InvalidId
 
 from simon import Model
@@ -13,9 +12,7 @@ from simon.utils import (current_datetime, get_nested_key, guarantee_object_id,
                          is_atomic, map_fields, parse_kwargs,
                          remove_nested_key, update_nested_keys)
 
-
-AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
-AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
+from .utils import AN_OBJECT_ID, AN_OBJECT_ID_STR
 
 
 class TestModel(Model):
