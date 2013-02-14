@@ -21,6 +21,8 @@ __all__ = ('Model',)
 # update before the write is considered successful.
 
 def _set_write_concern_as_safe(options, force_safe):
+    """Sets the safe parameter for write concern."""
+
     safe = options.pop('safe', None)
     w = options.pop('w', None)
 
@@ -35,6 +37,8 @@ def _set_write_concern_as_safe(options, force_safe):
 
 
 def _set_write_concern_as_w(options, force_safe):
+    """Sets w safe parameter for write concern."""
+
     safe = options.pop('safe', None)
     w = options.pop('w', None)
 
