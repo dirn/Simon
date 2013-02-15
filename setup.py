@@ -23,7 +23,7 @@ setup(
     install_requires=['pymongo>=2.1'],
     tests_require=['coverage', 'mock', 'nose'],
     license=open('LICENSE').read(),
-    classifiers=(
+    classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
@@ -35,5 +35,5 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Libraries :: Python Modules',
-    ),
+    ],
 )
