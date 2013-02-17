@@ -85,12 +85,16 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        conn = connection.connect(name='simon-integration')
-        cls.db = conn['simon-integration']
+        cls.connection = connection.connect(name='simon-integration')
+        cls.db = cls.connection['simon-integration']
         cls.collection = cls.db['simon-integration']
 
     def tearDown(self):
         self.db.drop_collection('simon-integration')
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.connection.drop_database('simon-integration')
 
     def test_increment(self):
         """Test the `increment()` method."""
