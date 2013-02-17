@@ -368,6 +368,11 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(TestModel, {'a__size': 2}, with_operators=True)
         self.assertEqual(actual, expected)
 
+        expected = {'a': {'$elemMatch': {'b': 2}}}
+        actual = map_fields(TestModel, {'a__elemMatch': {'b': 2}},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_with_operators_not(self):
         ("Test the `map_fields()` method with `not` and "
          "`with_operators` set.")

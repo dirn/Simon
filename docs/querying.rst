@@ -129,6 +129,14 @@ Array Operators
 
 The full list of array operators available is:
 
+elemMatch
+  Matches documents where the field is a list matching the specified
+  query.
+
+  .. code-block:: python
+
+    users = User.find(addresses__elemMatch={'state': 'NY'})
+
 size
   Matches documents where the field is a list of the specified length.
 

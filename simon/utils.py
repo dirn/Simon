@@ -184,6 +184,8 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
     * ``$exists`` the the key exists
     * ``$near`` the key's value is near the given location
     * ``$size`` the key's value has a length equal to the given value
+    * ``$elemMatch`` the key's value is an array satisfying the given
+      query
 
     To utilize any of the operators, append ``__`` and the name of the
     operator sans the ``$`` (e.g., ``__gt``, ``__lt``) to the name of
@@ -227,8 +229,8 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
     """
 
     if with_operators:
-        operators = ('all', 'exists', 'gt', 'gte', 'in', 'lt', 'lte', 'ne',
-                     'near', 'nin', 'size')
+        operators = ('all', 'elemMatch', 'exists', 'gt', 'gte', 'in', 'lt',
+                     'lte', 'ne', 'near', 'nin', 'size')
 
         for k, v in fields.items():
             # To figure out if a key includes an operator, split it
