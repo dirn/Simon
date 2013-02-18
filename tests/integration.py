@@ -178,6 +178,36 @@ class TestDatabaseIntegrations(unittest.TestCase):
         # Make sure all of the values have been inserted in order
         self.assertEqual(doc['a'], [1, 2, 3, 4])
 
+        # $addToSet
+
+        m.push('a', 1, allow_duplicates=False)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 4)
+
+        m.push('a', 5, allow_duplicates=False)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 5)
+        self.assertIn(5, doc['a'])
+
+        # $addToSet/$each
+
+        m.push('a', [1, 2, 3, 4, 5, 6], allow_duplicates=False)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 6)
+        self.assertIn(6, doc['a'])
+
+        # Make sure all of the values have been inserted in order
+        # Note that $addToSet doesn't do anything about the order of
+        # values that already exist in the list, but the one new value
+        # should be at the end.
+        self.assertEqual(doc['a'], [1, 2, 3, 4, 5, 6])
+
     def test_raw_update(self):
         """Test the `raw_update()` method."""
 

@@ -436,6 +436,16 @@ class TestDatabase(unittest.TestCase):
 
             self.assertIn(2, m._document['a'])
 
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1, 2, 3]}
+
+            m._update({'$addToSet': {'a': 3}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$addToSet': {'a': 3}},
+                                      **wc_on)
+
+            self.assertIn(3, m._document['a'])
+
     def test__update_rename(self):
         """Test the `_update()` method with a rename."""
 

@@ -521,17 +521,22 @@ class Model(object):
 
         self._update(update, safe=safe)
 
-    def push(self, field=None, value=None, safe=False, **fields):
+    def push(self, field=None, value=None, allow_duplicates=True, safe=False,
+             **fields):
         """Performs an atomic push.
 
-        With MongoDB there are two types of push operations: ``$push``
-        and ``$pushAll``. As the name implies, ``$pushAll`` is intended
-        to push all values from a list to the field, while ``$push`` is
-        meant for single values.
+        With MongoDB there are three types of push operations:
+        ``$push``, ``$pushAll``, add ``$addToSet``. As the name implies,
+        ``$pushAll`` is intended to push all values from a list to the
+        field, while ``$push`` is meant for single values. ``$addToSet``
+        can be used with either type of value, but it will only add a
+        value to the list if it doesn't already contain the value.
 
         This method will determine the correct operator(s) to use based
-        on the value(s) being pushed. Updates can consist of either
-        operator alone or both together.
+        on the value(s) being pushed. Setting ``allow_duplicates`` to
+        ``False`` will use ``$addToSet`` instead of ``$push`` and
+        ``$pushAll``. Updates that allow duplicates can combine
+        ``$push`` and ``$pushAll`` together.
 
         This can be used to update a single field::
 
@@ -552,6 +557,9 @@ class Model(object):
         :type field: str.
         :param value: (optional) Value to push to ``field``.
         :type value: scalar or list.
+        :param allow_duplicates: (optional) Whether to allow duplicate
+                                 values to be added to the list
+        :type allow_duplicates: bool.
         :param safe: (optional) Whether to perform the update in safe
                      mode.
         :type safe: bool.
@@ -583,9 +591,12 @@ class Model(object):
 
         for k, v in fields.items():
             if isinstance(v, (list, tuple)):
-                update['$pushAll'][k] = v
+                if allow_duplicates:
+                    update['$pushAll'][k] = v
+                else:
+                    update['$addToSet'][k] = {'$each': v}
             else:
-                update['$push'][k] = v
+                update['$push' if allow_duplicates else '$addToSet'][k] = v
 
         self._update(update, safe=safe)
 

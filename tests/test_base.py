@@ -418,6 +418,30 @@ class TestBase(unittest.TestCase):
 
             _update.assert_called_with({'$pushAll': {'a': [2, 3]}}, safe=False)
 
+    def tet_push_addtoset(self):
+        """Test the `push()` method with `$addToSet`."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.push('a', 1, allow_duplicates=False)
+
+            _update.assert_called_with({'$addToSet': {'a': 1}}, safe=False)
+
+            m.push('a', [1, 2], allow_duplicates=False)
+
+            _update.assert_called_with({'$addToSet': {'a': {'$each': [1, 2]}}},
+                                       safe=False)
+
+            m.push(a=2, allow_duplicates=False)
+
+            _update.assert_called_with({'$addToSet': {'a': 2}}, safe=False)
+
+            m.push(a=[2, 3], allow_duplicates=False)
+
+            _update.assert_called_with({'$addToSet': {'a': {'$each': [2, 3]}}},
+                                       safe=False)
+
     def test_push_multiple(self):
         """Test the `push()` method with multiple fields."""
 
@@ -438,6 +462,30 @@ class TestBase(unittest.TestCase):
 
             _update.assert_called_with({'$pushAll': {'a': [1, 2],
                                                      'b': [3, 4]}},
+                                       safe=False)
+
+    def test_push_multiple_addto_set(self):
+        ("Test the `push()` method with multiple fields with "
+         "`$addToSet`.")
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.push(a=1, b=2, allow_duplicates=False)
+
+            _update.assert_called_with({'$addToSet': {'a': 1, 'b': 2}},
+                                       safe=False)
+
+            m.push(a=1, b=[2, 3], allow_duplicates=False)
+
+            _update.assert_called_with({'$addToSet': {'a': 1,
+                                                      'b': {'$each': [2, 3]}}},
+                                       safe=False)
+
+            m.push(a=[1, 2], b=[3, 4], allow_duplicates=False)
+
+            _update.assert_called_with({'$addToSet': {'a': {'$each': [1, 2]},
+                                                      'b': {'$each': [3, 4]}}},
                                        safe=False)
 
     def test_push_valueerror(self):
