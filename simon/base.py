@@ -816,7 +816,7 @@ class Model(object):
 
         # Map all the field names and values
         if is_atomic(fields):
-            for k, v in fields.iteritems():
+            for k, v in fields.items():
                 fields[k] = map_field_names_and_values(v)
         else:
             fields = map_field_names_and_values(fields)

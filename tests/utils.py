@@ -42,7 +42,7 @@ def ModelFactory(name, spec=None, **kwargs):
     cls = type(name, spec, {'__module__': base})
 
     # Add the attributes
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         if not k.startswith('__') and hasattr(cls._meta, k):
             # Only update the Meta class for attributes that do not
             # begin with __. This allows attributes such as __str__

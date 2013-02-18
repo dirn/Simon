@@ -109,7 +109,7 @@ def guarantee_object_id(value):
 
     if isinstance(value, collections.Mapping):
         # Handle dicts.
-        for k, v in value.iteritems():
+        for k, v in value.items():
             if isinstance(v, ObjectId):
                 # If it's already an Object ID, skip it.
                 continue

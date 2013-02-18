@@ -166,7 +166,7 @@ def polygon(*points):
             raise ValueError('`points` must either be a list of points or a '
                              'dict mapping of points.')
 
-        for k, p in points.iteritems():
+        for k, p in points.items():
             _validate_point(p, name='Each point',
                             alternate_type=collections.Mapping)
 
