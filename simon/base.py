@@ -436,7 +436,7 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        # There needs to be something to update
+        # There needs to be something to update.
         if field is None and not fields:
             raise ValueError('No fields have been specified.')
 
@@ -444,7 +444,7 @@ class Model(object):
 
         # Both the field/value parameters and **fields can be used for
         # the update, so build a dictionary containing all of the fields
-        # to increment and the value to increment each by
+        # to increment and the value to increment each by.
         if field is not None:
             update[field] = value
         for k, v in fields.items():
