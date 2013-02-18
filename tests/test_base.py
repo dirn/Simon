@@ -377,7 +377,7 @@ class TestBase(unittest.TestCase):
 
             _update.assert_called_with({'$push': {'a': 1},
                                         '$pushAll': {'b': [2, 3]}},
-                                        safe=False)
+                                       safe=False)
 
             m.push(a=[1, 2], b=[3, 4])
 
