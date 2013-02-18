@@ -341,6 +341,61 @@ class TestBase(unittest.TestCase):
         self.assertNotEqual(m2 == m1, m2 != m1)
         self.assertEqual(m1 != m2, m2 != m1)
 
+    def test_pull(self):
+        """Test the `pull()` method."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.pull('a', 1)
+
+            _update.assert_called_with({'$pull': {'a': 1}}, safe=False)
+
+            m.pull('a', [1, 2])
+
+            _update.assert_called_with({'$pullAll': {'a': [1, 2]}}, safe=False)
+
+            m.pull(a=2)
+
+            _update.assert_called_with({'$pull': {'a': 2}}, safe=False)
+
+            m.pull(a=[2, 3])
+
+            _update.assert_called_with({'$pullAll': {'a': [2, 3]}}, safe=False)
+
+    def test_pull_multiple(self):
+        """Test the `pull()` method with multiple fields."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.pull(a=1, b=2)
+
+            _update.assert_called_with({'$pull': {'a': 1, 'b': 2}}, safe=False)
+
+            m.pull(a=1, b=[2, 3])
+
+            _update.assert_called_with({'$pull': {'a': 1},
+                                        '$pullAll': {'b': [2, 3]}},
+                                       safe=False)
+
+            m.pull(a=[1, 2], b=[3, 4])
+
+            _update.assert_called_with({'$pullAll': {'a': [1, 2],
+                                                     'b': [3, 4]}},
+                                       safe=False)
+
+    def test_pull_valueerror(self):
+        """Test that `pull()` raises `ValueError`."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with self.assertRaises(ValueError):
+            m.pull()
+
+        with self.assertRaises(ValueError):
+            m.pull('a')
+
     def test_push(self):
         """Test the `push()` method."""
 

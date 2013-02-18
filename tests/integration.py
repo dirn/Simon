@@ -108,6 +108,40 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         self.assertEqual(doc['a'], 3)
 
+    def test_pull(self):
+        """Test the `pull()` method."""
+
+        _id = self.collection.insert({'a': [1, 2, 3, 4, 4]})
+
+        m = TestModel.get(_id=_id)
+
+        # $pull
+
+        m.pull('a', 1)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 4)
+        self.assertNotIn(1, doc['a'])
+
+        m.pull(a=2)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 3)
+        self.assertNotIn(2, doc['a'])
+
+        # $pullAll
+
+        m.pull(a=[3, 4])
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 0)
+        # With the length of 0 check, these are redundant
+        self.assertNotIn(3, doc['a'])
+        self.assertNotIn(4, doc['a'])
+
     def test_push(self):
         """Test the `push()` method."""
 
