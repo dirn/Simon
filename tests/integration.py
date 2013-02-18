@@ -141,6 +141,7 @@ class TestDatabaseIntegrations(unittest.TestCase):
         self.assertIn(3, doc['a'])
         self.assertIn(4, doc['a'])
 
+        # Make sure all of the values have been inserted in order
         self.assertEqual(doc['a'], [1, 2, 3, 4])
 
     def test_raw_update(self):
