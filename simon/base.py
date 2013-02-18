@@ -1,5 +1,6 @@
 """The base Simon models"""
 
+from collections import defaultdict
 import sys
 import warnings
 
@@ -451,6 +452,74 @@ class Model(object):
             update[k] = v
 
         self._update({'$inc': update}, safe=safe)
+
+    def push(self, field=None, value=None, safe=False, **fields):
+        """Performs an atomic push.
+
+        With MongoDB there are two types of push operations: ``$push``
+        and ``$pushAll``. As the name implies, ``$pushAll`` is intended
+        to push all values from a list to the field, while ``$push`` is
+        meant for single values.
+
+        This method will determine the correct operator(s) to use based
+        on the value(s) being pushed. Updates can consist of either
+        operator alone or both together.
+
+        This can be used to update a single field::
+
+            >>> obj.push(field, value)
+
+        or to update multiple fields at a time::
+
+            >>> obj.push(field1=value1, field2=value2)
+
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        If no fields are indicated--either through ``field`` or through
+        ``**fields``, a :class:`ValueError` will be raised.
+
+        :param field: (optional) Name of the field to push to.
+        :type field: str.
+        :param value: (optional) Value to push to ``field``.
+        :type value: scalar or list.
+        :param safe: (optional) Whether to perform the update in safe
+                     mode.
+        :type safe: bool.
+        :param \*\*fields: Keyword arguments specifying fields and
+                           the values to push.
+        :type \*\*fields: \*\*kwargs.
+        :raises: :class:`TypeError`, :class:`ValueError`
+
+        .. versionadded:: 0.5.0
+        """
+
+        # There needs to be something to update.
+        if not (field and value) and not fields:
+            raise ValueError('No fields have been specified.')
+
+        # Most of the atomic methods treat update as a dict. A
+        # defaultdict of dicts is being used here because, unlike the
+        # other atomic methods, not only are two operators possible, but
+        # they can be used together. defaultdict saves the trouble of
+        # having to check for each operator in update before adding new
+        # keys to the operator's dict.
+        update = defaultdict(dict)
+
+        # Both the field/value parameters and **fields can be used for
+        # the update, so build a dictionary containing all of the fields
+        # to push to and the value(s) to push to each.
+        if not (field is None or value is None):
+            fields[field] = value
+
+        for k, v in fields.items():
+            if isinstance(v, (list, tuple)):
+                update['$pushAll'][k] = v
+            else:
+                update['$push'][k] = v
+
+        self._update(update, safe=safe)
 
     def raw_update(self, fields, safe=False):
         """Performs an update using a raw document.

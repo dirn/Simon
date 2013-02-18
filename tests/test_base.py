@@ -341,6 +341,61 @@ class TestBase(unittest.TestCase):
         self.assertNotEqual(m2 == m1, m2 != m1)
         self.assertEqual(m1 != m2, m2 != m1)
 
+    def test_push(self):
+        """Test the `push()` method."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.push('a', 1)
+
+            _update.assert_called_with({'$push': {'a': 1}}, safe=False)
+
+            m.push('a', [1, 2])
+
+            _update.assert_called_with({'$pushAll': {'a': [1, 2]}}, safe=False)
+
+            m.push(a=2)
+
+            _update.assert_called_with({'$push': {'a': 2}}, safe=False)
+
+            m.push(a=[2, 3])
+
+            _update.assert_called_with({'$pushAll': {'a': [2, 3]}}, safe=False)
+
+    def test_push_multiple(self):
+        """Test the `push()` method with multiple fields."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.push(a=1, b=2)
+
+            _update.assert_called_with({'$push': {'a': 1, 'b': 2}}, safe=False)
+
+            m.push(a=1, b=[2, 3])
+
+            _update.assert_called_with({'$push': {'a': 1},
+                                        '$pushAll': {'b': [2, 3]}},
+                                        safe=False)
+
+            m.push(a=[1, 2], b=[3, 4])
+
+            _update.assert_called_with({'$pushAll': {'a': [1, 2],
+                                                     'b': [3, 4]}},
+                                       safe=False)
+
+    def test_push_valueerror(self):
+        """Test that `push()` raises `ValueError`."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with self.assertRaises(ValueError):
+            m.push()
+
+        with self.assertRaises(ValueError):
+            m.push('a')
+
     def test_raw_update(self):
         """Test the `raw_update()` method."""
 

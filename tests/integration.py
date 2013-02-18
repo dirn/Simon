@@ -108,6 +108,41 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         self.assertEqual(doc['a'], 3)
 
+    def test_push(self):
+        """Test the `push()` method."""
+
+        _id = self.collection.insert({})
+
+        m = TestModel.get(_id=_id)
+
+        # $push
+
+        m.push('a', 1)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 1)
+        self.assertIn(1, doc['a'])
+
+        m.push(a=2)
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 2)
+        self.assertIn(2, doc['a'])
+
+        # $pushAll
+
+        m.push(a=[3, 4])
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 4)
+        self.assertIn(3, doc['a'])
+        self.assertIn(4, doc['a'])
+
+        self.assertEqual(doc['a'], [1, 2, 3, 4])
+
     def test_raw_update(self):
         """Test the `raw_update()` method."""
 
