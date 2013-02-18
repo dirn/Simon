@@ -345,7 +345,7 @@ class TestDatabase(unittest.TestCase):
         with nested(mock.patch.object(MappedModel._meta.db, 'update'),
                     mock.patch.object(MappedModel._meta.db, 'find_one'),
                     ) as (update, find_one):
-            find_one.return_value = {'real': 1}
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
 
             m._update({'$set': {'fake': 1}})
 
@@ -454,7 +454,7 @@ class TestDatabase(unittest.TestCase):
         with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
                     mock.patch.object(DefaultModel._meta.db, 'find_one'),
                     ) as (update, find_one):
-            find_one.return_value = {'b': 1}
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'b': 1}
 
             m._update({'$rename': {'a': 'b'}})
 
@@ -475,7 +475,7 @@ class TestDatabase(unittest.TestCase):
         with nested(mock.patch.object(MappedModel._meta.db, 'update'),
                     mock.patch.object(MappedModel._meta.db, 'find_one'),
                     ) as (update, find_one):
-            find_one.return_value = {'real': 1}
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
 
             m._update({'$rename': {'a': 'fake'}})
 
@@ -528,7 +528,7 @@ class TestDatabase(unittest.TestCase):
         with nested(mock.patch.object(RequiredModel._meta.db, 'update'),
                     mock.patch.object(RequiredModel._meta.db, 'find_one'),
                     ) as (update, find_one):
-            find_one.return_value = {'a': 1, 'b': 2}
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
 
             m._update({'$set': {'a': 1, 'b': 2}})
 
@@ -550,7 +550,7 @@ class TestDatabase(unittest.TestCase):
                     mock.patch.object(RequiredEmbeddedModel._meta.db,
                                       'find_one'),
                     ) as (update, find_one):
-            find_one.return_value = {'a.b': 1}
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
 
             m._update({'a.b': 1})
 
