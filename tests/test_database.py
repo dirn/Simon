@@ -381,6 +381,61 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a.b': 1}, **wc_on)
 
+    def test__update_pull(self):
+        """Test the `_update()` method with a pull."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID, a=[1, 2])
+
+        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
+                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [2]}
+
+            m._update({'$pull': {'a': 1}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$pull': {'a': 1}}, **wc_on)
+
+            self.assertNotIn(1, m._document['a'])
+            self.assertIn(2, m._document['a'])
+
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': []}
+
+            m._update({'$pullAll': {'a': [2]}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$pullAll': {'a': [2]}},
+                                      **wc_on)
+
+            self.assertNotIn(2, m._document['a'])
+
+    def test__update_push(self):
+        """Test the `_update()` method with a push."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
+                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
+
+            m._update({'$push': {'a': 1}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$push': {'a': 1}}, **wc_on)
+
+            self.assertIn(1, m._document['a'])
+
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1, 2]}
+
+            m._update({'$pushAll': {'a': [2]}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$pushAll': {'a': [2]}},
+                                      **wc_on)
+
+            self.assertIn(2, m._document['a'])
+
     def test__update_rename(self):
         """Test the `_update()` method with a rename."""
 
