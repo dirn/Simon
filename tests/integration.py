@@ -132,6 +132,19 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         self.assertNotIn('a', doc)
 
+    def test_rename(self):
+        """Test the `rename()` method."""
+
+        _id = self.collection.insert({'a': 1})
+
+        m = TestModel.get(_id=_id)
+        m.rename('a', 'b')
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertNotIn('a', doc)
+        self.assertIn('b', doc)
+
     def test_save(self):
         """Test the `save()` method."""
 

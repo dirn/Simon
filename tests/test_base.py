@@ -372,6 +372,41 @@ class TestBase(unittest.TestCase):
             _update.assert_called_with({'$unset': {'a': 1, 'b': 1}},
                                        safe=False)
 
+    def test_rename(self):
+        """Test the `rename()` method."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.rename('a', 'b')
+
+            _update.assert_called_with({'$rename': {'a': 'b'}}, safe=False)
+
+    def test_rename_multiple(self):
+        """Test the `rename()` method with multiple fields."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID, a=1, b=2)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.rename(a='b', c='d')
+
+            _update.assert_called_with({'$rename': {'a': 'b', 'c': 'd'}},
+                                       safe=False)
+
+    def test_rename_valueerror(self):
+        """Test that `rename()` raises `ValueError`."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with self.assertRaises(ValueError):
+            m.rename()
+
+        with self.assertRaises(ValueError):
+            m.rename('a')
+
+        with self.assertRaises(ValueError):
+            m.rename(field_to='a')
+
     def test_repr(self):
         """Test the `__repr__()` method."""
 

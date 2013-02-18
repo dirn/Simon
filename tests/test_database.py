@@ -381,6 +381,68 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a.b': 1}, **wc_on)
 
+    def test__update_rename(self):
+        """Test the `_update()` method with a rename."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID, a=1)
+
+        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
+                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'b': 1}
+
+            m._update({'$rename': {'a': 'b'}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$rename': {'a': 'b'}},
+                                      **wc_on)
+
+            self.assertNotIn('a', m._document)
+            self.assertIn('b', m._document)
+            self.assertEqual(m._document['b'], 1)
+
+    def test__update_rename_field_map(self):
+        ("Test the `_update()` method with a rename with a name in "
+         "`field_map`.")
+
+        m = MappedModel(_id=AN_OBJECT_ID, b=1)
+
+        with nested(mock.patch.object(MappedModel._meta.db, 'update'),
+                    mock.patch.object(MappedModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'real': 1}
+
+            m._update({'$rename': {'a': 'fake'}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$rename': {'a': 'real'}},
+                                      **wc_on)
+
+            self.assertNotIn('a', m._document)
+            self.assertIn('real', m._document)
+            self.assertEqual(m._document['real'], 1)
+
+    def test__update_rename_nested(self):
+        ("Test the `_update()` method with a rename with an embedded "
+         "document.")
+
+        m = DefaultModel(_id=AN_OBJECT_ID, a={'b': 1})
+
+        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
+                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'c': 1}}
+
+            m._update({'$rename': {'a.b': 'a.c'}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$rename': {'a.b': 'a.c'}},
+                                      **wc_on)
+
+            self.assertNotIn('b', m._document['a'])
+            self.assertIn('c', m._document['a'])
+            self.assertEqual(m._document['a']['c'], 1)
+
     def test__update_required_field(self):
         """Test the `_update()` method with a required field."""
 
@@ -430,6 +492,23 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a.b': 1}, **wc_on)
 
+    def test__update_required_rename(self):
+        ("Test the `_update()` method with a required field with a "
+         "rename.")
+
+        m = RequiredModel(_id=AN_OBJECT_ID, a=1, b=2, c=3)
+
+        with nested(mock.patch.object(RequiredModel._meta.db, 'update'),
+                    mock.patch.object(RequiredModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'd': 3}
+
+            m._update({'$rename': {'c': 'd'}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$rename': {'c': 'd'}},
+                                      **wc_on)
+
     def test__update_required_field_unset(self):
         ("Test the `_update()` method with a required field with "
          "`$unset`.")
@@ -470,6 +549,14 @@ class TestDatabase(unittest.TestCase):
 
         with self.assertRaises(TypeError) as e:
             m3._update({'$unset': {'a': 1}})
+
+        expected = ("The 'RequiredModel' object cannot be updated because it "
+                    "must contain all of the required fields: a, b.")
+        actual = str(e.exception)
+        self.assertEqual(actual, expected)
+
+        with self.assertRaises(TypeError) as e:
+            m3._update({'$rename': {'a': 'd'}})
 
         expected = ("The 'RequiredModel' object cannot be updated because it "
                     "must contain all of the required fields: a, b.")

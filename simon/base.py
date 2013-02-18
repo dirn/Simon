@@ -522,6 +522,59 @@ class Model(object):
 
         self._update({'$unset': fields}, safe=safe)
 
+    def rename(self, field_from=None, field_to=None, safe=False, **fields):
+        """Performs an atomic rename.
+
+        This can be used to update a single field::
+
+            >>> obj.rename(original, new)
+
+        or to update multiple fields at a time::
+
+            >>> obj.increment(original1=new1, original2=new2)
+
+        Note that the latter does **not** set the values of the fields,
+        but rather specifies the name they should be renamed to.
+
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        If no fields are indicated--either through ``field_from`` and
+        ``field_to`` or through ``**fields``, a :class:`ValueError` will
+        be raised.
+
+        :param field_from: (optional) Name of the field to rename.
+        :type field_from: str.
+        :param field_to: (optional) New name for ``field_from``.
+        :type field_to: int.
+        :param safe: (optional) Whether to perform the update in safe
+                     mode.
+        :type safe: bool.
+        :param \*\*fields: Keyword arguments specifying fields and their
+                           new names.
+        :type \*\*fields: \*\*kwargs.
+        :raises: :class:`TypeError`, :class:`ValueError`
+
+        .. versionadded:: 0.5.0
+        """
+
+        # There needs to be something to update.
+        if not (field_from and field_to) and not fields:
+            raise ValueError('No fields have been specified.')
+
+        update = {}
+
+        # Both the field/value parameters and **fields can be used for
+        # the update, so build a dictionary containing all of the fields
+        # to rename and the names to rename each to.
+        if not (field_from is None or field_to is None):
+            update[field_from] = field_to
+        for k, v in fields.items():
+            update[k] = v
+
+        self._update({'$rename': update}, safe=safe)
+
     def save(self, safe=False):
         """Saves the object to the database.
 
@@ -818,6 +871,11 @@ class Model(object):
         if is_atomic(fields):
             for k, v in fields.items():
                 fields[k] = map_field_names_and_values(v)
+                if k == '$rename':
+                    for field_from, field_to in fields[k].items():
+                        mapped = map_fields(cls, {field_to: 1},
+                                            flatten_keys=True)
+                        fields[k][field_from] = mapped.keys()[0]
         else:
             fields = map_field_names_and_values(fields)
         # When placing fields in kwargs, make a copy so changes to
@@ -835,6 +893,10 @@ class Model(object):
                 if '$unset' in fields:
                     if any(k in self._meta.required_fields for k
                             in fields['$unset']):
+                        has_required_fields = False
+                elif '$rename' in fields:
+                    if any(k in self._meta.required_fields for k
+                            in fields['$rename']):
                         has_required_fields = False
             else:
                 # For a document replacement, all of the required fields
@@ -892,6 +954,17 @@ class Model(object):
                         self._document = remove_nested_key(self._document, k)
                     else:
                         self._document.pop(k, None)
+
+            rename = fields.get('$rename')
+            if rename:
+                # The old fields need to be removed. The new fields will
+                # be added through the find_one() below.
+                for k in rename.keys():
+                    if '.' in k:
+                        self._document = remove_nested_key(self._document, k)
+                    else:
+                        self._document.pop(k, None)
+                fields['$rename'] = dict((v, 1) for v in rename.values())
 
             # If the only operation was an $unset, we're done.
             if not fields:
