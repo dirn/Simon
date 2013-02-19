@@ -662,7 +662,7 @@ class Model(object):
 
         :param fields: The document to save to the database.
         :type fields: dict.
-        :param safe: (optional) Whether to perform the save in safe
+        :param safe: (optional) Whether to perform the update in safe
                      mode.
         :type safe: bool.
         :raises: :class:`TypeError`
@@ -692,7 +692,7 @@ class Model(object):
 
         :param fields: The names of the fields to remove.
         :type fields: str, list, or tuple.
-        :param safe: (optional) Whether to perform the save in safe
+        :param safe: (optional) Whether to perform the update in safe
                      mode.
         :type safe: bool.
         :raises: :class:`TypeError`
@@ -844,7 +844,7 @@ class Model(object):
 
         :param fields: The names of the fields to update.
         :type fields: str, list, or tuple.
-        :param safe: (optional) Whether to perform the save in safe
+        :param safe: (optional) Whether to perform the update in safe
                      mode.
         :type safe: bool.
         :raises: :class:`AttributeError`, :class:`TypeError`
@@ -881,7 +881,7 @@ class Model(object):
         Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
-        :param safe: (optional) Whether to perform the save in safe
+        :param safe: (optional) Whether to perform the update in safe
                      mode.
         :type safe: bool.
         :param \*\*fields: The fields to update.
