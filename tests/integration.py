@@ -108,6 +108,27 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         self.assertEqual(doc['a'], 3)
 
+    def test_pop(self):
+        """Test the `pop()` method."""
+
+        _id = self.collection.insert({'a': [1, 2, 3]})
+
+        m = TestModel.get(_id=_id)
+
+        m.pop('a')
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 2)
+        self.assertNotIn(3, doc['a'])
+
+        m.pop('-a')
+
+        doc = self.collection.find_one({'_id': _id})
+
+        self.assertEqual(len(doc['a']), 1)
+        self.assertNotIn(1, doc['a'])
+
     def test_pull(self):
         """Test the `pull()` method."""
 

@@ -381,6 +381,24 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a.b': 1}, **wc_on)
 
+    def test__update_pop(self):
+        """Test the `_update()` method with a pop."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID, a=[1, 2])
+
+        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
+                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
+
+            m._update({'$pop': {'a': 1}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$pop': {'a': 1}}, **wc_on)
+
+            self.assertEqual(len(m._document['a']), 1)
+            self.assertNotIn(2, m._document['a'])
+
     def test__update_pull(self):
         """Test the `_update()` method with a pull."""
 

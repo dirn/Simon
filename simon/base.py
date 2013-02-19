@@ -453,6 +453,47 @@ class Model(object):
 
         self._update({'$inc': update}, safe=safe)
 
+    def pop(self, fields, safe=False):
+        """Performs an atomic pop.
+
+        Values can be popped from either the end or the beginning of a
+        list. To pop a value from the end of a list, specify the name of
+        the field. The pop a  value from the beginning of a list,
+        specify the name of the field with a ``-`` in front of it.
+
+        If the document does not have an ``_id``--this will
+        most likely indicate that the document has never been saved--
+        a :class:`TypeError` will be raised.
+
+        :param fields: The names of the fields to pop from.
+        :type fields: str, list, or tuple.
+        :param safe: (optional) Whether to perform the update in safe
+                     mode.
+        :type safe: bool.
+        :raises: :class:`TypeError`
+
+        .. versionadded:: 0.5.0
+        """
+
+        if not fields:
+            raise ValueError
+
+        if not isinstance(fields, (list, tuple)):
+            fields = (fields,)
+
+        update = {}
+
+        for field in fields:
+            if field[0] == '-':
+                field = field[1:]
+                direction = -1
+            else:
+                direction = 1
+
+            update[field] = direction
+
+        self._update({'$pop': update}, safe=safe)
+
     def pull(self, field=None, value=None, safe=False, **fields):
         """Performs an atomic pull.
 

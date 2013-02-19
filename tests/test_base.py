@@ -341,6 +341,43 @@ class TestBase(unittest.TestCase):
         self.assertNotEqual(m2 == m1, m2 != m1)
         self.assertEqual(m1 != m2, m2 != m1)
 
+    def test_pop(self):
+        """Test the `pop()` method."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.pop('a')
+
+            _update.assert_called_with({'$pop': {'a': 1}}, safe=False)
+
+            m.pop(['a'])
+
+            _update.assert_called_with({'$pop': {'a': 1}}, safe=False)
+
+            m.pop('-a')
+
+            _update.assert_called_with({'$pop': {'a': -1}}, safe=False)
+
+    def test_pop_multiple(self):
+        """Test the `pop()` method with multiple fields."""
+
+        m = DefaultModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(DefaultModel, '_update') as _update:
+            m.pop(('a', 'b'))
+
+            _update.assert_called_with({'$pop': {'a': 1, 'b': 1}}, safe=False)
+
+            m.pop(('a', '-b'))
+
+            _update.assert_called_with({'$pop': {'a': 1, 'b': -1}}, safe=False)
+
+            m.pop(('-a', '-b'))
+
+            _update.assert_called_with({'$pop': {'a': -1, 'b': -1}},
+                                       safe=False)
+
     def test_pull(self):
         """Test the `pull()` method."""
 
