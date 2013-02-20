@@ -148,8 +148,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.pull('a', 1)
 
-        m.assertEqual(len(m._document['a']), 4)
-        m.assertNotIn(1, m._document['a'])
+        self.assertEqual(len(m._document['a']), 4)
+        self.assertNotIn(1, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -158,8 +158,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.pull(a=2)
 
-        m.assertEqual(len(m._document['a']), 3)
-        m.assertNotIn(2, m._document['a'])
+        self.assertEqual(len(m._document['a']), 3)
+        self.assertNotIn(2, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -170,9 +170,9 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.pull(a=[3, 4])
 
-        m.assertEqual(len(m._document['a']), 0)
-        m.assertNotIn(3, m._document['a'])
-        m.assertNotIn(4, m._document['a'])
+        self.assertEqual(len(m._document['a']), 0)
+        self.assertNotIn(3, m._document['a'])
+        self.assertNotIn(4, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -192,8 +192,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push('a', 1)
 
-        m.assertEqual(len(m._document['a']), 1)
-        m.assertIn(1, m._document['a'])
+        self.assertEqual(len(m._document['a']), 1)
+        self.assertIn(1, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -202,8 +202,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push(a=2)
 
-        m.assertEqual(len(m._document['a']), 2)
-        m.assertIn(2, m._document['a'])
+        self.assertEqual(len(m._document['a']), 2)
+        self.assertIn(2, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -214,9 +214,9 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push(a=[3, 4])
 
-        m.assertEqual(len(m._document['a']), 4)
-        m.assertIn(3, m._document['a'])
-        m.assertIn(4, m._document['a'])
+        self.assertEqual(len(m._document['a']), 4)
+        self.assertIn(3, m._document['a'])
+        self.assertIn(4, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -231,7 +231,7 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push('a', 1, allow_duplicates=False)
 
-        m.assertEqual(len(m._document['a']), 4)
+        self.assertEqual(len(m._document['a']), 4)
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -239,8 +239,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push('a', 5, allow_duplicates=False)
 
-        m.assertEqual(len(m._document['a']), 5)
-        m.assertIn(5, m._document['a'])
+        self.assertEqual(len(m._document['a']), 5)
+        self.assertIn(5, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -251,8 +251,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push('a', [1, 2, 3, 4, 5, 6], allow_duplicates=False)
 
-        m.assertEqual(len(m._document['a']), 6)
-        m.assertIn(6, m._document['a'])
+        self.assertEqual(len(m._document['a']), 6)
+        self.assertIn(6, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -348,7 +348,7 @@ class TestDatabaseIntegrations(unittest.TestCase):
         m = TestModel.get(_id=_id)
         m.update(b=2)
 
-        m.assertEqual(m._document['b'], 2)
+        self.assertEqual(m._document['b'], 2)
 
         doc = self.collection.find_one({'_id': _id})
 
