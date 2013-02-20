@@ -104,6 +104,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
         m = TestModel.get(_id=_id)
         m.increment('a', 2)
 
+        self.assertEqual(m._document['a'], 3)
+
         doc = self.collection.find_one({'_id': _id})
 
         self.assertEqual(doc['a'], 3)
@@ -117,12 +119,18 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.pop('a')
 
+        self.assertEqual(len(m._document['a']), 2)
+        self.assertNotIn(3, m._document['a'])
+
         doc = self.collection.find_one({'_id': _id})
 
         self.assertEqual(len(doc['a']), 2)
         self.assertNotIn(3, doc['a'])
 
         m.pop('-a')
+
+        self.assertEqual(len(m._document['a']), 1)
+        self.assertNotIn(1, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -140,12 +148,18 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.pull('a', 1)
 
+        m.assertEqual(len(m._document['a']), 4)
+        m.assertNotIn(1, m._document['a'])
+
         doc = self.collection.find_one({'_id': _id})
 
         self.assertEqual(len(doc['a']), 4)
         self.assertNotIn(1, doc['a'])
 
         m.pull(a=2)
+
+        m.assertEqual(len(m._document['a']), 3)
+        m.assertNotIn(2, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -155,6 +169,10 @@ class TestDatabaseIntegrations(unittest.TestCase):
         # $pullAll
 
         m.pull(a=[3, 4])
+
+        m.assertEqual(len(m._document['a']), 0)
+        m.assertNotIn(3, m._document['a'])
+        m.assertNotIn(4, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -174,12 +192,18 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push('a', 1)
 
+        m.assertEqual(len(m._document['a']), 1)
+        m.assertIn(1, m._document['a'])
+
         doc = self.collection.find_one({'_id': _id})
 
         self.assertEqual(len(doc['a']), 1)
         self.assertIn(1, doc['a'])
 
         m.push(a=2)
+
+        m.assertEqual(len(m._document['a']), 2)
+        m.assertIn(2, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -189,6 +213,10 @@ class TestDatabaseIntegrations(unittest.TestCase):
         # $pushAll
 
         m.push(a=[3, 4])
+
+        m.assertEqual(len(m._document['a']), 4)
+        m.assertIn(3, m._document['a'])
+        m.assertIn(4, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -203,11 +231,16 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m.push('a', 1, allow_duplicates=False)
 
+        m.assertEqual(len(m._document['a']), 4)
+
         doc = self.collection.find_one({'_id': _id})
 
         self.assertEqual(len(doc['a']), 4)
 
         m.push('a', 5, allow_duplicates=False)
+
+        m.assertEqual(len(m._document['a']), 5)
+        m.assertIn(5, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -217,6 +250,9 @@ class TestDatabaseIntegrations(unittest.TestCase):
         # $addToSet/$each
 
         m.push('a', [1, 2, 3, 4, 5, 6], allow_duplicates=False)
+
+        m.assertEqual(len(m._document['a']), 6)
+        m.assertIn(6, m._document['a'])
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -237,6 +273,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
         m = TestModel.get(_id=_id)
         m.raw_update({'$set': {'b': 2}})
 
+        self.assertEqual(m._document['b'], 2)
+
         doc = self.collection.find_one({'_id': _id})
 
         self.assertEqual(doc['b'], 2)
@@ -248,6 +286,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m = TestModel.get(_id=_id)
         m.remove_fields('a')
+
+        self.assertNotIn('a', m._document)
 
         doc = self.collection.find_one({'_id': _id})
 
@@ -307,6 +347,8 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         m = TestModel.get(_id=_id)
         m.update(b=2)
+
+        m.assertEqual(m._document['b'], 2)
 
         doc = self.collection.find_one({'_id': _id})
 
