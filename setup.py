@@ -11,7 +11,7 @@ if sys.argv[-1] == 'publish':
 
 setup(
     name='Simon',
-    version='0.5.0',
+    version='0.6.0',
     description='Simple MongoDB Models',
     long_description=open('README.rst').read(),
     author='Andy Dirnberger',
