@@ -25,7 +25,6 @@ Define a model::
 
     from simon import Model
 
-
     class User(Model):
         """A model to represent users"""
 
