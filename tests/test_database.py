@@ -180,7 +180,7 @@ class TestDatabase(unittest.TestCase):
             self.assertEqual(actual, expected)
 
     def test__find_nested_field(self):
-        """The the `_find()` method with an embedded document."""
+        """Test the `_find()` method with an embedded document."""
 
         with nested(mock.patch.object(DefaultModel._meta.db, 'find'),
                     mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
