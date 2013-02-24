@@ -5,7 +5,7 @@ History
 ++++++++++++++++++
 
 - Add ``pop()`` method
-` Add ``pull()`` method
+- Add ``pull()`` method
 - Add ``push()`` method
 - Add ``rename()`` method
 - Add support for ``$elemMatch`` operator

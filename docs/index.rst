@@ -69,11 +69,10 @@ Changelog
 ++++++++++++++++++
 
 - Add ``pop()`` method
-` Add ``pull()`` method
+- Add ``pull()`` method
 - Add ``push()`` method
 - Add ``rename()`` method
 - Add support for ``$elemMatch`` operator
-
 
 0.4.0 (2013-02-12)
 ++++++++++++++++++
