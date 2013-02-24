@@ -17,13 +17,31 @@ from simon.query import Q
 from .utils import AN_OBJECT_ID, ModelFactory
 
 DefaultModel = ModelFactory('DefaultModel')
-MappedModel = ModelFactory('ModelFactory', field_map={'fake': 'real'})
+MappedModel = ModelFactory('MappedModel', field_map={'fake': 'real'})
 StringModel = ModelFactory('StringModel',
                            __str__=lambda x: 'this is the __str__',
                            __unicode__=lambda x: 'this is the __unicode__')
 
 
-class TestBase(unittest.TestCase):
+class BaseModel(Model):
+    """Use for testing subclassing."""
+
+    class Meta:
+        auto_timstamp = False
+        collection = 'collection'
+        database = 'database'
+        field_map = {'fake': 'real'}
+        map_id = False
+        required_fields = 'a'
+        safe = False
+        sort = 'a'
+
+
+class SubclassModel(BaseModel):
+    """Use for testing subclassing."""
+
+
+class TestModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with mock.patch('simon.connection.MongoClient'):
@@ -807,3 +825,76 @@ class TestBase(unittest.TestCase):
             m.update(a=1)
 
             _update.assert_called_with({'$set': {'a': 1}}, safe=False)
+
+
+class TestModelMetaClass(unittest.TestCase):
+    def test_core_attributes(self):
+        """Test the `_meta.core_attributes` attribute."""
+
+        core_attributes = ('_document', '_meta', 'MultipleDocumentsFound',
+                           'NoDocumentFound')
+
+        self.assertTrue(all(k in DefaultModel._meta.core_attributes
+                            for k in core_attributes))
+        self.assertNotIn('Meta', DefaultModel._meta.core_attributes)
+
+        class AttributeModel(Model):
+            an_attribute = 1
+
+        self.assertIn('an_attribute', AttributeModel._meta.core_attributes)
+
+    def test_db(self):
+        """Test the `_meta.db` attribute."""
+
+        with mock.patch('simon.meta.get_database') as get_database:
+            # Make a new class here to ensure that the database hasn't
+            # yet been set.
+            class MockModel(Model):
+                pass
+
+            # At this point the internal _db should be None.
+            self.assertIsNone(MockModel._meta._db)
+
+            # Once the mock is called, _db should always be set to this
+            # value.
+            get_database.return_value = {MockModel._meta.collection: 1}
+
+            # Accessing the property triggers the call.
+            MockModel._meta.db
+
+            self.assertEqual(MockModel._meta._db, 1)
+            get_database.assert_called_with(MockModel._meta.database)
+
+            # As per above, _db should not get set to this value.
+            get_database.return_value = {MockModel._meta.collection: 2}
+
+            MockModel._meta.db
+
+            self.assertEqual(MockModel._meta._db, 1)
+
+    def test_exceptions(self):
+        """Test that the exceptions are added."""
+
+        self.assertTrue(hasattr(DefaultModel, 'MultipleDocumentsFound'))
+        self.assertTrue(hasattr(DefaultModel, 'NoDocumentFound'))
+
+    def test_subclassed(self):
+        """Test a subclassed model."""
+
+        base = BaseModel._meta
+        subclass = SubclassModel._meta
+
+        # All of _meta's attributes should have the same value.
+        self.assertEqual(base.auto_timestamp, subclass.auto_timestamp)
+        self.assertEqual(base.collection, subclass.collection)
+        self.assertEqual(base.database, subclass.database)
+        self.assertEqual(base.field_map, subclass.field_map)
+        self.assertEqual(base.map_id, subclass.map_id)
+        self.assertEqual(base.required_fields, subclass.required_fields)
+        self.assertEqual(base.safe, subclass.safe)
+        self.assertEqual(base.sort, subclass.sort)
+
+        # Each model should have the same list of core attributes
+        # except that the subclassed one shouldn't have Meta.
+        self.assertEqual(sorted(base.core_attributes),
+                         sorted(subclass.core_attributes + ['Meta']))
