@@ -27,7 +27,7 @@ class BaseModel(Model):
     """Use for testing subclassing."""
 
     class Meta:
-        auto_timstamp = False
+        auto_timestamp = False
         collection = 'collection'
         database = 'database'
         field_map = {'fake': 'real'}
