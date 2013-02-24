@@ -5,9 +5,26 @@ try:
 except ImportError:
     import unittest
 
+import warnings
+
 import mock
+import pymongo
 
 from simon.meta import Meta
+
+
+def skip_with_mongoclient(f):
+    if pymongo.version_tuple[:2] >= (2, 4):
+        return unittest.skip('`MongoClient` is supported.')
+    else:
+        return f
+
+
+def skip_without_mongoclient(f):
+    if pymongo.version_tuple[:2] >= (2, 4):
+        return f
+    else:
+        return unittest.skip('`MongoClient is not supported.')
 
 
 class TestClass(object):
@@ -36,8 +53,14 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(meta.field_map, {'id': '_id'})
         self.assertEqual(meta.map_id, True)
         self.assertEqual(meta.required_fields, None)
-        self.assertEqual(meta.safe, True)
         self.assertEqual(meta.sort, None)
+
+        if pymongo.version_tuple[:2] >= (2, 4):
+            self.assertEqual(meta.write_concern, 1)
+        else:
+            self.assertEqual(meta.write_concern, True)
+        self.assertFalse(hasattr(meta, 'safe'))
+        self.assertFalse(hasattr(meta, 'w'))
 
         # core_attributes is a bit tougher to test
         self.assertTrue(all(k.startswith('_') for k in meta.core_attributes))
@@ -118,8 +141,14 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(meta.field_map, {})
         self.assertEqual(meta.map_id, True)
         self.assertEqual(meta.required_fields, None)
-        self.assertEqual(meta.safe, True)
         self.assertEqual(meta.sort, None)
+
+        if pymongo.version_tuple[:2] >= (2, 4):
+            self.assertEqual(meta.write_concern, 1)
+        else:
+            self.assertEqual(meta.write_concern, True)
+        self.assertFalse(hasattr(meta, 'safe'))
+        self.assertFalse(hasattr(meta, 'w'))
 
         # make sure attributes added later haven't been added
         self.assertFalse(hasattr(meta, 'class_name'))
@@ -147,18 +176,21 @@ class TestMeta(unittest.TestCase):
     def test_required_fields(self):
         """Test the `required_fields` attribute."""
 
+        # single value
         meta = Meta(mock.Mock(required_fields='a'))
 
         meta.add_to_original(TestClass, '_meta')
 
         self.assertEqual(TestClass._meta.required_fields, ('a',))
 
+        # multiple values
         meta = Meta(mock.Mock(required_fields=['a', 'b']))
 
         meta.add_to_original(TestClass, '_meta')
 
         self.assertEqual(TestClass._meta.required_fields, ['a', 'b'])
 
+    @skip_with_mongoclient
     def test_safe(self):
         """Test the `safe` attribute."""
 
@@ -166,17 +198,19 @@ class TestMeta(unittest.TestCase):
 
         meta.add_to_original(TestClass, '_meta')
 
-        self.assertFalse(TestClass._meta.safe)
+        self.assertFalse(TestClass._meta.write_concern)
 
     def test_sort(self):
         """Test the `sort` attribute."""
 
+        # single value
         meta = Meta(mock.Mock(sort='a'))
 
         meta.add_to_original(TestClass, '_meta')
 
         self.assertEqual(TestClass._meta.sort, ('a',))
 
+        # multiple values
         meta = Meta(mock.Mock(sort=['a', '-b']))
 
         meta.add_to_original(TestClass, '_meta')
@@ -202,3 +236,59 @@ class TestMeta(unittest.TestCase):
 
         self.assertEqual(u'{0}'.format(meta),
                          u'TestClass.Meta')
+
+    @skip_without_mongoclient
+    def test_w(self):
+        """Test the `w` attribute."""
+
+        meta = Meta(mock.Mock(w=0))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.write_concern, 0)
+
+    def test_write_conern(self):
+        """Test the write concern attributes."""
+
+        if pymongo.version_tuple[:2] >= (2, 4):
+            have_attribute = 'w'
+            have_not_attribute = 'safe'
+            have_on = 1
+            have_not_on = True
+            have_off = 0
+            have_not_off = False
+        else:
+            have_attribute = 'w'
+            have_not_attribute = 'safe'
+            have_on = 1
+            have_not_on = True
+            have_off = 0
+            have_not_off = False
+
+        # The correct attribute on
+        meta = Meta(mock.Mock(**{have_attribute: have_on}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.write_concern, have_on)
+
+        # The correct attribute off
+        meta = Meta(mock.Mock(**{have_attribute: have_off}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.write_concern, have_off)
+
+        # The wrong attribute on
+        meta = Meta(mock.Mock(**{have_not_attribute: have_not_on}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.write_concern, have_on)
+
+        # The wrong attribute off
+        meta = Meta(mock.Mock(**{have_not_attribute: have_not_off}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.write_concern, have_off)
