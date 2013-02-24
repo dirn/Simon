@@ -891,7 +891,7 @@ class TestModelMetaClass(unittest.TestCase):
         self.assertEqual(base.field_map, subclass.field_map)
         self.assertEqual(base.map_id, subclass.map_id)
         self.assertEqual(base.required_fields, subclass.required_fields)
-        self.assertEqual(base.safe, subclass.safe)
+        self.assertEqual(base.write_concern, subclass.write_concern)
         self.assertEqual(base.sort, subclass.sort)
 
         # Each model should have the same list of core attributes

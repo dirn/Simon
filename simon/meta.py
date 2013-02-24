@@ -1,6 +1,6 @@
 """Meta options"""
 
-from .connection import get_database
+from .connection import get_database, pymongo_supports_mongoclient
 
 __all__ = ('Meta',)
 
@@ -22,8 +22,12 @@ class Meta(object):
         self.field_map = {}
         self.map_id = True
         self.required_fields = None
-        self.safe = True
         self.sort = None
+
+        if pymongo_supports_mongoclient:
+            self.write_concern = 1
+        else:
+            self.write_concern = True
 
     def add_to_original(self, cls, name):
         """Adds the ``Meta`` object to another class.
@@ -42,10 +46,20 @@ class Meta(object):
 
             # Add the known attributes to the instance
             for name in ('auto_timestamp', 'collection', 'database',
-                         'field_map', 'map_id', 'required_fields', 'safe',
-                         'sort'):
+                         'field_map', 'map_id', 'required_fields', 'sort'):
                 if name in meta_attrs:
                     setattr(self, name, meta_attrs.pop(name))
+
+            if pymongo_supports_mongoclient:
+                if 'w' in meta_attrs:
+                    self.write_concern = meta_attrs.pop('w')
+                elif 'safe' in meta_attrs:
+                    self.write_concern = int(meta_attrs.pop('safe'))
+            else:
+                if 'safe' in meta_attrs:
+                    self.write_concern = meta_attrs.pop('safe')
+                elif 'w' in meta_attrs:
+                    self.write_concern = bool(meta_attrs.pop('w'))
 
             if not hasattr(self, 'collection'):
                 # If there's no collection name, generate one from the

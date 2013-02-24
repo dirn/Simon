@@ -200,7 +200,7 @@ class Model(object):
                                 self.__class__.__name__, '_id'))
 
         kwargs = {'safe': safe}
-        _set_write_concern(kwargs, self._meta.safe)
+        _set_write_concern(kwargs, self._meta.write_concern)
 
         self._meta.db.remove({'_id': id}, **kwargs)
 
@@ -999,7 +999,7 @@ class Model(object):
 
         # Handling the write concern argument has been pushed off to
         # another method that is aware of what PyMongo supports.
-        _set_write_concern(kwargs, self._meta.safe)
+        _set_write_concern(kwargs, self._meta.write_concern)
 
         # Which function are we calling?
         if not id:

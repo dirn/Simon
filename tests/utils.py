@@ -1,6 +1,7 @@
 """Helpers for running tests"""
 
 from bson import ObjectId
+import pymongo
 from simon import base
 
 __all__ = ('AN_OBJECT_ID', 'AN_OBJECT_ID_STR', 'ModelFactory',)
@@ -41,8 +42,23 @@ def ModelFactory(name, spec=None, **kwargs):
     # Create the type
     cls = type(name, spec, {'__module__': base})
 
+    if spec[0] != base.Model:
+        for k, v in spec[0]._meta.__dict__.items():
+            if not (k.startswith('_') or k == 'core_attributes'):
+                setattr(cls._meta, k, v)
+
     # Add the attributes
     for k, v in kwargs.items():
+        if k in ('safe', 'w'):
+            # write concern is unique
+            k = 'write_concern'
+            if pymongo.version_tuple[:2] >= (2, 4):
+                f = int
+            else:
+                f = bool
+            k = 'write_concern'
+            v = f(v)
+
         if not k.startswith('__') and hasattr(cls._meta, k):
             # Only update the Meta class for attributes that do not
             # begin with __. This allows attributes such as __str__
@@ -56,4 +72,5 @@ def ModelFactory(name, spec=None, **kwargs):
                 # so that __setattr__() will handle it correctly.
                 cls._meta.core_attributes += (k,)
             setattr(cls, k, v)
+
     return cls
