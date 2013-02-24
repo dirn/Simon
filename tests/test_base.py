@@ -881,6 +881,13 @@ class TestModelMetaClass(unittest.TestCase):
     def test_subclassed(self):
         """Test a subclassed model."""
 
+        BaseModel = ModelFactory('BaseModel', auto_timestamp=False,
+                                 collection='collection', database='database',
+                                 field_map={'fake': 'real'}, map_id=False,
+                                 required_fields='a', safe=False, sort='a')
+
+        SubclassModel = ModelFactory('SubclassModel', spec=BaseModel)
+
         base = BaseModel._meta
         subclass = SubclassModel._meta
 
@@ -897,4 +904,4 @@ class TestModelMetaClass(unittest.TestCase):
         # Each model should have the same list of core attributes
         # except that the subclassed one shouldn't have Meta.
         self.assertEqual(sorted(base.core_attributes),
-                         sorted(subclass.core_attributes + ['Meta']))
+                         sorted(subclass.core_attributes))
