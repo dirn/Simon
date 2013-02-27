@@ -17,6 +17,7 @@ their default values, as show below.
             map_id = True
             safe = True
             sort = None
+            w = 1
 
 ``auto_timestamp``
 ------------------
@@ -150,10 +151,12 @@ fields, :class:`TypeError` will be raised.
 ``safe``
 --------
 
+**DEPRECATED** If using PyMongo 2.4 or newer, the ``safe`` option has
+been deprecated. Use ``w`` instead.
+
 With the introduction of
 :class:`MongoClient <pymongo:pymongo.mongo_client.MongoClient>`, updates
-are performed with write concern enabled. Simon mimics this behavior by
-setting the ``safe`` option in the ``Meta`` class to ``True``. To revert
+are performed with write concern enabled by default. To revert
 to the previous behavior seen in versions of PyMongo prior to 2.4, set
 the ``safe`` option to ``False``. When write concern is disabled at the
 model level, it can still be used on a case by case basis by providing
@@ -193,3 +196,25 @@ check out the :meth:`~simon.query.QuerySet.sort` method.
 
 More information about natural sort is available in the
 `MongoDB Docs <http://docs.mongodb.org/manual/reference/glossary/#term-natural-order>`_.
+
+
+``w``
+-----
+
+With the introduction of
+:class:`MongoClient <pymongo:pymongo.mongo_client.MongoClient>`, updates
+are performed with write concern enabled by default. To revert
+to the previous behavior seen in versions of PyMongo prior to 2.4, set
+the ``w`` option to ``0``. When write concern is disabled at the
+model level, it can still be used on a case by case basis by providing
+``safe=True`` as a parameter to method calls.
+
+.. code-block:: python
+
+    class Meta:
+        w = 0  # don't use write concern for this model by default
+
+More information about write concern is available in the
+`MongoDB Docs <http://docs.mongodb.org/manual/core/write-operations/#write-concern>`_.
+
+
