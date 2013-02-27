@@ -19,6 +19,9 @@ their default values, as show below.
             sort = None
             w = 1
 
+
+.. _auto_timestamp:
+
 ``auto_timestamp``
 ------------------
 
@@ -33,6 +36,8 @@ behavior.
         auto_timestamp = False  # do not automatically add timestamps
 
 
+.. _collection:
+
 ``collection``
 --------------
 
@@ -45,6 +50,8 @@ the model with an ``s`` appended to it. Adding ``collection`` to the
     class Meta:
         collection = 'simon'  # store documents in the simon collection
 
+
+.. _database:
 
 ``database``
 ------------
@@ -61,6 +68,9 @@ by adding the ``database`` option to the ``Meta`` class.
     class Meta:
         database = 'logs'  # use the logs database
 
+
+.. _field_map:
+.. _map_id:
 
 ``field_map`` and ``map_id``
 ----------------------------
@@ -120,6 +130,8 @@ This query executing in the mongo Shell would look a little different:
     db.users.insert({fname: 'Simon', lname: 'Seville', loc: 'Fresno, CA'})
 
 
+.. _required_fields:
+
 ``required_fields``
 -------------------
 
@@ -148,11 +160,13 @@ If you try to save a document that is missing andy of the required
 fields, :class:`TypeError` will be raised.
 
 
+.. _safe:
+
 ``safe``
 --------
 
 **DEPRECATED** If using PyMongo 2.4 or newer, the ``safe`` option has
-been deprecated. Use ``w`` instead.
+been deprecated. Use :ref:`w` instead.
 
 With the introduction of
 :class:`MongoClient <pymongo:pymongo.mongo_client.MongoClient>`, updates
@@ -170,6 +184,8 @@ model level, it can still be used on a case by case basis by providing
 More information about write concern is available in the
 `MongoDB Docs <http://docs.mongodb.org/manual/core/write-operations/#write-concern>`_.
 
+
+.. _sort:
 
 ``sort``
 --------
@@ -197,6 +213,8 @@ check out the :meth:`~simon.query.QuerySet.sort` method.
 More information about natural sort is available in the
 `MongoDB Docs <http://docs.mongodb.org/manual/reference/glossary/#term-natural-order>`_.
 
+
+.. _w:
 
 ``w``
 -----
