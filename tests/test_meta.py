@@ -198,6 +198,18 @@ class TestMeta(unittest.TestCase):
 
         self.assertFalse(TestClass._meta.write_concern)
 
+    @skip_without_mongoclient
+    def test_safe_deprecationwarning(self):
+        ("Test that `safe` triggers `DeprecationWarning` for PyMongo "
+         "with MongoClient.")
+
+        with mock.patch('simon.meta.warnings') as warnings:
+            meta = Meta(mock.Mock(safe=True))
+
+            meta.add_to_original(TestClass, '_meta')
+
+            warnings.warn.assert_called_with('safe has been deprecated. Please use w instead.', DeprecationWarning)
+
     def test_sort(self):
         """Test the `sort` attribute."""
 
