@@ -1,5 +1,7 @@
 """Meta options"""
 
+import warnings
+
 from .connection import get_database, pymongo_supports_mongoclient
 
 __all__ = ('Meta',)
@@ -28,6 +30,10 @@ class Meta(object):
             self.write_concern = 1
         else:
             self.write_concern = True
+
+        if pymongo_supports_mongoclient and hasattr(meta, 'safe'):
+            message = 'safe has been deprecated. Please use w instead.'
+            warnings.warn(message, DeprecationWarning)
 
     def add_to_original(self, cls, name):
         """Adds the ``Meta`` object to another class.
