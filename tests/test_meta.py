@@ -5,8 +5,6 @@ try:
 except ImportError:
     import unittest
 
-import warnings
-
 import mock
 import pymongo
 
