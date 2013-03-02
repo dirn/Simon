@@ -208,7 +208,8 @@ class TestMeta(unittest.TestCase):
 
             meta.add_to_original(TestClass, '_meta')
 
-            warnings.warn.assert_called_with('safe has been deprecated. Please use w instead.', DeprecationWarning)
+            message = 'safe has been deprecated. Please use w instead.'
+            warnings.warn.assert_called_with(message, DeprecationWarning)
 
     def test_sort(self):
         """Test the `sort` attribute."""
