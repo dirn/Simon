@@ -11,7 +11,7 @@ import warnings
 
 import mock
 
-from simon import Model, connection
+from simon import Model, base, connection
 from simon.query import Q
 
 from .utils import AN_OBJECT_ID, ModelFactory
@@ -91,7 +91,8 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(TestModel, '_update') as _update:
             TestModel.create(a=1)
 
-            _update.assert_called_with({'a': 1}, safe=False, upsert=True)
+            _update.assert_called_with({'a': 1}, safe=None, w=None,
+                                       upsert=True)
 
     def test_db(self):
         ("Test that the `db` attribute is associated with classes and "
@@ -243,7 +244,7 @@ class TestModel(unittest.TestCase):
             # Because get_or_create() is being called without explicity
             # setting a value for safe, safe's default value will be
             # passed along to creates()
-            create.assert_called_with(_id=AN_OBJECT_ID, safe=False)
+            create.assert_called_with(_id=AN_OBJECT_ID, safe=None, w=None)
 
             self.assertTrue(created)
 
@@ -300,11 +301,11 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.increment('a')
 
-            _update.assert_called_with({'$inc': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$inc': {'a': 1}}, safe=None, w=None)
 
             m.increment('a', 2)
 
-            _update.assert_called_with({'$inc': {'a': 2}}, safe=False)
+            _update.assert_called_with({'$inc': {'a': 2}}, safe=None, w=None)
 
     def test_increment_multiple(self):
         """Test the `increment()` method with multiple fields."""
@@ -314,7 +315,8 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.increment(a=1, b=2)
 
-            _update.assert_called_with({'$inc': {'a': 1, 'b': 2}}, safe=False)
+            _update.assert_called_with({'$inc': {'a': 1, 'b': 2}}, safe=None,
+                                       w=None)
 
     def test_increment_valueerror(self):
         """Test that `increment()` raises `ValueError`."""
@@ -367,15 +369,15 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.pop('a')
 
-            _update.assert_called_with({'$pop': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$pop': {'a': 1}}, safe=None, w=None)
 
             m.pop(['a'])
 
-            _update.assert_called_with({'$pop': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$pop': {'a': 1}}, safe=None, w=None)
 
             m.pop('-a')
 
-            _update.assert_called_with({'$pop': {'a': -1}}, safe=False)
+            _update.assert_called_with({'$pop': {'a': -1}}, safe=None, w=None)
 
     def test_pop_multiple(self):
         """Test the `pop()` method with multiple fields."""
@@ -385,16 +387,18 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.pop(('a', 'b'))
 
-            _update.assert_called_with({'$pop': {'a': 1, 'b': 1}}, safe=False)
+            _update.assert_called_with({'$pop': {'a': 1, 'b': 1}}, safe=None,
+                                       w=None)
 
             m.pop(('a', '-b'))
 
-            _update.assert_called_with({'$pop': {'a': 1, 'b': -1}}, safe=False)
+            _update.assert_called_with({'$pop': {'a': 1, 'b': -1}}, safe=None,
+                                       w=None)
 
             m.pop(('-a', '-b'))
 
             _update.assert_called_with({'$pop': {'a': -1, 'b': -1}},
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_pull(self):
         """Test the `pull()` method."""
@@ -404,19 +408,21 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.pull('a', 1)
 
-            _update.assert_called_with({'$pull': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$pull': {'a': 1}}, safe=None, w=None)
 
             m.pull('a', [1, 2])
 
-            _update.assert_called_with({'$pullAll': {'a': [1, 2]}}, safe=False)
+            _update.assert_called_with({'$pullAll': {'a': [1, 2]}}, safe=None,
+                                       w=None)
 
             m.pull(a=2)
 
-            _update.assert_called_with({'$pull': {'a': 2}}, safe=False)
+            _update.assert_called_with({'$pull': {'a': 2}}, safe=None, w=None)
 
             m.pull(a=[2, 3])
 
-            _update.assert_called_with({'$pullAll': {'a': [2, 3]}}, safe=False)
+            _update.assert_called_with({'$pullAll': {'a': [2, 3]}}, safe=None,
+                                       w=None)
 
     def test_pull_multiple(self):
         """Test the `pull()` method with multiple fields."""
@@ -426,19 +432,20 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.pull(a=1, b=2)
 
-            _update.assert_called_with({'$pull': {'a': 1, 'b': 2}}, safe=False)
+            _update.assert_called_with({'$pull': {'a': 1, 'b': 2}}, safe=None,
+                                       w=None)
 
             m.pull(a=1, b=[2, 3])
 
             _update.assert_called_with({'$pull': {'a': 1},
                                         '$pullAll': {'b': [2, 3]}},
-                                       safe=False)
+                                       safe=None, w=None)
 
             m.pull(a=[1, 2], b=[3, 4])
 
             _update.assert_called_with({'$pullAll': {'a': [1, 2],
                                                      'b': [3, 4]}},
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_pull_valueerror(self):
         """Test that `pull()` raises `ValueError`."""
@@ -459,19 +466,21 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.push('a', 1)
 
-            _update.assert_called_with({'$push': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$push': {'a': 1}}, safe=None, w=None)
 
             m.push('a', [1, 2])
 
-            _update.assert_called_with({'$pushAll': {'a': [1, 2]}}, safe=False)
+            _update.assert_called_with({'$pushAll': {'a': [1, 2]}}, safe=None,
+                                       w=None)
 
             m.push(a=2)
 
-            _update.assert_called_with({'$push': {'a': 2}}, safe=False)
+            _update.assert_called_with({'$push': {'a': 2}}, safe=None, w=None)
 
             m.push(a=[2, 3])
 
-            _update.assert_called_with({'$pushAll': {'a': [2, 3]}}, safe=False)
+            _update.assert_called_with({'$pushAll': {'a': [2, 3]}}, safe=None,
+                                       w=None)
 
     def tet_push_addtoset(self):
         """Test the `push()` method with `$addToSet`."""
@@ -481,7 +490,8 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.push('a', 1, allow_duplicates=False)
 
-            _update.assert_called_with({'$addToSet': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$addToSet': {'a': 1}}, safe=None,
+                                       w=None)
 
             m.push('a', [1, 2], allow_duplicates=False)
 
@@ -490,12 +500,13 @@ class TestModel(unittest.TestCase):
 
             m.push(a=2, allow_duplicates=False)
 
-            _update.assert_called_with({'$addToSet': {'a': 2}}, safe=False)
+            _update.assert_called_with({'$addToSet': {'a': 2}}, safe=None,
+                                       w=None)
 
             m.push(a=[2, 3], allow_duplicates=False)
 
             _update.assert_called_with({'$addToSet': {'a': {'$each': [2, 3]}}},
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_push_multiple(self):
         """Test the `push()` method with multiple fields."""
@@ -505,19 +516,20 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.push(a=1, b=2)
 
-            _update.assert_called_with({'$push': {'a': 1, 'b': 2}}, safe=False)
+            _update.assert_called_with({'$push': {'a': 1, 'b': 2}}, safe=None,
+                                       w=None)
 
             m.push(a=1, b=[2, 3])
 
             _update.assert_called_with({'$push': {'a': 1},
                                         '$pushAll': {'b': [2, 3]}},
-                                       safe=False)
+                                       safe=None, w=None)
 
             m.push(a=[1, 2], b=[3, 4])
 
             _update.assert_called_with({'$pushAll': {'a': [1, 2],
                                                      'b': [3, 4]}},
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_push_multiple_addto_set(self):
         ("Test the `push()` method with multiple fields with "
@@ -529,19 +541,19 @@ class TestModel(unittest.TestCase):
             m.push(a=1, b=2, allow_duplicates=False)
 
             _update.assert_called_with({'$addToSet': {'a': 1, 'b': 2}},
-                                       safe=False)
+                                       safe=None, w=None)
 
             m.push(a=1, b=[2, 3], allow_duplicates=False)
 
             _update.assert_called_with({'$addToSet': {'a': 1,
                                                       'b': {'$each': [2, 3]}}},
-                                       safe=False)
+                                       safe=None, w=None)
 
             m.push(a=[1, 2], b=[3, 4], allow_duplicates=False)
 
             _update.assert_called_with({'$addToSet': {'a': {'$each': [1, 2]},
                                                       'b': {'$each': [3, 4]}}},
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_push_valueerror(self):
         """Test that `push()` raises `ValueError`."""
@@ -562,7 +574,7 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.raw_update({'$set': {'a': 1}})
 
-            _update.assert_called_with({'$set': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$set': {'a': 1}}, safe=None, w=None)
 
     def test_remove_fields(self):
         """Test the `remove_fields()` method."""
@@ -572,7 +584,7 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.remove_fields('a')
 
-            _update.assert_called_with({'$unset': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$unset': {'a': 1}}, safe=None, w=None)
 
     def test_remove_fields_multiple(self):
         """Test the `remove_fields()` method with multiple fields."""
@@ -583,7 +595,7 @@ class TestModel(unittest.TestCase):
             m.remove_fields(('a', 'b'))
 
             _update.assert_called_with({'$unset': {'a': 1, 'b': 1}},
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_rename(self):
         """Test the `rename()` method."""
@@ -593,7 +605,8 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.rename('a', 'b')
 
-            _update.assert_called_with({'$rename': {'a': 'b'}}, safe=False)
+            _update.assert_called_with({'$rename': {'a': 'b'}}, safe=None,
+                                       w=None)
 
     def test_rename_multiple(self):
         """Test the `rename()` method with multiple fields."""
@@ -604,7 +617,7 @@ class TestModel(unittest.TestCase):
             m.rename(a='b', c='d')
 
             _update.assert_called_with({'$rename': {'a': 'b', 'c': 'd'}},
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_rename_valueerror(self):
         """Test that `rename()` raises `ValueError`."""
@@ -645,7 +658,8 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(TestModel, '_update') as _update:
             m.save()
 
-            _update.assert_called_with({'a': 1}, safe=False, upsert=True)
+            _update.assert_called_with({'a': 1}, safe=None, w=None,
+                                       upsert=True)
 
     def test_save_exception(self):
         """Test that `save()` raises the exception it catches."""
@@ -672,7 +686,7 @@ class TestModel(unittest.TestCase):
             m.save_fields('a')
 
             _update.assert_called_with({'$set': {'a': 1}}, use_internal=True,
-                                       safe=False)
+                                       safe=None, w=None)
 
     def test_save_fields_attributeerror(self):
         """Test that `save_fields()` raises `AttributeError`."""
@@ -696,7 +710,7 @@ class TestModel(unittest.TestCase):
             m.save_fields(('a', 'b'))
 
             _update.assert_called_with({'$set': {'a': 1, 'b': 1}},
-                                       use_internal=True, safe=False)
+                                       use_internal=True, safe=None, w=None)
 
     def test_save_timestamps(self):
         """Test that `save()` properly handles adding timestamps."""
@@ -824,7 +838,7 @@ class TestModel(unittest.TestCase):
         with mock.patch.object(DefaultModel, '_update') as _update:
             m.update(a=1)
 
-            _update.assert_called_with({'$set': {'a': 1}}, safe=False)
+            _update.assert_called_with({'$set': {'a': 1}}, safe=None, w=None)
 
 
 class TestModelMetaClass(unittest.TestCase):
@@ -905,3 +919,81 @@ class TestModelMetaClass(unittest.TestCase):
         # except that the subclassed one shouldn't have Meta.
         self.assertEqual(sorted(base.core_attributes),
                          sorted(subclass.core_attributes))
+
+
+class TestMiscellaneous(unittest.TestCase):
+    def test_set_write_concern_as_safe(self):
+        """Test the `_set_write_concern_as_safe()` method."""
+
+        options = {'safe': True}
+        base._set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': True})
+
+        options = {'safe': False}
+        base._set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': False})
+
+        options = {'safe': False}
+        base._set_write_concern_as_safe(options, True)
+        self.assertEqual(options, {'safe': True})
+
+    def test_set_write_concern_as_safe_with_w(self):
+        """Test the `_set_write_concern_as_safe()` method with `w`."""
+
+        options = {'w': 1}
+        base._set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': True})
+
+        options = {'w': 0}
+        base._set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': False})
+
+        options = {'w': 0}
+        base._set_write_concern_as_safe(options, True)
+        self.assertEqual(options, {'safe': True})
+
+    def test_set_write_concern_as_w(self):
+        """Test the `_set_write_concern_as_w()` method."""
+
+        options = {'w': 2}
+        base._set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 2})
+
+        options = {'w': 0}
+        base._set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 0})
+
+        options = {'w': 0}
+        base._set_write_concern_as_w(options, 2)
+        self.assertEqual(options, {'w': 2})
+
+    def test_set_write_concern_as_w_deprecationwarning(self):
+        ("Test that `_set_write_concern_as_w()` triggers "
+         "`DeprecationWarning`.")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+
+            base._set_write_concern_as_w({'safe': True}, 0)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+            expected = 'safe has been deprecated. Please use w instead.'
+            actual = str(w[-1].message)
+            self.assertEqual(actual, expected)
+
+    def test_set_write_concern_as_w_with_safe(self):
+        """Test the `_set_write_concern_as_w()` method with `safe`."""
+
+        options = {'safe': True}
+        base._set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 1})
+
+        options = {'safe': 0}
+        base._set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 0})
+
+        options = {'safe': 0}
+        base._set_write_concern_as_w(options, 2)
+        self.assertEqual(options, {'w': 2})

@@ -87,11 +87,11 @@ class TestDatabase(unittest.TestCase):
             # m needs to be given its _id again because delete() strips
             # it to prevent attempts to resave a deleted document
             m = UnsafeModel(_id=AN_OBJECT_ID)
-            m.delete(safe=False)
+            m.delete(w=0)
             remove.assert_called_with({'_id': AN_OBJECT_ID}, **wc_off)
 
             m = UnsafeModel(_id=AN_OBJECT_ID)
-            m.delete(safe=True)
+            m.delete(w=1)
             remove.assert_called_with({'_id': AN_OBJECT_ID}, **wc_on)
 
     def test__find(self):

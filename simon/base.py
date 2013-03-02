@@ -41,6 +41,10 @@ def _set_write_concern_as_safe(options, force_safe):
 def _set_write_concern_as_w(options, force_safe):
     """Sets w safe parameter for write concern."""
 
+    if 'safe' in options and options['safe'] is not None:
+        message = 'safe has been deprecated. Please use w instead.'
+        warnings.warn(message, DeprecationWarning)
+
     safe = options.pop('safe', None)
     w = options.pop('w', None)
 
@@ -150,7 +154,7 @@ class Model(object):
         return self.find()
 
     @classmethod
-    def create(cls, safe=False, **fields):
+    def create(cls, **fields):
         """Creates a new document and saves it to the database.
 
         This is a convenience method to create a new document. It will
@@ -161,9 +165,11 @@ class Model(object):
         :class:`TypeError` will be raised if any of the fields are not
         provided.
 
-        :param safe: (optional) Whether to perform the create in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :param \*\*fields: Keyword arguments to add to the document.
         :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.Model` -- the new document.
@@ -172,12 +178,17 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
+        write_concern = {
+            'safe': fields.pop('safe', None),
+            'w': fields.pop('w', None),
+        }
+
         new = cls(**fields)
-        new.save(safe=safe)
+        new.save(**write_concern)
 
         return new
 
-    def delete(self, safe=False):
+    def delete(self, **kwargs):
         """Deletes a single document from the database.
 
         This will delete the document associated with the instance
@@ -185,9 +196,11 @@ class Model(object):
         most likely indicate that the document has never been saved--
         a :class:`TypeError` will be raised.
 
-        :param safe: (optional) Whether to perform the delete in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0
@@ -199,10 +212,14 @@ class Model(object):
                             "'{1}' attribute has not been set.".format(
                                 self.__class__.__name__, '_id'))
 
-        kwargs = {'safe': safe}
-        _set_write_concern(kwargs, self._meta.write_concern)
+        write_concern = {
+            'safe': kwargs.pop('safe', None),
+            'w': kwargs.pop('w', None),
+        }
 
-        self._meta.db.remove({'_id': id}, **kwargs)
+        _set_write_concern(write_concern, self._meta.write_concern)
+
+        self._meta.db.remove({'_id': id}, **write_concern)
 
         self._document = {}
 
@@ -270,7 +287,7 @@ class Model(object):
         return cls._find(find_one=True, q=q, **fields)
 
     @classmethod
-    def get_or_create(cls, safe=False, **fields):
+    def get_or_create(cls, **fields):
         """Gets an existing or creates a new document.
 
         This will find and return a single document matching the
@@ -281,9 +298,11 @@ class Model(object):
         will also be returned to indicate whether or not the document
         was created.
 
-        :param safe: (optional) Whether to perform the create in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :param \*\*fields: Keyword arguments specifying the query.
         :type \*\*fields: \*\*kwargs.
         :returns: tuple -- the :class:`~simon.Model` and whether the
@@ -293,12 +312,18 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
+        write_concern = {
+            'safe': fields.pop('safe', None),
+            'w': fields.pop('w', None),
+        }
+
         try:
             return cls.get(**fields), False
         except cls.NoDocumentFound:
-            return cls.create(safe=safe, **fields), True
+            return cls.create(safe=write_concern['safe'], w=write_concern['w'],
+                              **fields), True
 
-    def increment(self, field=None, value=1, safe=False, **fields):
+    def increment(self, field=None, value=1, **fields):
         """Performs an atomic increment.
 
         This can be used to update a single field::
@@ -323,9 +348,11 @@ class Model(object):
         :type field: str.
         :param value: (optional) Value to increment ``field`` by.
         :type value: int.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :param \*\*fields: Keyword arguments specifying fields and
                            increment values.
         :type \*\*fields: \*\*kwargs.
@@ -333,6 +360,11 @@ class Model(object):
 
         .. versionadded:: 0.1.0
         """
+
+        write_concern = {
+            'safe': fields.pop('safe', None),
+            'w': fields.pop('w', None),
+        }
 
         # There needs to be something to update.
         if field is None and not fields:
@@ -348,9 +380,9 @@ class Model(object):
         for k, v in fields.items():
             update[k] = v
 
-        self._update({'$inc': update}, safe=safe)
+        self._update({'$inc': update}, **write_concern)
 
-    def pop(self, fields, safe=False):
+    def pop(self, fields, **kwargs):
         """Performs an atomic pop.
 
         Values can be popped from either the end or the beginning of a
@@ -364,9 +396,11 @@ class Model(object):
 
         :param fields: The names of the fields to pop from.
         :type fields: str, list, or tuple.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :raises: :class:`TypeError`
 
         .. versionadded:: 0.5.0
@@ -374,6 +408,11 @@ class Model(object):
 
         if not fields:
             raise ValueError
+
+        write_concern = {
+            'safe': kwargs.pop('safe', None),
+            'w': kwargs.pop('w', None),
+        }
 
         if not isinstance(fields, (list, tuple)):
             fields = (fields,)
@@ -389,9 +428,9 @@ class Model(object):
 
             update[field] = direction
 
-        self._update({'$pop': update}, safe=safe)
+        self._update({'$pop': update}, **write_concern)
 
-    def pull(self, field=None, value=None, safe=False, **fields):
+    def pull(self, field=None, value=None, **fields):
         """Performs an atomic pull.
 
         With MongoDB there are two types of pull operations: ``$pull``
@@ -422,9 +461,11 @@ class Model(object):
         :type field: str.
         :param value: (optional) Value to pull from ``field``.
         :type value: scalar or list.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :param \*\*fields: Keyword arguments specifying fields and
                            the values to pull.
         :type \*\*fields: \*\*kwargs.
@@ -432,6 +473,11 @@ class Model(object):
 
         .. versionadded:: 0.5.0
         """
+
+        write_concern = {
+            'safe': fields.pop('safe', None),
+            'w': fields.pop('w', None),
+        }
 
         # There needs to be something to update.
         if not (field and value) and not fields:
@@ -457,10 +503,9 @@ class Model(object):
             else:
                 update['$pull'][k] = v
 
-        self._update(update, safe=safe)
+        self._update(update, **write_concern)
 
-    def push(self, field=None, value=None, allow_duplicates=True, safe=False,
-             **fields):
+    def push(self, field=None, value=None, allow_duplicates=True, **fields):
         """Performs an atomic push.
 
         With MongoDB there are three types of push operations:
@@ -498,9 +543,11 @@ class Model(object):
         :param allow_duplicates: (optional) Whether to allow duplicate
                                  values to be added to the list
         :type allow_duplicates: bool.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :param \*\*fields: Keyword arguments specifying fields and
                            the values to push.
         :type \*\*fields: \*\*kwargs.
@@ -508,6 +555,11 @@ class Model(object):
 
         .. versionadded:: 0.5.0
         """
+
+        write_concern = {
+            'safe': fields.pop('safe', None),
+            'w': fields.pop('w', None),
+        }
 
         # There needs to be something to update.
         if not (field and value) and not fields:
@@ -536,9 +588,9 @@ class Model(object):
             else:
                 update['$push' if allow_duplicates else '$addToSet'][k] = v
 
-        self._update(update, safe=safe)
+        self._update(update, **write_concern)
 
-    def raw_update(self, fields, safe=False):
+    def raw_update(self, fields, **kwargs):
         """Performs an update using a raw document.
 
         This method should be used carefully as it will perform the
@@ -559,17 +611,24 @@ class Model(object):
 
         :param fields: The document to save to the database.
         :type fields: dict.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0
         """
 
-        self._update(fields, safe=safe)
+        write_concern = {
+            'safe': kwargs.pop('safe', None),
+            'w': kwargs.pop('w', None),
+        }
 
-    def remove_fields(self, fields, safe=False):
+        self._update(fields, **write_concern)
+
+    def remove_fields(self, fields, **kwargs):
         """Removes the specified fields from the document.
 
         The specified fields will be removed from the document in the
@@ -589,13 +648,20 @@ class Model(object):
 
         :param fields: The names of the fields to remove.
         :type fields: str, list, or tuple.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :raises: :class:`TypeError`
 
         .. versionadded:: 0.1.0
         """
+
+        write_concern = {
+            'safe': kwargs.pop('safe', None),
+            'w': kwargs.pop('w', None),
+        }
 
         # fields can contain a single item as a string. If it's not a
         # list or tuple, make it one. Otherwise the generators below
@@ -606,9 +672,9 @@ class Model(object):
 
         fields = dict((k, 1) for k in fields)
 
-        self._update({'$unset': fields}, safe=safe)
+        self._update({'$unset': fields}, **write_concern)
 
-    def rename(self, field_from=None, field_to=None, safe=False, **fields):
+    def rename(self, field_from=None, field_to=None, **fields):
         """Performs an atomic rename.
 
         This can be used to update a single field::
@@ -634,9 +700,11 @@ class Model(object):
         :type field_from: str.
         :param field_to: (optional) New name for ``field_from``.
         :type field_to: int.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :param \*\*fields: Keyword arguments specifying fields and their
                            new names.
         :type \*\*fields: \*\*kwargs.
@@ -644,6 +712,11 @@ class Model(object):
 
         .. versionadded:: 0.5.0
         """
+
+        write_concern = {
+            'safe': fields.pop('safe', None),
+            'w': fields.pop('w', None),
+        }
 
         # There needs to be something to update.
         if not (field_from and field_to) and not fields:
@@ -659,9 +732,9 @@ class Model(object):
         for k, v in fields.items():
             update[k] = v
 
-        self._update({'$rename': update}, safe=safe)
+        self._update({'$rename': update}, **write_concern)
 
-    def save(self, safe=False):
+    def save(self, **kwargs):
         """Saves the object to the database.
 
         When saving a new document for a model with ``auto_timestamp``
@@ -673,9 +746,11 @@ class Model(object):
         :class:`TypeError` will be raised if any of the fields have not
         been associated with the instance.
 
-        :param safe: (optional) Whether to perform the save in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :raises: :class:`TypeError`
 
         .. versionchanged:: 0.4.0
@@ -684,6 +759,11 @@ class Model(object):
 
         .. versionadded:: 0.1.0
         """
+
+        write_concern = {
+            'safe': kwargs.pop('safe', None),
+            'w': kwargs.pop('w', None),
+        }
 
         # Use a copy of the internal document so _id can be safely
         # removed.
@@ -703,7 +783,7 @@ class Model(object):
 
         try:
             # Use upsert=True so new documents can be inserted.
-            self._update(fields, upsert=True, safe=safe)
+            self._update(fields, upsert=True, **write_concern)
         except:
             # Raise the exception that was caught
             e = sys.exc_info()
@@ -718,7 +798,7 @@ class Model(object):
                 if 'modified' in fields:
                     self._document['modified'] = fields['modified']
 
-    def save_fields(self, fields, safe=False):
+    def save_fields(self, fields, **kwargs):
         """Saves only the specified fields.
 
         If only a select number of fields need to be updated, an atomic
@@ -741,13 +821,20 @@ class Model(object):
 
         :param fields: The names of the fields to update.
         :type fields: str, list, or tuple.
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :raises: :class:`AttributeError`, :class:`TypeError`
 
         .. versionadded:: 0.1.0
         """
+
+        write_concern = {
+            'safe': kwargs.pop('safe', None),
+            'w': kwargs.pop('w', None),
+        }
 
         # fields can contain a single item as a string. If it's not a
         # list or tuple, make it one. Otherwise the generators below
@@ -760,9 +847,9 @@ class Model(object):
 
         # Set use_internal so that the real values will come from
         # self._document instead of the document passed to _update().
-        self._update({'$set': update}, use_internal=True, safe=safe)
+        self._update({'$set': update}, use_internal=True, **write_concern)
 
-    def update(self, safe=False, **fields):
+    def update(self, **fields):
         """Performs an atomic update.
 
         If only a select number of fields need to be updated, an atomic
@@ -778,9 +865,11 @@ class Model(object):
         Unlike :meth:`~simon.Model.save`, ``modified`` will not be
         updated.
 
-        :param safe: (optional) Whether to perform the update in safe
-                     mode.
+        :param safe: (optional) **DEPRECATED** Use ``w`` instead.
         :type safe: bool.
+        :param w: (optional) The number of servers that must receive the
+                  update for it to be successful.
+        :type w: int.
         :param \*\*fields: The fields to update.
         :type \*\*fields: \*\*kwargs.
         :raises: :class:`TypeError`
@@ -788,7 +877,12 @@ class Model(object):
         .. versionadded:: 0.1.0
         """
 
-        self._update({'$set': fields}, safe=safe)
+        write_concern = {
+            'safe': fields.pop('safe', None),
+            'w': fields.pop('w', None),
+        }
+
+        self._update({'$set': fields}, **write_concern)
 
     # Database interaction methods
 
