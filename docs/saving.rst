@@ -165,28 +165,27 @@ raw_update
 Write Concern
 -------------
 
-When Simon was first started, the default behavior with MongoDB was to
-perform writes without write concern. This led to faster performance but
-had the potential for data loss. Queries performed with write concern
-enabled will request the result of ``getLastError()`` before returning
-execution to the application. More information is available in the
-`MongoDB Docs`_.
-
-.. _MongoDB Docs: http://docs.mongodb.org/manual/core/write-operations/#write-concern
-
-Simon was built with respect for this behavior as the default. All of
-the methods discussed above as well as :meth:`~simon.Model.delete`
-accept an argument called ``safe`` that can override the default
-behavior.
+Simon ships with write concern enabled for all updates by default. For
+an update to be successful, it must be successful or, in the case of a
+replica set, it must be successful on the primary server. All of the
+methods discussed above as well as :meth:`~simon.Model.delete` and
+:meth:`~simon.Model.get_or_create` accept an argument called ``w`` that
+can be used to override the default behavior. This can come in the form
+of disabling write concern with ``w=0`` or making sure the update is
+replicated toa number of secondary servers with ``w=3``. The latter
+will only be considered successful if write happens on the primary
+server and two secondary servers.
 
 .. code-block:: python
 
     user = User(name='Simon')
-    user.save(safe=True)
+    user.save(w=0)
 
     user.update(email='simon@example.com', safe=True)
 
-    user.delete(safe=True)
+    user.delete(w=2)
 
-This also applies to the :meth:`~simon.Model.get_or_create` method
-discussed in :doc:`querying`.
+A much more detailed explanation of write concern is available in the
+`MongoDB Docs`_.
+
+.. _MongoDB Docs: http://docs.mongodb.org/manual/core/write-operations/#write-concern

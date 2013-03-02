@@ -59,13 +59,13 @@ to documents that haven't already been saved and don't already have a
     print '%r %r %r' % (user.id, user.created, user.modified)
     # ObjectId('50e467580ea5faf0b83679f7') datetime.datetime(2013, 1, 2, 16, 59, 4, 688000) datetime.datetime(2013, 1, 2, 16, 59, 4, 688000)
 
-**By default saves do not happen with write concern set.** There is no
-guarantee the document will make it to the database. Write concern can
-be turned on by setting the ``safe`` parameter to ``True``.
+By default saves happen with write concern set. If, for some reason,
+this behavior isn't desired, write concern can be turned off by setting
+the ``w`` parameter to ``0``.
 
 .. code-block:: python
 
-    user.save(safe=True)
+    user.save(w=0)
 
 
 Retrieving
