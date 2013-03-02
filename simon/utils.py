@@ -150,11 +150,11 @@ def is_atomic(document):
     return any(k[0] == '$' for k in document.keys())
 
 
-def map_fields(cls, fields, with_operators=False, flatten_keys=False):
+def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
     """Maps attribute names to document keys.
 
-    Attribute names will be mapped to document keys using
-    ``cls._meta.field_map``. If any of the attribute names contain
+    Attribute names will be mapped to document keys using the mapping
+    specified in ``field_map``. If any of the attribute names contain
     ``__``, :meth:`parse_kwargs` will be called and a second pass
     through ``cls._meta.field_map`` will be performed.
 
@@ -191,7 +191,7 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
     operator sans the ``$`` (e.g., ``__gt``, ``__lt``) to the name of
     the key::
 
-        map_fields(ModelClass, {'a__gt': 1, 'b__lt': 2},
+        map_fields(mapping, {'a__gt': 1, 'b__lt': 2},
                    with_operators=True)
 
     This will check for a greater than 1 and b less than 2 as::
@@ -201,7 +201,7 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
     The ``$not`` operator can be used in conjunction with any of the
     above operators::
 
-        map_fields(ModelClass, {'a__gt': 1, 'b__not__lt': 2},
+        map_fields(mapping, {'a__gt': 1, 'b__not__lt': 2},
                    with_operators=True)
 
     This will check for a greater than 1 and b not less than 2 as::
@@ -212,8 +212,8 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
     of the result dictionary, using a ``.`` to separate each part of a
     key. When this happens, the second pass will be omitted.
 
-    :param cls: A subclass of :class:`~simon.Model`.
-    :type cls: type.
+    :param field_map: Key/value pairs defining the field map.
+    :type field_map: dict.
     :param fields: Key/value pairs to be used for queries.
     :type fields: dict.
     :param with_operators: (optional) Whether or not to process
@@ -269,7 +269,7 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
             # back into map_fields() and a new list should be build
             # from the mapped dictionaries.
             if isinstance(v, list):
-                v = [map_fields(cls=cls, fields=x,
+                v = [map_fields(field_map=field_map, fields=x,
                                 with_operators=with_operators,
                                 flatten_keys=flatten_keys) for x in v]
         else:
@@ -279,7 +279,7 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
             # the syntax for mapping embedded keys. If a . exists in the
             # new key, second_pass should be set to True because
             # parse_kwargs() should be run
-            k = cls._meta.field_map.get(k.replace('__', '.'), k)
+            k = field_map.get(k.replace('__', '.'), k)
             if '.' in k:
                 second_pass = True
 
@@ -311,7 +311,7 @@ def map_fields(cls, fields, with_operators=False, flatten_keys=False):
 
         mapped_fields = {}
         for k, v in fields.items():
-            k = cls._meta.field_map.get(k, k)
+            k = field_map.get(k, k)
 
             mapped_fields[k] = v
 

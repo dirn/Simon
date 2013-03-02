@@ -150,8 +150,8 @@ class QuerySet(object):
         # If the QuerySet has a model class, check for key in the
         # class's field map
         if self._cls:
-            query = map_fields(self._cls, {key: 1}, flatten_keys=True,
-                               with_operators=True)
+            query = map_fields(self._cls._meta.field_map, {key: 1},
+                               flatten_keys=True, with_operators=True)
             key = query.keys()[0]
 
         return self._cursor.distinct(key)
@@ -215,8 +215,8 @@ class QuerySet(object):
                 direction = 1
 
             if self._cls:
-                query = map_fields(self._cls, {key: 1}, flatten_keys=True,
-                                   with_operators=True)
+                query = map_fields(self._cls._meta.field_map, {key: 1},
+                                   flatten_keys=True, with_operators=True)
                 key = query.keys()[0]
 
             sorting.append((key, direction))

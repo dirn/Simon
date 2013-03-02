@@ -133,7 +133,7 @@ class Model(object):
         # used to store the real document's values
         self._document = {}
 
-        fields = map_fields(self.__class__, fields)
+        fields = map_fields(self.__class__._meta.field_map, fields)
 
         # Add the fields to the document
         for k, v in fields.items():
@@ -922,7 +922,8 @@ class Model(object):
         if isinstance(q, Q):
             fields.update(q._filter)
 
-        query = map_fields(cls, fields, flatten_keys=True, with_operators=True)
+        query = map_fields(cls._meta.field_map, fields, flatten_keys=True,
+                           with_operators=True)
 
         # If querying by the _id, make sure it's an Object ID.
         if '_id' in query:
@@ -1020,7 +1021,7 @@ class Model(object):
             .. versionadded:: 0.3.0
             """
 
-            fields = map_fields(cls, fields, flatten_keys=True)
+            fields = map_fields(cls._meta.field_map, fields, flatten_keys=True)
             if use_internal:
                 try:
                     fields = dict((k, get_nested_key(self._document, k))
@@ -1053,7 +1054,7 @@ class Model(object):
                 fields[k] = map_field_names_and_values(v)
                 if k == '$rename':
                     for field_from, field_to in fields[k].items():
-                        mapped = map_fields(cls, {field_to: 1},
+                        mapped = map_fields(cls._meta.field_map, {field_to: 1},
                                             flatten_keys=True)
                         fields[k][field_from] = mapped.keys()[0]
         else:
@@ -1203,8 +1204,8 @@ class Model(object):
                 # map_fields() requires a dict, so make a simple one and
                 # then capture the first (only) key in the resulting
                 # dict.
-                mapped_name = map_fields(self.__class__, {name: 1},
-                                         flatten_keys=True)
+                mapped_name = map_fields(self.__class__._meta.field_map,
+                                         {name: 1}, flatten_keys=True)
                 mapped_name = mapped_name.keys()[0]
             else:
                 mapped_name = name
@@ -1239,7 +1240,7 @@ class Model(object):
             # map_fields() requires a dict, so make a simple one and
             # then capture the first (only) key in the resulting
             # dict.
-            mapped_name = map_fields(self.__class__, {name: 1},
+            mapped_name = map_fields(self.__class__._meta.field_map, {name: 1},
                                      flatten_keys=True)
             mapped_name = mapped_name.keys()[0]
 
