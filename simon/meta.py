@@ -118,7 +118,7 @@ class Meta(object):
 
         # If _id hasn't been specified, add it.
         if '_id' not in self.typed_fields:
-            self.typed_fields['_id'] = (ObjectId,)
+            self.typed_fields['_id'] = ObjectId
 
     @property
     def db(self):
