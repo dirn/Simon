@@ -156,7 +156,7 @@ You can also require multiple fields.
     class Meta:
         required_fields = ('email', 'name')
 
-If you try to save a document that is missing andy of the required
+If you try to save a document that is missing and of the required
 fields, :class:`TypeError` will be raised.
 
 
