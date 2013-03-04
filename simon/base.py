@@ -994,7 +994,7 @@ class Model(object):
         :type use_internal: bool.
         :param \*\*kwargs: The optional settings.
         :type \*\*kwargs: \*\*kwargs.
-        :raises: :class:`TypeError`
+        :raises: :class:`AttributeError`, :class:`TypeError`
 
         .. versionadded:: 0.3.0
         """
