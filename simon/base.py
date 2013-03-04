@@ -1002,6 +1002,31 @@ class Model(object):
         # Save characters
         cls = self.__class__
 
+        def check_typed_fields(fields):
+            """Checks that fields are of the correct type.
+
+            This function checks the fields that are being saved and
+            makes sure they are of the correct type. If a field isn't
+            of the right type, :class:`TypeError` will be raised.
+
+            :param fields: The document to check.
+            :type fields: dict.
+            :raises: :class:`TypeError`
+
+            .. versionadded:: 0.6.0
+            """
+
+            for k, v in cls._meta.typed_fields.items():
+                if k not in fields:
+                    # Nothing to see here.
+                    continue
+
+                if not isinstance(fields[k], v):
+                    message = ("The '{0}' object cannot be updated because"
+                               " its '{1}' field must be {2}.")
+                    message = message.format(cls.__name__, k, v)
+                    raise TypeError(message)
+
         def map_field_names_and_values(fields):
             """Maps field names and values.
 
