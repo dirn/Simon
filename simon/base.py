@@ -1005,8 +1005,8 @@ class Model(object):
         def map_field_names_and_values(fields):
             """Maps field names and values.
 
-            This method will take care of mapping the keys of ``fields``
-            to the correct syntax for the query.
+            This function will take care of mapping the keys of
+            ``fields`` to the correct syntax for the query.
 
             When the  ``use_internal`` argument of
             :meth:`~simon.Model._update()` is set to ``True``, it will
