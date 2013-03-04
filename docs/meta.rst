@@ -17,6 +17,7 @@ their default values, as show below.
             map_id = True
             safe = True
             sort = None
+            typed_fields = {'id': ObjectId}
             w = 1
 
 
@@ -212,6 +213,29 @@ check out the :meth:`~simon.query.QuerySet.sort` method.
 
 More information about natural sort is available in the
 `MongoDB Docs <http://docs.mongodb.org/manual/reference/glossary/#term-natural-order>`_.
+
+
+.. _typed_fields:
+
+``typed_fields``
+----------------
+
+While Simon tries to expose MongoDB's dynamic schema by not enforcing a
+schema on a model, there may be times when you wish to make sure that a
+field is of a certain type before it is saved. You can designate a
+field as typed by adding it to the ``typed_fields`` option in the
+``Meta`` class.
+
+.. code-block:: python
+
+    class Meta:
+        typed_fields = {'email': basestring}
+
+With this setting, you wouldn't be able to save a document if its
+``email`` field contained a value that wasn't a string.
+
+If you try to save a document with a field that is of the wrong type,
+:class:`TypeError` will be raised.
 
 
 .. _w:
