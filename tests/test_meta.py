@@ -5,6 +5,7 @@ try:
 except ImportError:
     import unittest
 
+from bson import ObjectId
 import mock
 import pymongo
 
@@ -52,6 +53,7 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(meta.map_id, True)
         self.assertEqual(meta.required_fields, None)
         self.assertEqual(meta.sort, None)
+        self.assertEqual(meta.typed_fields, {'_id': ObjectId})
 
         if pymongo.version_tuple[:2] >= (2, 4):
             self.assertEqual(meta.write_concern, 1)
@@ -140,6 +142,7 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(meta.map_id, True)
         self.assertEqual(meta.required_fields, None)
         self.assertEqual(meta.sort, None)
+        self.assertEqual(meta.typed_fields, {})
 
         if pymongo.version_tuple[:2] >= (2, 4):
             self.assertEqual(meta.write_concern, 1)
@@ -237,6 +240,31 @@ class TestMeta(unittest.TestCase):
 
         self.assertEqual('{0!s}'.format(meta),
                          'TestClass.Meta')
+
+    def test_typed_fields(self):
+        """Test the `typed_fields` attribute."""
+
+        # default
+        meta = Meta(None)
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.typed_fields, {'_id': ObjectId})
+
+        # custom
+        meta = Meta(mock.Mock(typed_fields={'a': int}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.typed_fields,
+                         {'_id': ObjectId, 'a': int})
+
+        # with _id
+        meta = Meta(mock.Mock(typed_fields={'a': int, 'id': None}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.typed_fields, {'a': int, '_id': None})
 
     def test_unicode(self):
         """Test the `__unicode__()` method."""

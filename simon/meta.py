@@ -2,7 +2,10 @@
 
 import warnings
 
+from bson import ObjectId
+
 from .connection import get_database, pymongo_supports_mongoclient
+from .utils import map_fields
 
 __all__ = ('Meta',)
 
@@ -25,6 +28,7 @@ class Meta(object):
         self.map_id = True
         self.required_fields = None
         self.sort = None
+        self.typed_fields = {}
 
         if pymongo_supports_mongoclient:
             self.write_concern = 1
@@ -52,7 +56,8 @@ class Meta(object):
 
             # Add the known attributes to the instance
             for name in ('auto_timestamp', 'collection', 'database',
-                         'field_map', 'map_id', 'required_fields', 'sort'):
+                         'field_map', 'map_id', 'required_fields', 'sort',
+                         'typed_fields'):
                 if name in meta_attrs:
                     setattr(self, name, meta_attrs.pop(name))
 
@@ -106,6 +111,14 @@ class Meta(object):
         # later.
         if self.sort and not isinstance(self.sort, (list, tuple)):
             self.sort = (self.sort,)
+
+        # Apply field_map to typed_fields now rather than each time it's
+        # needed.
+        self.typed_fields = map_fields(self.field_map, self.typed_fields)
+
+        # If _id hasn't been specified, add it.
+        if '_id' not in self.typed_fields:
+            self.typed_fields['_id'] = (ObjectId,)
 
     @property
     def db(self):
