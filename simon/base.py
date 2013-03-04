@@ -1017,11 +1017,13 @@ class Model(object):
             """
 
             for k, v in cls._meta.typed_fields.items():
-                if k not in fields:
-                    # Nothing to see here.
+                try:
+                    value = get_nested_key(fields, k)
+                except KeyError:
+                    # Nothing to see here
                     continue
 
-                if not isinstance(fields[k], v):
+                if not isinstance(value, v):
                     message = ("The '{0}' object cannot be updated because"
                                " its '{1}' field must be {2}.")
                     message = message.format(cls.__name__, k, v)

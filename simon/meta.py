@@ -114,7 +114,8 @@ class Meta(object):
 
         # Apply field_map to typed_fields now rather than each time it's
         # needed.
-        self.typed_fields = map_fields(self.field_map, self.typed_fields)
+        self.typed_fields = map_fields(self.field_map, self.typed_fields,
+                                       flatten_keys=True)
 
         # If _id hasn't been specified, add it.
         if '_id' not in self.typed_fields:

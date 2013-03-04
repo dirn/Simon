@@ -259,6 +259,14 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(TestClass._meta.typed_fields,
                          {'_id': ObjectId, 'a': int})
 
+        # nested
+        meta = Meta(mock.Mock(typed_fields={'a.b': int}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.typed_fields,
+                         {'_id': ObjectId, 'a.b': int})
+
         # with _id
         meta = Meta(mock.Mock(typed_fields={'a': int, 'id': None}))
 
