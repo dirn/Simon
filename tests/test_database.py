@@ -575,7 +575,7 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a.b': 1}, **wc_on)
 
-    def test__update_required_rename(self):
+    def test__update_required_field_rename(self):
         ("Test the `_update()` method with a required field with a "
          "rename.")
 
@@ -618,10 +618,10 @@ class TestDatabase(unittest.TestCase):
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 
+        # TypeError should be raised when required fields are missing.
         m2 = RequiredModel(_id=AN_OBJECT_ID)
         m3 = RequiredModel(_id=AN_OBJECT_ID, a=1, b=2)
 
-        # TypeError should be raised when required fields are missing.
         with self.assertRaises(TypeError) as e:
             m2._update({})
 
