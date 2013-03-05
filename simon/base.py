@@ -16,7 +16,7 @@ __all__ = ('Model',)
 
 
 # In version 2.4, PyMongo introduced MongoClient as a
-# replcaement for Connection. Part of the new class is that the
+# replacement for Connection. Part of the new class is that the
 # safe argument was deprecated in favor of the w argument.
 # Whereas safe was a boolean, w is an integer representing the
 # number of servers in a replica set that must receive the
@@ -1148,7 +1148,7 @@ class Model(object):
             # that have been updated. Build a dictionary containing the
             # keys of the fields that need to be reloaded and retrieve
             # them from the database. Then apply the new values to the
-            # instance's interal document.
+            # instance's internal document.
 
             unset = fields.pop('$unset', None)
             if unset:
