@@ -6,8 +6,10 @@ except ImportError:
     import unittest
 
 from contextlib import nested
+import datetime
 import warnings
 
+from bson import ObjectId
 import mock
 import pymongo
 
@@ -681,6 +683,50 @@ class TestDatabase(unittest.TestCase):
                         'of the correct type.')
             actual = str(w[-1].message)
             self.assertEqual(actual, expected)
+
+    def test__update_typed_field_types(self):
+        ("Test the `_update()` method with different types of typed "
+         "fields.")
+
+        MultipleTypedModel = ModelFactory('MultipleTypedModel',
+                                          typed_fields={
+                                              'int': int,
+                                              'string': basestring,
+                                              'datetime': datetime.datetime,
+                                              'list': list,
+                                              'objectid': ObjectId,
+                                          })
+
+        m = MultipleTypedModel(_id=AN_OBJECT_ID)
+
+        # Test a successful update.
+        with nested(mock.patch.object(MultipleTypedModel._meta.db, 'update'),
+                    mock.patch.object(MultipleTypedModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID}
+
+            m._update({
+                'int': 1,
+                'string': 'value',
+                'datetime': datetime.datetime.now(),
+                'list': [],
+                'objectid': ObjectId(),
+            })
+
+            self.assertTrue(update.called)
+
+        # Test a bunch of bad updates.
+        with self.assertRaises(TypeError):
+            m._update({'int': 'value'})
+
+        with self.assertRaises(TypeError):
+            m._update({'datetime': 'value'})
+
+        with self.assertRaises(TypeError):
+            m._update({'list': 'value'})
+
+        with self.assertRaises(TypeError):
+            m._update({'objectid': 'value'})
 
     def test__update_typeerror(self):
         """Test that `_update()` raises `TypeError`."""
