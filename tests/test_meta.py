@@ -274,6 +274,27 @@ class TestMeta(unittest.TestCase):
 
         self.assertEqual(TestClass._meta.typed_fields, {'a': int, '_id': None})
 
+    def test_typed_fields_typeerror(self):
+        """Test the `typed_fields` attribute for `TypeError`."""
+
+        meta = Meta(mock.Mock(typed_fields={'a': 1}))
+
+        with self.assertRaises(TypeError) as e:
+            meta.add_to_original(TestClass, '_meta')
+
+        actual = str(e.exception)
+        expected = "'typed_fields' must be either a type or None."
+        self.assertEqual(actual, expected)
+
+        meta = Meta(mock.Mock(typed_fields={'a': 'b'}))
+
+        with self.assertRaises(TypeError) as e:
+            meta.add_to_original(TestClass, '_meta')
+
+        actual = str(e.exception)
+        expected = "'typed_fields' must be either a type or None."
+        self.assertEqual(actual, expected)
+
     def test_unicode(self):
         """Test the `__unicode__()` method."""
 
