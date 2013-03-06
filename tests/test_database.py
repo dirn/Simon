@@ -6,6 +6,7 @@ except ImportError:
     import unittest
 
 from contextlib import nested
+import warnings
 
 import mock
 import pymongo
@@ -25,6 +26,7 @@ else:
 DefaultModel = ModelFactory('DefaultModel')
 MappedModel = ModelFactory('MappedModel', field_map={'fake': 'real'})
 RequiredModel = ModelFactory('RequiredModel', required_fields=('a', 'b'))
+TypedModel = ModelFactory('TypedModel', typed_fields={'a': int})
 
 
 class TestDatabase(unittest.TestCase):
@@ -604,6 +606,82 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'$unset': {'c': 1}}, **wc_on)
 
+    def test__update_typed_field(self):
+        """Test the `_update()` method with a typed field."""
+
+        m = TypedModel(_id=AN_OBJECT_ID)
+
+        with mock.patch.object(TypedModel._meta.db, 'update') as update:
+            m._update({'a': 1})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'a': 1}, **wc_on)
+
+    def test__update_typed_field_atomic(self):
+        ("Test the `_update()` method with a typed field with an atomic"
+         " update.")
+
+        m = TypedModel(_id=AN_OBJECT_ID)
+
+        with nested(mock.patch.object(TypedModel._meta.db, 'update'),
+                    mock.patch.object(TypedModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+
+            m._update({'$set': {'a': 1}})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'$set': {'a': 1}}, **wc_on)
+
+    def test__update_typed_field_nested(self):
+        ("Test the `_update()` method with a typed field with an "
+         "embedded document.")
+
+        TypedEmbeddedModel = ModelFactory('TypedEmbeddedModel',
+                                          typed_fields={'a.b': int})
+
+        m = TypedEmbeddedModel(_id=AN_OBJECT_ID)
+
+        with nested(mock.patch.object(TypedEmbeddedModel._meta.db, 'update'),
+                    mock.patch.object(TypedEmbeddedModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
+
+            m._update({'a.b': 1})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'a.b': 1}, **wc_on)
+
+    def test__update_typed_field_rename(self):
+        ("Test the `_update()` method with a typed field with a "
+         "rename.")
+
+        m = TypedModel(_id=AN_OBJECT_ID, b=1)
+
+        # This with needs to go before catch_warnings() or it will a
+        # DeprecationWarning will be included in w for Python 2.7+.
+        with nested(mock.patch.object(TypedModel._meta.db, 'update'),
+                    mock.patch.object(TypedModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+
+                m._update({'$rename': {'b': 'a'}})
+
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$rename': {'b': 'a'}},
+                                          **wc_on)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, UserWarning))
+
+            expected = ('You are renaming a typed field. Its value may not be '
+                        'of the correct type.')
+            actual = str(w[-1].message)
+            self.assertEqual(actual, expected)
+
     def test__update_typeerror(self):
         """Test that `_update()` raises `TypeError`."""
 
@@ -643,6 +721,26 @@ class TestDatabase(unittest.TestCase):
 
         expected = ("The 'RequiredModel' object cannot be updated because it "
                     "must contain all of the required fields: a, b.")
+        actual = str(e.exception)
+        self.assertEqual(actual, expected)
+
+        # TypeError should be raised when typed fields are of the wrong
+        # type.
+        m4 = TypedModel(_id=AN_OBJECT_ID)
+
+        with self.assertRaises(TypeError) as e:
+            m4._update({'a': 'string'})
+
+        expected = ("The 'TypedModel' object cannot be updated because its 'a'"
+                    " field must be <type 'int'>.")
+        actual = str(e.exception)
+        self.assertEqual(actual, expected)
+
+        with self.assertRaises(TypeError) as e:
+            m4._update({'$set': {'a': 'string'}})
+
+        expected = ("The 'TypedModel' object cannot be updated because its 'a'"
+                    " field must be <type 'int'>.")
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 

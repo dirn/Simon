@@ -1119,6 +1119,31 @@ class Model(object):
                                          ', '.join(self._meta.required_fields))
                 raise TypeError(message)
 
+        # Enforce the typed fields
+        if cls._meta.typed_fields:
+            if is_atomic(fields):
+                for k, v in fields.items():
+                    if k == '$rename':
+                        # $rename doesn't alter the value stored in the
+                        # database. Therefore the value associated with
+                        # the instance is not a reliable way to tell if
+                        # a renamed field will be of the wrong type. The
+                        # only way to really know would be to load the
+                        # value from the database. Rather than incurring
+                        # this blocking operation, renaming to a typed
+                        # field will trigger a UserWarning instead.
+                        if any(v in cls._meta.typed_fields
+                               for v in v.values()):
+                            message = ('You are renaming a typed field. Its '
+                                       'value may not be of the correct type.')
+                            warnings.warn(message, UserWarning)
+                    elif k != '$unset':
+                        # Fields don't need to be checked if they're
+                        # being removed.
+                        check_typed_fields(v)
+            else:
+                check_typed_fields(fields)
+
         # Handling the write concern argument has been pushed off to
         # another method that is aware of what PyMongo supports.
         _set_write_concern(kwargs, self._meta.write_concern)
