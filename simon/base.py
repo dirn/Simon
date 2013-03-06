@@ -1056,7 +1056,7 @@ class Model(object):
             if use_internal:
                 try:
                     fields = dict((k, get_nested_key(self._document, k))
-                                  for k in fields.keys())
+                                  for k in fields.iterkeys())
                 except KeyError:
                     # KeyError will be raised by get_nested_key() when a
                     # field isn't part of the internal document.
@@ -1137,7 +1137,7 @@ class Model(object):
                         # this blocking operation, renaming to a typed
                         # field will trigger a UserWarning instead.
                         if any(v in cls._meta.typed_fields
-                               for v in v.values()):
+                               for v in v.itervalues()):
                             message = ('You are renaming a typed field. Its '
                                        'value may not be of the correct type.')
                             warnings.warn(message, UserWarning)
@@ -1196,18 +1196,19 @@ class Model(object):
             if rename:
                 # The old fields need to be removed. The new fields will
                 # be added through the find_one() below.
-                for k in rename.keys():
+                for k in rename.iterkeys():
                     if '.' in k:
                         self._document = remove_nested_key(self._document, k)
                     else:
                         self._document.pop(k, None)
-                fields['$rename'] = dict((v, 1) for v in rename.values())
+                fields['$rename'] = dict((v, 1) for v in rename.itervalues())
 
             # If the only operation was an $unset, we're done.
             if not fields:
                 return
 
-            fields = dict((k, 1) for v in fields.values() for k in v.keys())
+            fields = dict((k, 1) for v in fields.itervalues()
+                          for k in v.iterkeys())
             doc = self._meta.db.find_one({'_id': id}, fields)
 
             # There's no need to update the _id
