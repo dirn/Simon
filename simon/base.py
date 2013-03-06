@@ -996,6 +996,10 @@ class Model(object):
         :type \*\*kwargs: \*\*kwargs.
         :raises: :class:`AttributeError`, :class:`TypeError`
 
+        .. versionchanged:: 0.6.0
+           ``typed_fields`` is enforced
+           ``safe`` is being deprecated in favor of ``w`` (PyMongo 2.4+)
+
         .. versionadded:: 0.3.0
         """
 
