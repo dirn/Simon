@@ -241,7 +241,7 @@ class Model(object):
                   objects matching ``query``.
 
         .. versionchanged:: 0.3.0
-           Deprecating ``qs`` in favor of ``q``
+           ``qs`` is being deprecated in favor of ``q``
 
         .. versionadded:: 0.1.0
         """
@@ -273,7 +273,7 @@ class Model(object):
                  :class:`~simon.Model.NoDocumentFound`
 
         .. versionchanged:: 0.3.0
-           Deprecating ``qs`` in favor of ``q``
+           ``qs`` is being deprecated in favor of ``q``
 
         .. versionadded:: 0.1.0
         """
