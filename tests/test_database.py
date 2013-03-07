@@ -654,6 +654,25 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a.b': 1}, **wc_on)
 
+    def test__update_type_field_none(self):
+        ("Test the `_update()` method with a typed field set to None "
+         "instead of a type.")
+
+        TypedNoneModel = ModelFactory('TypedNoneModel',
+                                      typed_fields={'a': None})
+
+        m = TypedNoneModel(_id=AN_OBJECT_ID)
+
+        with nested(mock.patch.object(TypedNoneModel._meta.db, 'update'),
+                    mock.patch.object(TypedNoneModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+
+            m._update({'a': 1})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'a': 1}, **wc_on)
+
     def test__update_typed_field_rename(self):
         ("Test the `_update()` method with a typed field with a "
          "rename.")

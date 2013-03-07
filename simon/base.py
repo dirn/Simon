@@ -1021,6 +1021,11 @@ class Model(object):
             """
 
             for k, v in cls._meta.typed_fields.items():
+                if v is None:
+                    # None means the field can be any type. This will
+                    # probably be used most often with _id.
+                    continue
+
                 try:
                     value = get_nested_key(fields, k)
                 except KeyError:
