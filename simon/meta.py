@@ -113,9 +113,18 @@ class Meta(object):
             self.sort = (self.sort,)
 
         # Make sure that only types (or None) as used with typed_fields.
-        if any(not (v is None or isinstance(v, type))
-               for v in self.typed_fields.itervalues()):
-            raise TypeError("'typed_fields' must be either a type or None.")
+        for field in self.typed_fields.itervalues():
+            if field is None or isinstance(field, type):
+                # The field is properly typed.
+                continue
+
+            if (isinstance(field, list) and len(field) == 1
+                    and isinstance(field[0], type)):
+                # The field is a properly typed list.
+                continue
+
+            message = 'Fields must be a type, a typed list, or None.'
+            raise TypeError(message)
         # Apply field_map to typed_fields now rather than each time it's
         # needed.
         self.typed_fields = map_fields(self.field_map, self.typed_fields,

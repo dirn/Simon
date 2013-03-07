@@ -29,6 +29,7 @@ DefaultModel = ModelFactory('DefaultModel')
 MappedModel = ModelFactory('MappedModel', field_map={'fake': 'real'})
 RequiredModel = ModelFactory('RequiredModel', required_fields=('a', 'b'))
 TypedModel = ModelFactory('TypedModel', typed_fields={'a': int})
+TypedListModel = ModelFactory('TypedListModel', typed_fields={'a': [int]})
 
 
 class TestDatabase(unittest.TestCase):
@@ -635,6 +636,22 @@ class TestDatabase(unittest.TestCase):
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'$set': {'a': 1}}, **wc_on)
 
+    def test__update_type_field_list(self):
+        ("Test the `_update()` method with a typed field that is a "
+         "typed list.")
+
+        m = TypedListModel(_id=AN_OBJECT_ID)
+
+        with nested(mock.patch.object(TypedListModel._meta.db, 'update'),
+                    mock.patch.object(TypedListModel._meta.db, 'find_one'),
+                    ) as (update, find_one):
+            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
+
+            m._update({'a': [1]})
+
+            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                      document={'a': [1]}, **wc_on)
+
     def test__update_typed_field_nested(self):
         ("Test the `_update()` method with a typed field with an "
          "embedded document.")
@@ -806,6 +823,24 @@ class TestDatabase(unittest.TestCase):
 
         expected = ("The 'TypedModel' object cannot be updated because its 'a'"
                     " field must be <type 'int'>.")
+        actual = str(e.exception)
+        self.assertEqual(actual, expected)
+
+        m5 = TypedListModel(_id=AN_OBJECT_ID)
+
+        with self.assertRaises(TypeError) as e:
+            m5._update({'a': ['b']})
+
+        expected = ("The 'TypedListModel' object cannot be updated because its"
+                    " 'a' field must be [<type 'int'>].")
+        actual = str(e.exception)
+        self.assertEqual(actual, expected)
+
+        with self.assertRaises(TypeError) as e:
+            m5._update({'a': [1, 'b']})
+
+        expected = ("The 'TypedListModel' object cannot be updated because its"
+                    " 'a' field must be [<type 'int'>].")
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 

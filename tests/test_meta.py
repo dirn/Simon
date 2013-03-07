@@ -259,6 +259,14 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(TestClass._meta.typed_fields,
                          {'_id': ObjectId, 'a': int})
 
+        # list
+        meta = Meta(mock.Mock(typed_fields={'a': [int]}))
+
+        meta.add_to_original(TestClass, '_meta')
+
+        self.assertEqual(TestClass._meta.typed_fields,
+                         {'_id': ObjectId, 'a': [int]})
+
         # nested
         meta = Meta(mock.Mock(typed_fields={'a.b': int}))
 
@@ -283,7 +291,7 @@ class TestMeta(unittest.TestCase):
             meta.add_to_original(TestClass, '_meta')
 
         actual = str(e.exception)
-        expected = "'typed_fields' must be either a type or None."
+        expected = 'Fields must be a type, a typed list, or None.'
         self.assertEqual(actual, expected)
 
         meta = Meta(mock.Mock(typed_fields={'a': 'b'}))
@@ -292,7 +300,16 @@ class TestMeta(unittest.TestCase):
             meta.add_to_original(TestClass, '_meta')
 
         actual = str(e.exception)
-        expected = "'typed_fields' must be either a type or None."
+        expected = 'Fields must be a type, a typed list, or None.'
+        self.assertEqual(actual, expected)
+
+        meta = Meta(mock.Mock(typed_fields={'a': ['b']}))
+
+        with self.assertRaises(TypeError) as e:
+            meta.add_to_original(TestClass, '_meta')
+
+        actual = str(e.exception)
+        expected = 'Fields must be a type, a typed list, or None.'
         self.assertEqual(actual, expected)
 
     def test_unicode(self):

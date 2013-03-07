@@ -1032,11 +1032,18 @@ class Model(object):
                     # Nothing to see here
                     continue
 
-                if not isinstance(value, v):
-                    message = ("The '{0}' object cannot be updated because"
-                               " its '{1}' field must be {2}.")
-                    message = message.format(cls.__name__, k, v)
-                    raise TypeError(message)
+                if isinstance(v, list):
+                    if all(isinstance(x, v[0]) for x in value):
+                        # All values in the list are of the right type.
+                        continue
+                elif isinstance(value, v):
+                    # The value is of the right type.
+                    continue
+
+                message = ("The '{0}' object cannot be updated because "
+                           "its '{1}' field must be {2}.")
+                message = message.format(cls.__name__, k, v)
+                raise TypeError(message)
 
         def map_field_names_and_values(fields):
             """Maps field names and values.
