@@ -195,6 +195,23 @@ class TestDatabase(unittest.TestCase):
 
             find.assert_called_with({'a.b': 1})
 
+    def test__find_objectid_none(self):
+        """Test the `_find()` method with an untyped Object Id."""
+
+        UntypedModel = ModelFactory('UntypedModel', typed_fields={'_id': None})
+
+        with nested(mock.patch.object(UntypedModel._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
+
+            UntypedModel._find(_id='a')
+
+            find.assert_called_with({'_id': 'a'})
+
+            UntypedModel._find(_id=1)
+
+            find.assert_called_with({'_id': 1})
+
     def test__find_objectid_string(self):
         """Test the `_find()` method with a string `_id`."""
 
@@ -205,6 +222,19 @@ class TestDatabase(unittest.TestCase):
             DefaultModel._find(_id=AN_OBJECT_ID_STR)
 
             find.assert_called_with({'_id': AN_OBJECT_ID})
+
+    def test__find_objectid_typed(self):
+        """Test the `_find()` method with a typed Object Id."""
+
+        IntModel = ModelFactory('IntModel', typed_fields={'_id': int})
+
+        with nested(mock.patch.object(IntModel._meta.db, 'find'),
+                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
+            find.return_value = QuerySet
+
+            IntModel._find(_id=1)
+
+            find.assert_called_with({'_id': 1})
 
     def test__find_q(self):
         """Test the `_find()` method with a `Q` object."""
@@ -385,6 +415,39 @@ class TestDatabase(unittest.TestCase):
 
             update.assert_called_with(spec={'_id': AN_OBJECT_ID},
                                       document={'a.b': 1}, **wc_on)
+
+    def test__update_objectid_none(self):
+        """Test the `_update()` method with an untyped Object Id."""
+
+        UntypedModel = ModelFactory('UntypedModel', typed_fields={'_id': None})
+
+        with mock.patch.object(UntypedModel._meta.db, 'update') as update:
+            m1 = UntypedModel(_id='a')
+
+            m1._update({'b': 1})
+
+            update.assert_called_with(spec={'_id': 'a'}, document={'b': 1},
+                                      **wc_on)
+
+            m2 = UntypedModel(_id=1)
+
+            m2._update({'b': 2})
+
+            update.assert_called_with(spec={'_id': 1}, document={'b': 2},
+                                      **wc_on)
+
+    def test__update_objectid_typed(self):
+        """Test the `_update()` method with a typed Object Id."""
+
+        IntModel = ModelFactory('IntModel', typed_fields={'_id': int})
+
+        m = IntModel(_id=1)
+
+        with mock.patch.object(IntModel._meta.db, 'update') as update:
+            m._update({'b': 2})
+
+            update.assert_called_with(spec={'_id': 1}, document={'b': 2},
+                                      **wc_on)
 
     def test__update_pop(self):
         """Test the `_update()` method with a pop."""

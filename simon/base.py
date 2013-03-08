@@ -4,6 +4,8 @@ from collections import defaultdict
 import sys
 import warnings
 
+from bson import ObjectId
+
 from .connection import pymongo_supports_mongoclient
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .meta import Meta
@@ -925,8 +927,9 @@ class Model(object):
         query = map_fields(cls._meta.field_map, fields, flatten_keys=True,
                            with_operators=True)
 
-        # If querying by the _id, make sure it's an Object ID.
-        if '_id' in query:
+        # If querying by the _id, make sure it's an Object ID, but only
+        # if it's typed as one.
+        if '_id' in query and cls._meta.typed_fields.get('_id') == ObjectId:
             query['_id'] = guarantee_object_id(query['_id'])
 
         # Find all of the matching documents.
@@ -1084,10 +1087,13 @@ class Model(object):
                        "attribute has not been set.".format(cls.__name__))
             raise TypeError(message)
 
-        # Capture the _id and make sure it's an Object ID
+        # Capture the _id.
         id = self._document.get('_id')
         if id:
-            id = guarantee_object_id(id)
+            # Make sure it's an Object ID, but only if it's typed as
+            # one.
+            if cls._meta.typed_fields.get('_id') == ObjectId:
+                id = guarantee_object_id(id)
             # Updates (as opposed to inserts) need spec to match against
             kwargs['spec'] = {'_id': id}
 

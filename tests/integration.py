@@ -27,6 +27,13 @@ class TestModel(Model):
         database = 'simon-integration'
 
 
+class TestUntypedModel(Model):
+    class Meta:
+        collection = 'simon-integration'
+        database = 'simon-integration'
+        typed_fields = {'_id': None}
+
+
 class TestConnectionIntegrations(unittest.TestCase):
     """Connection integration tests"""
 
@@ -326,6 +333,18 @@ class TestDatabaseIntegrations(unittest.TestCase):
         doc = self.collection.find_one({'_id': m._document['_id']})
 
         self.assertEqual(doc['b'], 2)
+
+        # Update with non-Object Id
+
+        self.collection.insert({'_id': 1})
+
+        m = TestUntypedModel(_id=1)
+        m.a = 1
+        m.save()
+
+        doc = self.collection.find_one({'_id': 1})
+
+        self.assertEqual(doc['a'], 1)
 
     def test_save_fields(self):
         """Test the `save_fields()` method."""
