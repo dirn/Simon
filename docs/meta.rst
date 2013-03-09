@@ -234,6 +234,18 @@ field as typed by adding it to the ``typed_fields`` option in the
 With this setting, you wouldn't be able to save a document if its
 ``email`` field contained a value that wasn't a string.
 
+If addition to being any valid type, a field can be specified as a typed
+list.
+
+.. code-block:: python
+
+    class Meta:
+        typed_fields = {'tags': [basestring]}
+
+This will type the ``tags`` field as a list of strings. You wouldn't be
+able to save a document if its ``tags`` field contained anything other
+than a list whose values were all strings.
+
 If you try to save a document with a field that is of the wrong type,
 :class:`TypeError` will be raised.
 
