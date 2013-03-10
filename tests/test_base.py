@@ -11,7 +11,7 @@ import warnings
 
 import mock
 
-from simon import Model, base, connection
+from simon import Model, connection
 from simon.query import Q
 
 from .utils import AN_OBJECT_ID, ModelFactory
@@ -919,81 +919,3 @@ class TestModelMetaClass(unittest.TestCase):
         # except that the subclassed one shouldn't have Meta.
         self.assertEqual(sorted(base.core_attributes),
                          sorted(subclass.core_attributes))
-
-
-class TestMiscellaneous(unittest.TestCase):
-    def test_set_write_concern_as_safe(self):
-        """Test the `_set_write_concern_as_safe()` method."""
-
-        options = {'safe': True}
-        base._set_write_concern_as_safe(options, False)
-        self.assertEqual(options, {'safe': True})
-
-        options = {'safe': False}
-        base._set_write_concern_as_safe(options, False)
-        self.assertEqual(options, {'safe': False})
-
-        options = {'safe': False}
-        base._set_write_concern_as_safe(options, True)
-        self.assertEqual(options, {'safe': True})
-
-    def test_set_write_concern_as_safe_with_w(self):
-        """Test the `_set_write_concern_as_safe()` method with `w`."""
-
-        options = {'w': 1}
-        base._set_write_concern_as_safe(options, False)
-        self.assertEqual(options, {'safe': True})
-
-        options = {'w': 0}
-        base._set_write_concern_as_safe(options, False)
-        self.assertEqual(options, {'safe': False})
-
-        options = {'w': 0}
-        base._set_write_concern_as_safe(options, True)
-        self.assertEqual(options, {'safe': True})
-
-    def test_set_write_concern_as_w(self):
-        """Test the `_set_write_concern_as_w()` method."""
-
-        options = {'w': 2}
-        base._set_write_concern_as_w(options, 0)
-        self.assertEqual(options, {'w': 2})
-
-        options = {'w': 0}
-        base._set_write_concern_as_w(options, 0)
-        self.assertEqual(options, {'w': 0})
-
-        options = {'w': 0}
-        base._set_write_concern_as_w(options, 2)
-        self.assertEqual(options, {'w': 2})
-
-    def test_set_write_concern_as_w_deprecationwarning(self):
-        ("Test that `_set_write_concern_as_w()` triggers "
-         "`DeprecationWarning`.")
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-
-            base._set_write_concern_as_w({'safe': True}, 0)
-
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-
-            expected = 'safe has been deprecated. Please use w instead.'
-            actual = str(w[-1].message)
-            self.assertEqual(actual, expected)
-
-    def test_set_write_concern_as_w_with_safe(self):
-        """Test the `_set_write_concern_as_w()` method with `safe`."""
-
-        options = {'safe': True}
-        base._set_write_concern_as_w(options, 0)
-        self.assertEqual(options, {'w': 1})
-
-        options = {'safe': 0}
-        base._set_write_concern_as_w(options, 0)
-        self.assertEqual(options, {'w': 0})
-
-        options = {'safe': 0}
-        base._set_write_concern_as_w(options, 2)
-        self.assertEqual(options, {'w': 2})

@@ -6,13 +6,12 @@ import warnings
 
 from bson import ObjectId
 
-from .connection import pymongo_supports_mongoclient
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .meta import Meta
 from .query import Q, QuerySet
 from .utils import (current_datetime, get_nested_key, guarantee_object_id,
                     is_atomic, map_fields, remove_nested_key,
-                    update_nested_keys)
+                    set_write_concern, update_nested_keys)
 
 __all__ = ('Model',)
 
@@ -23,48 +22,6 @@ __all__ = ('Model',)
 # Whereas safe was a boolean, w is an integer representing the
 # number of servers in a replica set that must receive the
 # update before the write is considered successful.
-
-def _set_write_concern_as_safe(options, force_safe):
-    """Sets the safe parameter for write concern."""
-
-    safe = options.pop('safe', None)
-    w = options.pop('w', None)
-
-    if force_safe:
-        safe = True
-    else:
-        if safe is None and w:
-            safe = True
-        else:
-            safe = safe or False
-    options['safe'] = safe
-
-
-def _set_write_concern_as_w(options, force_safe):
-    """Sets w safe parameter for write concern."""
-
-    if 'safe' in options and options['safe'] is not None:
-        message = 'safe has been deprecated. Please use w instead.'
-        warnings.warn(message, DeprecationWarning)
-
-    safe = options.pop('safe', None)
-    w = options.pop('w', None)
-
-    if force_safe:
-        w = int(force_safe)  # use int() in case force_safe is True
-    else:
-        if w is None and safe:
-            w = 1
-        else:
-            w = w or 0
-    options['w'] = w
-
-
-if pymongo_supports_mongoclient:
-    _set_write_concern = _set_write_concern_as_w
-else:
-    _set_write_concern = _set_write_concern_as_safe
-
 
 class ModelMetaClass(type):
     """Define :class:`Model`
@@ -219,7 +176,7 @@ class Model(object):
             'w': kwargs.pop('w', None),
         }
 
-        _set_write_concern(write_concern, self._meta.write_concern)
+        set_write_concern(write_concern, self._meta.write_concern)
 
         self._meta.db.remove({'_id': id}, **write_concern)
 
@@ -1172,7 +1129,7 @@ class Model(object):
 
         # Handling the write concern argument has been pushed off to
         # another method that is aware of what PyMongo supports.
-        _set_write_concern(kwargs, self._meta.write_concern)
+        set_write_concern(kwargs, self._meta.write_concern)
 
         # Which function are we calling?
         if not id:

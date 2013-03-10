@@ -4,12 +4,16 @@ except ImportError:
     import unittest
 
 from datetime import datetime
+import warnings
 
 from bson.errors import InvalidId
+import pymongo
 
 from simon.utils import (current_datetime, get_nested_key, guarantee_object_id,
                          is_atomic, map_fields, parse_kwargs,
-                         remove_nested_key, update_nested_keys)
+                         remove_nested_key, set_write_concern,
+                         set_write_concern_as_safe, set_write_concern_as_w,
+                         update_nested_keys)
 
 from .utils import AN_OBJECT_ID, AN_OBJECT_ID_STR
 
@@ -476,6 +480,90 @@ class TestUtils(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             remove_nested_key(1, 'a')
+
+    def test_set_write_concern(self):
+        """Test the `set_write_concern()` method."""
+
+        if pymongo.version_tuple[:2] < (2, 4):
+            self.assertEqual(set_write_concern, set_write_concern_as_safe)
+        else:
+            self.assertEqual(set_write_concern, set_write_concern_as_w)
+
+    def test_set_write_concern_as_safe(self):
+        """Test the `set_write_concern_as_safe()` method."""
+
+        options = {'safe': True}
+        set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': True})
+
+        options = {'safe': False}
+        set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': False})
+
+        options = {'safe': False}
+        set_write_concern_as_safe(options, True)
+        self.assertEqual(options, {'safe': True})
+
+    def test_set_write_concern_as_safe_with_w(self):
+        """Test the `set_write_concern_as_safe()` method with `w`."""
+
+        options = {'w': 1}
+        set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': True})
+
+        options = {'w': 0}
+        set_write_concern_as_safe(options, False)
+        self.assertEqual(options, {'safe': False})
+
+        options = {'w': 0}
+        set_write_concern_as_safe(options, True)
+        self.assertEqual(options, {'safe': True})
+
+    def test_set_write_concern_as_w(self):
+        """Test the `set_write_concern_as_w()` method."""
+
+        options = {'w': 2}
+        set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 2})
+
+        options = {'w': 0}
+        set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 0})
+
+        options = {'w': 0}
+        set_write_concern_as_w(options, 2)
+        self.assertEqual(options, {'w': 2})
+
+    def test_set_write_concern_as_w_deprecationwarning(self):
+        ("Test that `set_write_concern_as_w()` triggers "
+         "`DeprecationWarning`.")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+
+            set_write_concern_as_w({'safe': True}, 0)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+            expected = 'safe has been deprecated. Please use w instead.'
+            actual = str(w[-1].message)
+            self.assertEqual(actual, expected)
+
+    def test_set_write_concern_as_w_with_safe(self):
+        """Test the `set_write_concern_as_w()` method with `safe`."""
+
+        options = {'safe': True}
+        set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 1})
+
+        options = {'safe': 0}
+        set_write_concern_as_w(options, 0)
+        self.assertEqual(options, {'w': 0})
+
+        options = {'safe': 0}
+        set_write_concern_as_w(options, 2)
+        self.assertEqual(options, {'w': 2})
 
     def test_update_nested_keys(self):
         """Test the `update_nested_values()` method."""

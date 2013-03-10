@@ -9,12 +9,15 @@ compatability of its API.
 
 import collections
 from datetime import datetime
+import warnings
 
 from bson import ObjectId
 
+from .connection import pymongo_supports_mongoclient
+
 __all__ = ('current_datetime', 'get_nested_key', 'guarantee_object_id',
            'is_atomic', 'map_fields', 'parse_kwargs', 'remove_nested_key',
-           'update_nested_keys')
+           'set_write_concern', 'update_nested_keys')
 
 
 # The logical operators are needed when mapping fields. The values
@@ -397,6 +400,71 @@ def remove_nested_key(original, key):
         del original[key]
 
     return original
+
+
+def set_write_concern_as_safe(options, force_write_concern):
+    """Sets the safe parameter for write concern.
+
+    If ``force_write_concern`` is ``True``, write concern will be used.
+
+    :param options: The potential write concern settings.
+    :type options: dict.
+    :param force_write_concern: A value to override ``options`` with.
+    :type force_write_concern: bool.
+
+    .. versionadded:: 0.3.0
+    """
+
+    safe = options.pop('safe', None)
+    w = options.pop('w', None)
+
+    if force_write_concern:
+        safe = True
+    else:
+        if safe is None and w:
+            safe = True
+        else:
+            safe = safe or False
+    options['safe'] = safe
+
+
+def set_write_concern_as_w(options, force_write_concern):
+    """Sets the w parameter for write concern.
+
+    If ``force_write_concern`` is a value greater than zero, write
+    concern will be used.
+
+    :param options: The potential write concern settings.
+    :type options: dict.
+    :param force_write_concern: A value to override ``options`` with.
+    :type force_write_concern: int.
+
+    .. versionadded:: 0.3.0
+    """
+
+    if 'safe' in options and options['safe'] is not None:
+        message = 'safe has been deprecated. Please use w instead.'
+        warnings.warn(message, DeprecationWarning)
+
+    safe = options.pop('safe', None)
+    w = options.pop('w', None)
+
+    if force_write_concern:
+        # use int() in case force_write_concern is True
+        w = int(force_write_concern)
+    else:
+        if w is None and safe:
+            w = 1
+        else:
+            w = w or 0
+    options['w'] = w
+
+
+# Export the relevant function as of set_write_concern()
+if pymongo_supports_mongoclient:
+    set_write_concern = set_write_concern_as_w
+else:
+    set_write_concern = set_write_concern_as_safe
 
 
 def update_nested_keys(original, updates):
