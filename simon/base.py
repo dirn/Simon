@@ -917,6 +917,9 @@ class Model(object):
         :raises: :class:`~simon.Model.MultipleDocumentsFound`,
                  :class:`~simon.Model.NoDocumentFound`
 
+        .. versionchanged:: 0.6.0
+           ``_id`` can be a type other than :class:`~pymongo.ObjectId`
+
         .. versionadded:: 0.3.0
         """
 
@@ -1001,6 +1004,7 @@ class Model(object):
 
         .. versionchanged:: 0.6.0
            ``typed_fields`` is enforced
+           ``_id`` can be a type other than :class:`~pymongo.ObjectId`
            ``safe`` is being deprecated in favor of ``w`` (PyMongo 2.4+)
 
         .. versionadded:: 0.3.0
