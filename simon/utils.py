@@ -412,7 +412,7 @@ def set_write_concern_as_safe(options, force_write_concern):
     :param force_write_concern: A value to override ``options`` with.
     :type force_write_concern: bool.
 
-    .. versionadded:: 0.3.0
+    .. versionadded:: 0.6.0
     """
 
     safe = options.pop('safe', None)
@@ -439,7 +439,7 @@ def set_write_concern_as_w(options, force_write_concern):
     :param force_write_concern: A value to override ``options`` with.
     :type force_write_concern: int.
 
-    .. versionadded:: 0.3.0
+    .. versionadded:: 0.6.0
     """
 
     if 'safe' in options and options['safe'] is not None:
