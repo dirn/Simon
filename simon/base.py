@@ -889,7 +889,7 @@ class Model(object):
 
         # If querying by the _id, make sure it's an Object ID, but only
         # if it's typed as one.
-        if '_id' in query and cls._meta.typed_fields.get('_id') == ObjectId:
+        if '_id' in query and cls._meta.typed_fields['_id'] == ObjectId:
             query['_id'] = guarantee_object_id(query['_id'])
 
         # Find all of the matching documents.
@@ -1053,7 +1053,7 @@ class Model(object):
         if id:
             # Make sure it's an Object ID, but only if it's typed as
             # one.
-            if cls._meta.typed_fields.get('_id') == ObjectId:
+            if cls._meta.typed_fields['_id'] == ObjectId:
                 id = guarantee_object_id(id)
             # Updates (as opposed to inserts) need spec to match against
             kwargs['spec'] = {'_id': id}

@@ -49,7 +49,10 @@ def ModelFactory(name, spec=None, **kwargs):
 
     # Add the attributes
     for k, v in kwargs.items():
-        if k in ('safe', 'w'):
+        if k == 'typed_fields':
+            if '_id' not in v:
+                v['_id'] = ObjectId
+        elif k in ('safe', 'w'):
             # write concern is unique
             k = 'write_concern'
             if pymongo.version_tuple[:2] >= (2, 4):
