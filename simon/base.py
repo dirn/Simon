@@ -1136,9 +1136,9 @@ class Model(object):
             # PyMongo's insert() method calls the argument doc_or_docs
             # instead of document.
             kwargs['doc_or_docs'] = kwargs.pop('document')
-            f = self._meta.db.insert
+            f = cls._meta.db.insert
         else:
-            f = self._meta.db.update
+            f = cls._meta.db.update
 
         result = f(**kwargs)
 
