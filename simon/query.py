@@ -1,5 +1,7 @@
 """Query functionality"""
 
+import pymongo
+
 from .utils import map_fields
 
 __all__ = ('Q', 'QuerySet')
@@ -210,9 +212,9 @@ class QuerySet(object):
         for key in keys:
             if key[0] == '-':
                 key = key[1:]
-                direction = -1
+                direction = pymongo.DESCENDING
             else:
-                direction = 1
+                direction = pymongo.ASCENDING
 
             if self._cls:
                 query = map_fields(self._cls._meta.field_map, {key: 1},
