@@ -94,10 +94,11 @@ def near(point, max_distance=None, unique_docs=False):
     ``$uniqueDocs`` without needing to structure the query as
     ``field={'$near': [x, y], '$maxDistance': z}``.
 
-    .. note:: As of the current release of MongoDB (2.2), ``$near``
-       queries do not support the ``$uniqueDocs`` parameter. It is
-       included here so that when support is added to MongoDB, no
-       changes to the library will be needed. - 11 November 2012
+    .. note::
+       As of the current release of MongoDB (2.2), ``$near`` queries do
+       not support the ``$uniqueDocs`` parameter. It is included here so
+       that when support is added to MongoDB, no changes to the library
+       will be needed. - 11 November 2012
 
     :param point: The point to use for the geospatial lookup.
     :type point: list, containing exactly two elements.
