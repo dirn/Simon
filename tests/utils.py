@@ -13,8 +13,8 @@ AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
 def ModelFactory(name, spec=None, **kwargs):
     """Creates a model on the fly.
 
-    **NOTE** This is meant for testing purposes only and is not intended
-    for production use.
+    .. note:: This is meant for testing purposes only and is not
+       intended for production use.
 
     ``ModelFactory`` can be used to create a class at run time. Items
     passed in through ``**kwargs`` will be added either to the model
