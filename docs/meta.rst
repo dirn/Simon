@@ -251,7 +251,7 @@ If you try to save a document with a field that is of the wrong type,
 
 .. note:: When setting ``_id`` to a type other than
    :class:`ObjectId <pymongo:bson.objectid.ObjectId>`, failing to
-   explicitly providing a value for ``_id`` will result in the database
+   explicitly provide a value for ``_id`` will result in the database
    automatically assigning an
    :class:`ObjectId <pymongo:bson.objectid.ObjectId>`.
 
