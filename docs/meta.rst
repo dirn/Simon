@@ -249,6 +249,17 @@ than a list whose values were all strings.
 If you try to save a document with a field that is of the wrong type,
 :class:`TypeError` will be raised.
 
+.. note:: When setting ``_id`` to a type other than
+   :class:`ObjectId <pymongo:bson.objectid.ObjectId>`, failing to
+   explicitly providing a value for ``_id`` will result in the database
+   automatically assigning an
+   :class:`ObjectId <pymongo:bson.objectid.ObjectId>`.
+
+.. note:: When setting ``_id`` to a type other than
+   :class:`ObjectId <pymongo:bson.objectid.ObjectId>`, it will be
+   possible to overwrite a document in the database if the value of
+   ``_id`` isn't first checked for uniqueness.
+
 
 .. _w:
 

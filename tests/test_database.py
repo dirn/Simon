@@ -427,14 +427,14 @@ class TestDatabase(unittest.TestCase):
             m1._update({'b': 1})
 
             update.assert_called_with(spec={'_id': 'a'}, document={'b': 1},
-                                      **wc_on)
+                                      upsert=True, **wc_on)
 
             m2 = UntypedModel(_id=1)
 
             m2._update({'b': 2})
 
             update.assert_called_with(spec={'_id': 1}, document={'b': 2},
-                                      **wc_on)
+                                      upsert=True, **wc_on)
 
     def test__update_objectid_typed(self):
         """Test the `_update()` method with a typed Object Id."""
@@ -447,7 +447,7 @@ class TestDatabase(unittest.TestCase):
             m._update({'b': 2})
 
             update.assert_called_with(spec={'_id': 1}, document={'b': 2},
-                                      **wc_on)
+                                      upsert=True, **wc_on)
 
     def test__update_pop(self):
         """Test the `_update()` method with a pop."""

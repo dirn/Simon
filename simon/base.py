@@ -1138,6 +1138,10 @@ class Model(object):
             kwargs['doc_or_docs'] = kwargs.pop('document')
             f = cls._meta.db.insert
         else:
+            if cls._meta.typed_fields['_id'] != ObjectId:
+                # In order to handle inserting documents with custom
+                # values for _id an upsert is needed.
+                kwargs['upsert'] = True
             f = cls._meta.db.update
 
         result = f(**kwargs)
