@@ -208,7 +208,7 @@ center
     center = [x, y]
     users = User.find(location=geo.circle(center, radius))
 
-Here's a quick run through of these queries in the mongo Shell:
+Here's a quick run through of these queries in the ``mongo`` Shell:
 
 .. code-block:: javascript
 
@@ -237,7 +237,7 @@ not
 
     users = User.find(score__not__gt=1000)
 
-To perform this query in the mongo Shell:
+To perform this query in the ``mongo`` Shell:
 
 .. code-block:: javascript
 
@@ -278,7 +278,7 @@ Be careful, however, as chaining together a lot of queries through
 different operators can result in deeply nested queries, which may
 become inefficient.
 
-Here's how these queries would look in the mongo Shell:
+Here's how these queries would look in the ``mongo`` Shell:
 
 .. code-block:: javascript
 

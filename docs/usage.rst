@@ -40,8 +40,8 @@ and whose ``company`` field has a value of ``My Company``:
 
     internal_users = Users.find(name='Simon', company='My Company')
 
-If you were to execute these queries using the mongo Shell, they would
-look like:
+If you were to execute these queries using the ``mongo`` Shell, they
+would look like:
 
 .. code-block:: javascript
 
@@ -100,7 +100,7 @@ database with the one associated with the instance.
     user.email = 'simon@example.org'
     user.save()  # update
 
-The equivalent queries in the mongo Shell would be:
+The equivalent queries in the ``mongo`` Shell would be:
 
 .. code-block:: javascript
 
@@ -124,7 +124,7 @@ simply a matter of calling :meth:`~simon.Model.delete`.
 Be careful as this will raise a :class:`TypeError` if you try to delete
 a document that was never saved.
 
-If you were to execute this query directly in mongo Shell, it would
+If you were to execute this query directly in ``mongo`` Shell, it would
 look like:
 
 .. code-block:: javascript

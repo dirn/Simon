@@ -37,8 +37,8 @@ document.
     user.save()
 
 The first of these calls to :meth:`~simon.Model.save` will result in an
-``insert``. The second will result in an ``update``. In the mongo Shell
-they would be written as:
+``insert``. The second will result in an ``update``. In the ``mongo``
+Shell they would be written as:
 
 .. code-block:: javascript
 
@@ -73,7 +73,7 @@ save_fields
     user.friends = ['Alvin', 'Theodore']
     user.save_fields(['score', 'friends'])
 
-  In the mongo Shell these would be:
+  In the ``mongo`` Shell these would be:
 
   .. code-block:: javascript
 
@@ -113,7 +113,7 @@ increment
 
     user.increment(score=100, level=1)
 
-  The equivalent queries in the mongo Shell would be:
+  The equivalent queries in the ``mongo`` Shell would be:
 
   .. code-block:: javascript
 
@@ -135,7 +135,7 @@ remove_fields
 
     user.remove_fields(['level', 'friends'])
 
-  To execute these same queries in the mongo Shell:
+  To execute these same queries in the ``mongo`` Shell:
 
   .. code-block:: javascript
 

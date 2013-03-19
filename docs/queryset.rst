@@ -49,7 +49,7 @@ not affect the direction of other sorts.
     # sort by name ascending, email descending, and date_of_birth ascending
     users = User.all().sort('name', '-email', 'date_of_birth')
 
-Here are the queries in the mongo Shell:
+Here are the queries in the ``mongo`` Shell:
 
 .. code-block:: javascript
 
@@ -95,7 +95,7 @@ The methods can be used in any order.
     # retrieve the second page of 10 documents
     users = User.all().skip(10).limit(10)
 
-Here are the queries in the mongo Shell:
+Here are the queries in the ``mongo`` Shell:
 
 .. code-block:: javascript
 
@@ -119,7 +119,7 @@ It is possible to get a list of unique values for a single field using
     # get a list of all email addresses for users named Simon
     emails = User.find(name='Simon').distinct('email')
 
-Unlike Simon, the same query in the mongo Shell is handled at the
+Unlike Simon, the same query in the ``mongo`` Shell is handled at the
 collection level:
 
 .. code-block:: javascript
@@ -140,7 +140,7 @@ provides that information in :meth:`~simon.query.QuerySet.count`.
 Simon makes sure that the any calls to
 :meth:`~simon.query.QuerySet.limit` and
 :meth:`~simon.query.QuerySet.skip` are factored in. Executing the same
-thing in mongo Shell would look like:
+thing in ``mongo`` Shell would look like:
 
 .. code-block:: javascript
 

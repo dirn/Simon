@@ -124,7 +124,8 @@ shorter variations in the database.
     user = User.create(first_name='Simon', last_name='Seville',
                        location='Fresno, CA')
 
-This query executing in the mongo Shell would look a little different:
+This query executing in the ``mongo`` Shell would look a little
+different:
 
 .. code-block:: javascript
 
