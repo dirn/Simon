@@ -359,6 +359,23 @@ class TestDatabaseIntegrations(unittest.TestCase):
 
         self.assertEqual(doc['b'], 2)
 
+    def test_sort(self):
+        """Test the `sort()` method."""
+
+        self.collection.insert([{'a': 2}, {'a': 1}, {'a': 3}])
+
+        qs = TestModel.all().sort('a')
+
+        self.assertEqual(qs[0]._document['a'], 1)
+        self.assertEqual(qs[1]._document['a'], 2)
+        self.assertEqual(qs[2]._document['a'], 3)
+
+        qs = TestModel.all().sort('-a')
+
+        self.assertEqual(qs[0]._document['a'], 3)
+        self.assertEqual(qs[1]._document['a'], 2)
+        self.assertEqual(qs[2]._document['a'], 1)
+
     def test_update(self):
         """Test the `update()` method."""
 

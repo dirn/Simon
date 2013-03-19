@@ -211,57 +211,65 @@ class TestQuerySet(unittest.TestCase):
     def test_sort(self):
         """Test the `sort()` method."""
 
-        self.qs.sort('_id')
+        qs = self.qs.sort('_id')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('_id', 1)])
+        self.assertEqual(qs._sorting, [('_id', 1)])
+        qs._cursor.sort.assert_not_called()
 
-        self.qs.sort('-_id')
+        qs = self.qs.sort('-_id')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('_id', -1)])
+        self.assertEqual(qs._sorting, [('_id', -1)])
+        qs._cursor.sort.assert_not_called()
 
     def test_sort_field_map(self):
         """Test the `sort()` method with a name in `field_map`."""
 
         self.model_qs._cls = MappedModel
 
-        self.model_qs.sort('fake')
+        qs = self.model_qs.sort('fake')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('real', 1)])
+        self.assertEqual(qs._sorting, [('real', 1)])
+        qs._cursor.sort.assert_not_called()
 
     def test_sort_multiple_ascending(self):
         """Test the `sort()` method for multiple ascending keys."""
 
-        self.qs.sort('a', 'b')
+        qs = self.qs.sort('a', 'b')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('a', 1), ('b', 1)])
+        self.assertEqual(qs._sorting, [('a', 1), ('b', 1)])
+        qs._cursor.sort.assert_not_called()
 
     def test_sort_multiple_descending(self):
         """Test the `sort()` method for multiple descending keys."""
 
-        self.qs.sort('-a', '-b')
+        qs = self.qs.sort('-a', '-b')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('a', -1), ('b', -1)])
+        self.assertEqual(qs._sorting, [('a', -1), ('b', -1)])
+        qs._cursor.sort.assert_not_called()
 
     def test_sort_multiple_ascending_then_descending(self):
         """Test the `sort()` method for multiple keys ascending first."""
 
-        self.qs.sort('a', '-b')
+        qs = self.qs.sort('a', '-b')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('a', 1), ('b', -1)])
+        self.assertEqual(qs._sorting, [('a', 1), ('b', -1)])
+        qs._cursor.sort.assert_not_called()
 
     def test_sort_multiple_descending_then_ascending(self):
         """Test the `sort()` method for multiple keys descending first."""
 
-        self.qs.sort('-a', 'b')
+        qs = self.qs.sort('-a', 'b')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('a', -1), ('b', 1)])
+        self.assertEqual(qs._sorting, [('a', -1), ('b', 1)])
+        qs._cursor.sort.assert_not_called()
 
     def test_sort_nested_field(self):
         """Test the `sort()` method with a nested field."""
 
-        self.model_qs.sort('a__b')
+        qs = self.model_qs.sort('a__b')
         self.cursor.clone.assert_called_with()
-        self.cursor.clone().sort.assert_called_with([('a.b', 1)])
+        self.assertEqual(qs._sorting, [('a.b', 1)])
+        qs._cursor.sort.assert_not_called()
 
     def test__fill_to(self):
         """Test the `_fill_to()` method."""
@@ -309,6 +317,18 @@ class TestQuerySet(unittest.TestCase):
         self.qs._fill_to(3)
 
         self.assertEqual(len(self.qs._items), 3)
+
+    def test__fill_to_sort(self):
+        """Test that `_fill_to()` correctly handles sorting."""
+
+        self.cursor.count.return_value = 3
+
+        self.qs._sorting = [('a', 1)]
+
+        self.qs._fill_to(0)
+
+        self.cursor.sort.assert_called_with([('a', 1)])
+        self.assertIsNone(self.qs._sorting)
 
     def test__fill_to_twice(self):
         """Test that `_fill_to()` can be called multiple times."""

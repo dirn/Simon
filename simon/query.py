@@ -112,6 +112,8 @@ class QuerySet(object):
 
         self._items = []
 
+        self._sorting = None
+
     def count(self):
         """Gets the number of documents in the :class:`QuerySet`.
 
@@ -202,6 +204,9 @@ class QuerySet(object):
         :type \*keys: \*args.
         :returns: :class:`QuerySet` -- the sorted documents.
 
+        .. versionchanged:: 0.3.0
+           Sorting is cached until documents are loaded
+
         .. versionadded:: 0.1.0
         """
 
@@ -224,7 +229,12 @@ class QuerySet(object):
             sorting.append((key, direction))
 
         # Make sure to clone the cursor so as not to alter the original
-        return QuerySet(self._cursor.clone().sort(sorting), self._cls)
+        qs = QuerySet(self._cursor.clone(), self._cls)
+
+        # Add the sorting so that _fill_to() can apply it later.
+        qs._sorting = sorting
+
+        return qs
 
     def _fill_to(self, index):
         """Builds the cache of documents retrieved from the cursor.
@@ -238,6 +248,9 @@ class QuerySet(object):
         :param index: Index to fill the cache to.
         :type index: int.
 
+        .. versionchanged:: 0.3.0
+           Processes the sorting when documents are first fetched
+
         .. versionadded:: 0.1.0
         """
 
@@ -245,6 +258,12 @@ class QuerySet(object):
         # out early.
         if index < len(self._items):
             return
+
+        if self._sorting:
+            # If there's a sort, apply it...
+            self._cursor.sort(self._sorting)
+            # and remove it so it won't happen again.
+            self._sorting = None
 
         # If the specified index is beyond the total number of
         # documents, load until the last document
