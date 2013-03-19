@@ -1,6 +1,15 @@
 History
 -------
 
+0.6.0 (2013-03-19)
+++++++++++++++++++
+
+- Add support for typed fields
+- Add support for non Object ID values for ``_id``
+- Deprecate ``safe``
+- Add ``meta`` module and place ``Meta`` in it
+- Only apply sort when documents are retrieved
+
 0.5.0 (2013-02-21)
 ++++++++++++++++++
 
