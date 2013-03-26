@@ -10,14 +10,39 @@ compatability of its API.
 import collections
 from datetime import datetime
 import warnings
+try:
+    # @raymondh added the ignored() context manager in Python 3.4:
+    # http://hg.python.org/cpython/rev/406b47c64480.
+    # It's awesome and I want to use it...
+    from contextlib import ignored
+except ImportError:
+    from contextlib import contextmanager
+
+    # ... but if this is running on an older version of Python--
+    # especially since 3.4 hasn't been released yet at the time of this
+    # change--I'm adding it in manually. The following is taken directly
+    # from Lib/contextlib.py.
+
+    @contextmanager
+    def ignored(*exceptions):
+        """Context manager to ignore specifed exceptions
+
+             with ignored(OSError):
+                 os.remove(somefile)
+
+        """
+        try:
+            yield
+        except exceptions:
+            pass
 
 from bson import ObjectId
 
 from .connection import pymongo_supports_mongoclient
 
 __all__ = ('current_datetime', 'get_nested_key', 'guarantee_object_id',
-           'is_atomic', 'map_fields', 'parse_kwargs', 'remove_nested_key',
-           'set_write_concern', 'update_nested_keys')
+           'ignored', 'is_atomic', 'map_fields', 'parse_kwargs',
+           'remove_nested_key', 'set_write_concern', 'update_nested_keys')
 
 
 # The logical operators are needed when mapping fields. The values

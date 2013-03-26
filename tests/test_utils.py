@@ -10,7 +10,7 @@ from bson.errors import InvalidId
 import pymongo
 
 from simon.utils import (current_datetime, get_nested_key, guarantee_object_id,
-                         is_atomic, map_fields, parse_kwargs,
+                         ignored, is_atomic, map_fields, parse_kwargs,
                          remove_nested_key, set_write_concern,
                          set_write_concern_as_safe, set_write_concern_as_w,
                          update_nested_keys)
@@ -616,3 +616,28 @@ class TestUtils(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             update_nested_keys(1, 1)
+
+
+# The below is taken directly from Lib/test/test_contextlib.py as of
+# http://hg.python.org/cpython/rev/406b47c64480.
+class TestIgnored(unittest.TestCase):
+
+    def test_no_exception(self):
+
+        with ignored(ValueError):
+            self.assertEqual(pow(2, 5), 32)
+
+    def test_exact_exception(self):
+
+        with ignored(TypeError):
+            len(5)
+
+    def test_multiple_exception_args(self):
+
+        with ignored(ZeroDivisionError, TypeError):
+            len(5)
+
+    def test_exception_hierarchy(self):
+
+        with ignored(LookupError):
+            'Hello'[50]
