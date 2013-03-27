@@ -2,7 +2,7 @@
 
 import pymongo
 
-from .utils import map_fields
+from .utils import ignored, map_fields
 
 __all__ = ('Q', 'QuerySet')
 
@@ -276,19 +276,17 @@ class QuerySet(object):
         # the one specified by index. If the :class:`QuerySet` has a
         # model class, store an instance of the class in the cache,
         # otherwise store the raw document
-        try:
+        with ignored(StopIteration):
+            # StopIteration should never happen because of the check at
+            # the top of this method, but it's here just in case
+            # something crazy happens, like a document is added to the
+            # cursor (since new documents can suddenly appear in a
+            # cursor) during iteration.
             for x in range(len(self._items), index + 1):
                 item = self._cursor.next()
                 if self._cls:
                     item = self._cls(**item)
                 self._items.append(item)
-        except StopIteration:
-            # This should never happen because of the check at the top
-            # of this method, but it's here just in case something
-            # crazy happens, like a document is added to the cursor
-            # (since new documents can suddenly appear in a cursor)
-            # during iteration
-            pass
 
     def __getitem__(self, k):
         """Gets an item or slice from the :class:`QuerySet`.

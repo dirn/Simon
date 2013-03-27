@@ -10,7 +10,7 @@ from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .meta import Meta
 from .query import Q, QuerySet
 from .utils import (current_datetime, get_nested_key, guarantee_object_id,
-                    is_atomic, map_fields, remove_nested_key,
+                    ignored, is_atomic, map_fields, remove_nested_key,
                     set_write_concern, update_nested_keys)
 
 __all__ = ('Model',)
@@ -1243,11 +1243,10 @@ class Model(object):
                 mapped_name = mapped_name.keys()[0]
             else:
                 mapped_name = name
-            try:
+
+            with ignored(AttributeError):
+                # If not, give it a go the normal way.
                 return get_nested_key(self._document, mapped_name)
-            except AttributeError:
-                # Give it a go the normal way
-                pass
 
         # If the attribute is a key in the document, use it.
         name = self._meta.field_map.get(name, name)
