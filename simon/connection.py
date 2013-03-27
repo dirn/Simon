@@ -1,5 +1,7 @@
 """Manage database connections"""
 
+import warnings
+
 from pymongo import uri_parser
 try:
     # pymongo 2.4+
@@ -7,8 +9,13 @@ try:
     pymongo_supports_mongoclient = True
 except ImportError:
     from pymongo import (Connection as MongoClient,
-                         ReplicaSetConnection as MongoReplicaSetClient)
+                         ReplicaSetConnection as MongoReplicaSetClient,
+                         version)
     pymongo_supports_mongoclient = False
+
+    message = ('Support for PyMongo {0} has been deprecated. Please upgrade to'
+               ' 2.4 or newer.')
+    warnings.warn(message.format(version), DeprecationWarning)
 
 from .exceptions import ConnectionError
 

@@ -13,7 +13,7 @@ setup(
     packages=['simon'],
     package_data={'': ['LICENSE', 'README.rst']},
     include_package_data=True,
-    install_requires=['pymongo>=2.1'],
+    install_requires=['pymongo>=2.4'],
     tests_require=['coverage', 'mock', 'nose'],
     license=open('LICENSE').read(),
     classifiers=[
