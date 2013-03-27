@@ -6,7 +6,6 @@ from pymongo import uri_parser
 try:
     # pymongo 2.4+
     from pymongo import MongoClient, MongoReplicaSetClient
-    pymongo_supports_mongoclient = True
 except ImportError:
     from pymongo import (Connection as MongoClient,
                          ReplicaSetConnection as MongoReplicaSetClient,
@@ -16,6 +15,8 @@ except ImportError:
     message = ('Support for PyMongo {0} has been deprecated. Please upgrade to'
                ' 2.4 or newer.')
     warnings.warn(message.format(version), DeprecationWarning)
+else:
+    pymongo_supports_mongoclient = True
 
 from .exceptions import ConnectionError
 
