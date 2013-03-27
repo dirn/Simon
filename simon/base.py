@@ -1222,12 +1222,6 @@ class Model(object):
         key = self._meta.field_map.get(name, name)
         if key in self._document:
             del self._document[key]
-            try:
-                delattr(self, name)
-            except AttributeError:
-                # This will happen if the attribute hasn't been directly
-                # accessed yet.
-                pass
 
             # The deletion of the attribute is now complete, get out
             # before an AttributeError is raised by the super delete.
