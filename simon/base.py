@@ -1251,8 +1251,8 @@ class Model(object):
         # If the attribute is a key in the document, use it.
         name = self._meta.field_map.get(name, name)
         if not name in self._document:
-            raise AttributeError("'{0}' object has no attribute '{1}'.".format(
-                self.__class__.__name__, name))
+            message = "'{0}' object has no attribute '{1}'."
+            raise AttributeError(message.format(self.__class__.__name__, name))
         return self._document[name]
 
     def __setattr__(self, name, value):
