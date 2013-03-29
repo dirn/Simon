@@ -175,7 +175,7 @@ def is_atomic(document):
     .. versionadded:: 0.3.0
     """
 
-    return any(k[0] == '$' for k in document.iterkeys())
+    return any(k[0] == '$' for k in document)
 
 
 def map_fields(field_map, fields, with_operators=False, flatten_keys=False):

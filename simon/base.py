@@ -1032,7 +1032,7 @@ class Model(object):
             if use_internal:
                 try:
                     fields = dict((k, get_nested_key(self._document, k))
-                                  for k in fields.iterkeys())
+                                  for k in fields)
                 except KeyError:
                     # KeyError will be raised by get_nested_key() when a
                     # field isn't part of the internal document.
@@ -1179,7 +1179,7 @@ class Model(object):
             if rename:
                 # The old fields need to be removed. The new fields will
                 # be added through the find_one() below.
-                for k in rename.iterkeys():
+                for k in rename:
                     if '.' in k:
                         self._document = remove_nested_key(self._document, k)
                     else:
@@ -1190,8 +1190,7 @@ class Model(object):
             if not fields:
                 return
 
-            fields = dict((k, 1) for v in fields.itervalues()
-                          for k in v.iterkeys())
+            fields = dict((k, 1) for v in fields.itervalues() for k in v)
             doc = self._meta.db.find_one({'_id': id}, fields)
 
             # There's no need to update the _id
