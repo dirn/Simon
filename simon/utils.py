@@ -86,8 +86,6 @@ def get_nested_key(values, key):
     :type key: str.
     :returns: The value associated with the nested key.
     :raises: :class:`KeyError`
-
-    .. versionadded:: 0.1.0
     """
 
     # If key exists in values, return its value, otherwise recurse
@@ -127,8 +125,6 @@ def guarantee_object_id(value):
     :param value: the ID.
     :returns: ObjectId or dict -- the Object ID.
     :raises: :class:`TypeError`, :class:`~bson.errors.InvalidId`
-
-    .. versionadded:: 0.1.0
     """
 
     # If it's already an Object ID, get out early.
@@ -252,8 +248,6 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
     :type flatten_keys: bool.
     :returns: dict -- key/value pairs renamed based on ``cls``'s
               ``field_map`` mapping.
-
-    .. versionadded:: 0.1.0
     """
 
     if with_operators:
@@ -357,8 +351,6 @@ def parse_kwargs(**kwargs):
     :type \*\*kwargs: \*\*kwargs.
     :returns: dict -- dictionary with nested keys generated from the
               names of the arguments.
-
-    .. versionadded:: 0.1.0
     """
 
     parsed_kwargs = {}
@@ -406,8 +398,6 @@ def remove_nested_key(original, key):
     :type key: str.
     :returns: dict -- the updated dictionary
     :raises: :class:`TypeError`, :class:`KeyError`
-
-    .. versionadded:: 0.1.0
     """
 
     if not isinstance(original, collections.Mapping):
@@ -508,8 +498,6 @@ def update_nested_keys(original, updates):
     :type updates: dict.
     :returns: dict -- the updated dictionary.
     :raises: :class:`TypeError`
-
-    .. versionadded:: 0.1.0
     """
 
     # Based on http://stackoverflow.com/questions/3232943/

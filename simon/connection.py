@@ -52,8 +52,6 @@ def connect(host='localhost', name=None, username=None, password=None,
     .. versionchanged:: 0.2.0
        ``connect()`` now accepts ``replica_set`` as a kwarg, it is
        preferred over ``replicaSet``
-
-    .. versionadded:: 0.1.0
     """
 
     # The default settings, based on the arguments passed in
@@ -139,8 +137,6 @@ def _get_connection(host, port, replica_set=None, **kwargs):
     :returns: tuple -- a pair of values containing a
                        :class:`pymongo.Connection` and any settings
                        parsed when a URI is provided.
-
-    .. versionadded:: 0.1.0
     """
 
     parsed_settings = {}
@@ -220,8 +216,6 @@ def get_database(name):
     :param name: The name of the database.
     :type name: str.
     :returns: ``pymongo.database.Database`` -- a database object.
-
-    .. versionadded:: 0.1.0
     """
 
     if not (_databases and name in _databases):

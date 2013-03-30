@@ -19,8 +19,6 @@ def _validate_point(point, name=None, alternate_type=None):
     :param alternate_type: (optional) Alternate type(s) to check for.
     :type alternate_type: type or tuple of types.
     :raises: :class:`TypeError`, :class:`ValueError`.
-
-    .. versionadded:: 0.1.0
     """
 
     exception = None
@@ -53,8 +51,6 @@ def box(lower_left_point, upper_right_point):
     :type upper_right_point: list.
     :returns: dict -- the ``$box`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
-
-    .. versionadded:: 0.1.0
     """
 
     _validate_point(lower_left_point, '`lower_left_point`')
@@ -75,8 +71,6 @@ def circle(point, radius):
     :type radius: int.
     :returns: dict -- the ``$circle`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
-
-    .. versionadded:: 0.1.0
     """
 
     _validate_point(point)
@@ -109,8 +103,6 @@ def near(point, max_distance=None, unique_docs=False):
                         documents.
     :returns: dict -- the ``$near`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
-
-    .. versionadded:: 0.1.0
     """
 
     _validate_point(point)
@@ -141,8 +133,6 @@ def polygon(*points):
     :type \*points: \*args.
     :returns: dict -- the ``$polygon`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
-
-    .. versionadded:: 0.1.0
     """
 
     if len(points) > 1:
@@ -191,8 +181,6 @@ def within(shape, *bounds, **bounds_map):
     :type \*\*bounds_map: \*\*kwargs.
     :returns: dict -- the ``$within`` query.
     :raises: :class:`RuntimeError`.
-
-    .. versionadded:: 0.1.0
     """
 
     if bounds and bounds_map:

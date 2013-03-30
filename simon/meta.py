@@ -11,10 +11,7 @@ __all__ = ('Meta',)
 
 
 class Meta(object):
-    """Custom options for a :class:`~simon.Model`.
-
-    .. versionadded:: 0.1.0
-    """
+    """Custom options for a :class:`~simon.Model`."""
 
     _db = None
 
@@ -40,10 +37,7 @@ class Meta(object):
             warnings.warn(message, DeprecationWarning)
 
     def add_to_original(self, cls, name):
-        """Adds the ``Meta`` object to another class.
-
-        .. versionadded:: 0.1.0
-        """
+        """Adds the ``Meta`` object to another class."""
 
         setattr(cls, name, self)
 
@@ -136,10 +130,7 @@ class Meta(object):
 
     @property
     def db(self):
-        """Contains the :class:`~pymongo.collection.Collection`.
-
-        .. versionadded:: 0.1.0
-        """
+        """Contains the :class:`~pymongo.collection.Collection`."""
 
         if self._db is None:
             # Only make the call to get_database once for each class.

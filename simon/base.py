@@ -24,10 +24,7 @@ __all__ = ('Model',)
 # update before the write is considered successful.
 
 class ModelMetaClass(type):
-    """Define :class:`Model`
-
-    .. versionadded:: 0.1.0
-    """
+    """Define :class:`Model`"""
 
     def __new__(cls, name, bases, attrs):
         new_new = super(ModelMetaClass, cls).__new__
@@ -59,10 +56,7 @@ class ModelMetaClass(type):
         return new_class
 
     def addattr(self, name, value):
-        """Assigns attributes to the class.
-
-        .. versionadded:: 0.1.0
-        """
+        """Assigns attributes to the class."""
 
         if hasattr(value, 'add_to_original'):
             value.add_to_original(self, name)
@@ -71,10 +65,7 @@ class ModelMetaClass(type):
 
 
 class Model(object):
-    """The base class for all Simon models
-
-    .. versionadded:: 0.1.0
-    """
+    """The base class for all Simon models"""
 
     __metaclass__ = ModelMetaClass
 
@@ -84,8 +75,6 @@ class Model(object):
         :param \*\*fields: Keyword arguments to add to the document.
         :type \*\*fields: \*\*kwargs.
         :raises: :class:`~simon.exceptions.ConnectionError`
-
-        .. versionadded:: 0.1.0
         """
 
         # Assign an empty dictionary to _document so that it can be
@@ -104,8 +93,6 @@ class Model(object):
 
         If ``sort`` has been defined on the ``Meta`` class it will be
         used to order the records.
-
-        .. versionadded:: 0.1.0
         """
 
         # All of the functionality already exists inside find(), so
@@ -133,8 +120,6 @@ class Model(object):
         :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.Model` -- the new document.
         :raises: :class:`TypeError`
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
@@ -161,8 +146,6 @@ class Model(object):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`TypeError`
-
-        .. versionadded:: 0.1.0
         """
 
         id = self._document.get('_id')
@@ -201,8 +184,6 @@ class Model(object):
 
         .. versionchanged:: 0.3.0
            ``qs`` is being deprecated in favor of ``q``
-
-        .. versionadded:: 0.1.0
         """
 
         if qs:
@@ -233,8 +214,6 @@ class Model(object):
 
         .. versionchanged:: 0.3.0
            ``qs`` is being deprecated in favor of ``q``
-
-        .. versionadded:: 0.1.0
         """
 
         if qs:
@@ -267,8 +246,6 @@ class Model(object):
         :returns: tuple -- the :class:`~simon.Model` and whether the
                   document was created.
         :raises: :class:`~simon.Model.MultipleDocumentsFound`
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
@@ -316,8 +293,6 @@ class Model(object):
                            increment values.
         :type \*\*fields: \*\*kwargs.
         :raises: :class:`TypeError`, :class:`ValueError`
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
@@ -576,8 +551,6 @@ class Model(object):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`TypeError`
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
@@ -613,8 +586,6 @@ class Model(object):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`TypeError`
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
@@ -715,8 +686,6 @@ class Model(object):
         .. versionchanged:: 0.4.0
            ``created`` is always added to inserted documents when
            ``auto_timestamp`` is ``True``
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
@@ -786,8 +755,6 @@ class Model(object):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`AttributeError`, :class:`TypeError`
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
@@ -832,8 +799,6 @@ class Model(object):
         :param \*\*fields: The fields to update.
         :type \*\*fields: \*\*kwargs.
         :raises: :class:`TypeError`
-
-        .. versionadded:: 0.1.0
         """
 
         write_concern = {
