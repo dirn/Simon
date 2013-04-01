@@ -58,7 +58,8 @@ class TestModel(unittest.TestCase):
     def test_aggregate(self):
         """Test the `aggregate()` method."""
 
-        with mock.patch.object(DefaultModel._meta.db, 'aggregate') as aggregate:
+        with mock.patch.object(DefaultModel._meta.db, 'aggregate') \
+                as aggregate:
             DefaultModel.aggregate(unwind='$a',
                                    group={'_id': '$a', 'count': {'$sum': 1}},
                                    sort=SON([('count', -1), ('_id', -1)]))
