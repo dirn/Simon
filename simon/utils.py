@@ -401,7 +401,7 @@ def remove_nested_key(original, key):
     """
 
     if not isinstance(original, collections.Mapping):
-        raise TypeError('`original` must be a `dict`.')
+        raise TypeError("'original' must be a dict.")
 
     if '.' in key:
         # If the key contains a . it is considered nested. Split the key
