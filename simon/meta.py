@@ -1,5 +1,6 @@
 """Meta options"""
 
+from collections import Mapping
 import warnings
 
 from bson import ObjectId
@@ -85,6 +86,10 @@ class Meta(object):
         # These will make up the list of reserved words that cannot be
         # used for keys.
         self.core_attributes = cls.__dict__.keys() + ['_document']
+
+        # field_map must be a valid mapping
+        if not isinstance(self.field_map, Mapping):
+            raise TypeError("'field_map' must be a dict.")
 
         if self.map_id and 'id' not in self.field_map:
             # If map_id is True and id isn't in field_map, add it.

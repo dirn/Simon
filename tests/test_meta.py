@@ -124,6 +124,27 @@ class TestMeta(unittest.TestCase):
 
         self.assertEqual(TestClass._meta.field_map, {'fake': 'real'})
 
+    def test_field_map_typeerror(self):
+        """Test the `field_map` attribute for `TypeError`."""
+
+        meta = Meta(mock.Mock(field_map=1))
+
+        with self.assertRaises(TypeError) as e:
+            meta.add_to_original(TestClass, '_meta')
+
+        actual = str(e.exception)
+        expected = "'field_map' must be a dict."
+        self.assertEqual(actual, expected)
+
+        meta = Meta(mock.Mock(field_map='a'))
+
+        with self.assertRaises(TypeError) as e:
+            meta.add_to_original(TestClass, '_meta')
+
+        actual = str(e.exception)
+        expected = "'field_map' must be a dict."
+        self.assertEqual(actual, expected)
+
     def test_init(self):
         """Test the `__init__()` method."""
 
