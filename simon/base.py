@@ -74,7 +74,6 @@ class Model(object):
 
         :param \*\*fields: Keyword arguments to add to the document.
         :type \*\*fields: \*\*kwargs.
-        :raises: :class:`~simon.exceptions.ConnectionError`
         """
 
         # Assign an empty dictionary to _document so that it can be
