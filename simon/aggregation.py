@@ -36,8 +36,6 @@ class Pipeline(object):
         :type exclude: list or tuple.
         :returns: :class:`~simon.aggregation.Pipeline` -- the current
                   instance.
-
-        .. versionadded:: 0.7.0
         """
 
         def add_or_remove(fields, include_value):
