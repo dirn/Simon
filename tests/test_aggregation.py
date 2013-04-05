@@ -12,6 +12,8 @@ from simon import Model, aggregation
 from .utils import ModelFactory
 
 MappedModel = ModelFactory('MappedModel', field_map={'fake': 'real'})
+MapNestedModel = ModelFactory('MapNestedModel',
+                              field_map={'a.b': 'c', 'd': 'e.f'})
 NotMappedModel = ModelFactory('MappedModel', map_id=False)
 
 
@@ -90,8 +92,11 @@ class TestPipeline(unittest.TestCase):
 
         a = aggregation.Pipeline(cls=MappedModel)
         a.project(exclude='fake')
-
         self.assertEqual(a._project, {'real': 0})
+
+        a = aggregation.Pipeline(cls=MapNestedModel)
+        a.project(exclude=('a.b', 'd'))
+        self.assertEqual(a._project, {'c': 0, 'e.f': 0})
 
     def test_project_include(self):
         """Test the `project()` method with includes."""
@@ -114,5 +119,8 @@ class TestPipeline(unittest.TestCase):
 
         a = aggregation.Pipeline(cls=MappedModel)
         a.project(include='fake')
-
         self.assertEqual(a._project, {'real': '$fake'})
+
+        a = aggregation.Pipeline(cls=MapNestedModel)
+        a.project(include=('a.b', 'd'))
+        self.assertEqual(a._project, {'c': '$a.b', 'e.f': '$d'})
