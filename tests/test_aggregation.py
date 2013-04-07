@@ -42,40 +42,13 @@ class TestPipeline(unittest.TestCase):
 
         self.assertTrue(p._cls is Model)
 
-    def test_project_add_or_remove(self):
-        """Test the `add_or_remove()` function."""
-
-        p = aggregation.Pipeline()
-        p.project(include='a')
-
-        self.assertEqual(p._project, {'a': 1})
-
-    def test_project_add_or_remove_list(self):
-        """Test the `add_or_remove()` function with a list."""
-
-        p = aggregation.Pipeline()
-        p.project(include=['a'])
-
-        self.assertEqual(p._project, {'a': 1})
-
-    def test_project_add_or_remove_no_mapped_fields(self):
-        ("Test the `add_or_remove()` function with an empty field "
-         "map.")
-
-        p = aggregation.Pipeline(cls=NotMappedModel)
-
-        with mock.patch('simon.aggregation.get_nested_key') as get_nested_key:
-            p.project(include=['a'])
-
-            get_nested_key.assert_not_called()
-
     def test_consecutive_calls(self):
         """Test that `project()` properly handles consecutive calls."""
 
         p = aggregation.Pipeline()
-        p.project(include='a')
-        p.project(include='b')
-        p.project(exclude=('a', 'c'))
+        p.project(a=True)
+        p.project(b=True)
+        p.project(a=False, c=False)
 
         self.assertEqual(p._project, {'a': 0, 'b': 1, 'c': 0})
 
@@ -83,7 +56,7 @@ class TestPipeline(unittest.TestCase):
         """Test the `project()` method with excludes."""
 
         p = aggregation.Pipeline()
-        p.project(exclude=('a', 'b'))
+        p.project(a=False, b=False)
 
         self.assertEqual(p._project, {'a': 0, 'b': 0})
 
@@ -91,18 +64,18 @@ class TestPipeline(unittest.TestCase):
         """Test the `project()` method with an excluded mapped field."""
 
         p = aggregation.Pipeline(cls=MappedModel)
-        p.project(exclude='fake')
+        p.project(fake=False)
         self.assertEqual(p._project, {'real': 0})
 
         p = aggregation.Pipeline(cls=MapNestedModel)
-        p.project(exclude=('a.b', 'd'))
+        p.project(a__b=False, d=False)
         self.assertEqual(p._project, {'c': 0, 'e.f': 0})
 
     def test_project_include(self):
         """Test the `project()` method with includes."""
 
         p = aggregation.Pipeline()
-        p.project(include=('a', 'b'))
+        p.project(a=True, b=True)
 
         self.assertEqual(p._project, {'a': 1, 'b': 1})
 
@@ -110,7 +83,7 @@ class TestPipeline(unittest.TestCase):
         """Test the `project()` method with includes and excludes."""
 
         p = aggregation.Pipeline()
-        p.project(include=('a', 'b'), exclude=('c', 'd'))
+        p.project(a=True, b=True, c=False, d=False)
 
         self.assertEqual(p._project, {'a': 1, 'b': 1, 'c': 0, 'd': 0})
 
@@ -118,17 +91,17 @@ class TestPipeline(unittest.TestCase):
         """Test the `project()` method with an included mapped field."""
 
         p = aggregation.Pipeline(cls=MappedModel)
-        p.project(include='fake')
+        p.project(fake=True)
         self.assertEqual(p._project, {'real': '$fake'})
 
         p = aggregation.Pipeline(cls=MapNestedModel)
-        p.project(include=('a.b', 'd'))
+        p.project(a__b=True, d=True)
         self.assertEqual(p._project, {'c': '$a.b', 'e.f': '$d'})
 
     def test_project_return(self):
         """Test that `project()` returns the instance."""
 
         p1 = aggregation.Pipeline()
-        p2 = p1.project(include='a')
+        p2 = p1.project(a=True)
 
         self.assertEqual(p1, p2)
