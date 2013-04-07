@@ -124,3 +124,11 @@ class TestPipeline(unittest.TestCase):
         a = aggregation.Pipeline(cls=MapNestedModel)
         a.project(include=('a.b', 'd'))
         self.assertEqual(a._project, {'c': '$a.b', 'e.f': '$d'})
+
+    def test_project_return(self):
+        """Test that `project()` returns the instance."""
+
+        a = aggregation.Pipeline()
+        b = a.project(include='a')
+
+        self.assertEqual(a, b)
