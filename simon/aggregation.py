@@ -49,6 +49,8 @@ class Pipeline(object):
         """
 
         for k, v in fields.iteritems():
+            # Field names will include '__' (Simon's convention with
+            # kwargs), but get_nested_key() is looking for '.'.
             k = k.replace('__', '.')
 
             if self._cls:
