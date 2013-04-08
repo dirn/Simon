@@ -117,3 +117,15 @@ class Pipeline(object):
             self._project[k] = int(v)
 
         return self
+
+    def skip(self, skip):
+        """Defines the number of documents to skip over in the pipeline
+
+        :param skip: Number of documents to skip.
+        :type skip: int.
+        :returns: :class:`~simon.aggregation.Pipeline` -- the current
+                  instance.
+        """
+        self._skip = skip
+
+        return self

@@ -180,3 +180,28 @@ class TestPipeline(unittest.TestCase):
         p2 = p1.project(a=True)
 
         self.assertEqual(p1, p2)
+
+    def test_skip(self):
+        """Test the `skip()` method."""
+
+        p = aggregation.Pipeline()
+        p.skip(1)
+
+        self.assertEqual(p._skip, 1)
+
+    def test_skip_consecutive_calls(self):
+        """Test that `skip()` properly handles consecutive calls."""
+
+        p = aggregation.Pipeline()
+        p.skip(1)
+        p.skip(2)
+
+        self.assertEqual(p._skip, 2)
+
+    def test_skip_return(self):
+        """Test that `skip()` returns the instance."""
+
+        p1 = aggregation.Pipeline()
+        p2 = p1.skip(1)
+
+        self.assertEqual(p1, p2)
