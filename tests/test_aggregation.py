@@ -42,7 +42,7 @@ class TestPipeline(unittest.TestCase):
 
         self.assertTrue(p._cls is Model)
 
-    def test_consecutive_calls(self):
+    def test_project_consecutive_calls(self):
         """Test that `project()` properly handles consecutive calls."""
 
         p = aggregation.Pipeline()
