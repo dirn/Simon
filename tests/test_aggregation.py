@@ -85,7 +85,7 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(p._match, {'a': {'$gt': 1}})
 
     def test_match_return(self):
-        """Test that `match()` return the instance."""
+        """Test that `match()` returns the instance."""
 
         p1 = aggregation.Pipeline()
         p2 = p1.match(a=1)
