@@ -1,6 +1,6 @@
 """The aggregation framework"""
 
-from .utils import get_nested_key, ignored
+from .utils import get_nested_key, ignored, map_fields
 
 __all__ = ('Pipeline',)
 
@@ -28,6 +28,31 @@ class Pipeline(object):
 
         # Store a reference to the class so that fields can be mapped
         self._cls = cls
+
+    def match(self, **fields):
+        """Adds conditions to the pipeline.
+
+        This method can be used to control the ``$match`` operator of
+        the aggregation query. It's syntax is similar to that of
+        :meth:`~simon.Model.find`.
+
+        The current instance is returns so that calls to other methods
+        can be chained together.
+
+        :param \*\*fields: Keyword arguments specifying the query.
+        :type \*\*fields: \*\*kwargs.
+        :returns: :class:`~simon.aggregation.Pipeline` -- the current
+                  instance.
+        """
+
+        if self._cls:
+            # If there is a Model class, map the fields.
+            fields = map_fields(self._cls._meta.field_map, fields,
+                                with_operators=True, flatten_keys=True)
+
+        self._match.update(fields)
+
+        return self
 
     def project(self, **fields):
         """Adds fields to reshape a document stream.

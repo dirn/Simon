@@ -42,6 +42,40 @@ class TestPipeline(unittest.TestCase):
 
         self.assertTrue(p._cls is Model)
 
+    def test_match(self):
+        """Test the `match()` method."""
+
+        p = aggregation.Pipeline()
+        p.match(a=1)
+
+        self.assertEqual(p._match, {'a': 1})
+
+    def test_match_consecutive_calls(self):
+        """Test that `match()` properly handles consecutive calls."""
+
+        p = aggregation.Pipeline()
+        p.match(a=1)
+        p.match(b=2)
+        p.match(a=3, c=4)
+
+        self.assertEqual(p._match, {'a': 3, 'b': 2, 'c': 4})
+
+    def test_match_mapped_field(self):
+        """Test the `match()` method with a mapped field."""
+
+        p = aggregation.Pipeline(cls=MappedModel)
+        p.match(fake=1)
+
+        self.assertEqual(p._match, {'real': 1})
+
+    def test_match_return(self):
+        """Test that `match()` return the instance."""
+
+        p1 = aggregation.Pipeline()
+        p2 = p1.match(a=1)
+
+        self.assertEqual(p1, p2)
+
     def test_project_consecutive_calls(self):
         """Test that `project()` properly handles consecutive calls."""
 
