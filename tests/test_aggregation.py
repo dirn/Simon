@@ -42,6 +42,31 @@ class TestPipeline(unittest.TestCase):
 
         self.assertTrue(p._cls is Model)
 
+    def test_limit(self):
+        """Test the `limit()` method."""
+
+        p = aggregation.Pipeline()
+        p.limit(1)
+
+        self.assertEqual(p._limit, 1)
+
+    def test_limit_consecutive_calls(self):
+        """Test that `limit()` properly handles consecutive calls."""
+
+        p = aggregation.Pipeline()
+        p.limit(1)
+        p.limit(2)
+
+        self.assertEqual(p._limit, 2)
+
+    def test_limit_return(self):
+        """Test that `limit()` returns the instance."""
+
+        p1 = aggregation.Pipeline()
+        p2 = p1.limit(1)
+
+        self.assertEqual(p1, p2)
+
     def test_match(self):
         """Test the `match()` method."""
 

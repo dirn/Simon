@@ -29,6 +29,18 @@ class Pipeline(object):
         # Store a reference to the class so that fields can be mapped
         self._cls = cls
 
+    def limit(self, limit):
+        """Applies a limit to the number of documents in the pipeline.
+
+        :param limit: Number of documents to return.
+        :type limit: int.
+        :returns: :class:`~simon.aggregation.Pipeline` -- the current
+                  instance.
+        """
+        self._limit = limit
+
+        return self
+
     def match(self, **fields):
         """Adds conditions to the pipeline.
 
