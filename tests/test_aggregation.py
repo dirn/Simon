@@ -68,6 +68,14 @@ class TestPipeline(unittest.TestCase):
 
         self.assertEqual(p._match, {'real': 1})
 
+    def test_match_nested_field(self):
+        """Test the `match()` method with an embedded document."""
+
+        p = aggregation.Pipeline()
+        p.match(a__b=1)
+
+        self.assertEqual(p._match, {'a.b': 1})
+
     def test_match_return(self):
         """Test that `match()` return the instance."""
 

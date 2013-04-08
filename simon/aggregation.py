@@ -47,8 +47,14 @@ class Pipeline(object):
 
         if self._cls:
             # If there is a Model class, map the fields.
-            fields = map_fields(self._cls._meta.field_map, fields,
-                                with_operators=True, flatten_keys=True)
+            field_map = self._cls._meta.field_map
+        else:
+            # If there isn't, map_fields() still needs to be called,
+            # so fake it.
+            field_map = {}
+
+        fields = map_fields(field_map, fields, with_operators=True,
+                            flatten_keys=True)
 
         self._match.update(fields)
 
