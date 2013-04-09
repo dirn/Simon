@@ -205,3 +205,45 @@ class TestPipeline(unittest.TestCase):
         p2 = p1.skip(1)
 
         self.assertEqual(p1, p2)
+
+    def test_unwind(self):
+        """Test the `unwind()` method."""
+
+        p = aggregation.Pipeline()
+        p.unwind('a')
+
+        self.assertEqual(p._unwind, ['$a'])
+
+    def test_unwind_consecutive_calls(self):
+        """Test that `unwind()` properly handles consecutive calls."""
+
+        p = aggregation.Pipeline()
+        p.unwind('a')
+        p.unwind('b')
+        p.unwind('a', 'c')
+
+        self.assertEqual(p._unwind, ['$a', '$b', '$c'])
+
+    def test_match_unwind_field(self):
+        """Test the `unwind()` method with a mapped field."""
+
+        p = aggregation.Pipeline(cls=MappedModel)
+        p.unwind('fake')
+
+        self.assertEqual(p._unwind, ['$real'])
+
+    def test_unwind_nested_field(self):
+        """Test the `unwind()` method with an embedded document."""
+
+        p = aggregation.Pipeline()
+        p.unwind('a__b')
+
+        self.assertEqual(p._unwind, ['$a.b'])
+
+    def test_unwind_return(self):
+        """Test that `unwind()` returns the instance."""
+
+        p1 = aggregation.Pipeline()
+        p2 = p1.unwind('a')
+
+        self.assertEqual(p1, p2)

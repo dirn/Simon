@@ -129,3 +129,20 @@ class Pipeline(object):
         self._skip = skip
 
         return self
+
+    def unwind(self, *fields):
+        fields = dict((k, 1) for k in fields)
+
+        if self._cls:
+            field_map = self._cls._meta.field_map
+        else:
+            field_map = {}
+
+        fields = map_fields(field_map, fields, flatten_keys=True)
+
+        for field in fields.iterkeys():
+            field = '${0}'.format(field)
+            if field not in self._unwind:
+                self._unwind.append(field)
+
+        return self
