@@ -22,7 +22,7 @@ class Pipeline(object):
         self._match = {}
         self._limit = None
         self._skip = None
-        self._unwind = {}
+        self._unwind = []
         self._group = {}
         self._geonear = {}
 

@@ -29,7 +29,7 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(p._match, {})
         self.assertIsNone(p._limit)
         self.assertIsNone(p._skip)
-        self.assertEqual(p._unwind, {})
+        self.assertEqual(p._unwind, [])
         self.assertEqual(p._group, {})
         self.assertEqual(p._geonear, {})
 
