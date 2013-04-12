@@ -224,7 +224,7 @@ class TestPipeline(unittest.TestCase):
 
         self.assertEqual(p._unwind, ['$a', '$b', '$c'])
 
-    def test_match_unwind_field(self):
+    def test_unwind_mapped_field(self):
         """Test the `unwind()` method with a mapped field."""
 
         p = aggregation.Pipeline(cls=MappedModel)
