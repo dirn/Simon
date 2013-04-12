@@ -211,6 +211,19 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
     * ``$elemMatch`` the key's value is an array satisfying the given
       query
 
+    The following aggregation operators are also supported:
+
+    * ``$addToSet`` returns an unique array of all values found in the
+      selected field
+    * ``$push`` returns an array of all values found in the selected
+      field
+    * ``$first`` returns the first value encountered for its group
+    * ``$last`` returns the last value encountered for its group
+    * ``$max`` returns the hightest value for the field
+    * ``$min`` returns the lowest non-null value for the field
+    * ``$avg`` returns the average value for the field
+    * ``$sum`` returns the sum of values for the field
+
     To utilize any of the operators, append ``__`` and the name of the
     operator sans the ``$`` (e.g., ``__gt``, ``__lt``) to the name of
     the key::
@@ -248,11 +261,15 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
     :type flatten_keys: bool.
     :returns: dict -- key/value pairs renamed based on ``cls``'s
               ``field_map`` mapping.
+
+    .. versionchanged:: 0.7.0
+       ``$group`` operators are supported
     """
 
     if with_operators:
-        operators = ('all', 'elemMatch', 'exists', 'gt', 'gte', 'in', 'lt',
-                     'lte', 'ne', 'near', 'nin', 'size')
+        operators = ('addToSet', 'all', 'avg', 'elemMatch', 'exists', 'first',
+                     'gt', 'gte', 'in', 'last', 'lt', 'lte', 'max', 'min',
+                     'ne', 'near', 'nin', 'push', 'size', 'sum')
 
         for k, v in fields.items():
             # To figure out if a key includes an operator, split it

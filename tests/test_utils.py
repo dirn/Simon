@@ -186,6 +186,42 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(field_map, {'x': 1, 'y': 2})
         self.assertEqual(actual, expected)
 
+    def test_map_fields_aggregation_operators(self):
+        """Test the `map_fields()` method with aggregation operators."""
+
+        expected = {'a': {'$addToSet': 'b'}}
+        actual = map_fields(field_map, {'a__addToSet': 'b'},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$avg': 'b'}}
+        actual = map_fields(field_map, {'a__avg': 'b'}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$first': 'b'}}
+        actual = map_fields(field_map, {'a__first': 'b'}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$last': 'b'}}
+        actual = map_fields(field_map, {'a__last': 'b'}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$max': 'b'}}
+        actual = map_fields(field_map, {'a__max': 'b'}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$min': 'b'}}
+        actual = map_fields(field_map, {'a__min': 'b'}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$push': 'b'}}
+        actual = map_fields(field_map, {'a__push': 'b'}, with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$sum': 'b'}}
+        actual = map_fields(field_map, {'a__sum': 'b'}, with_operators=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_flattened_keys(self):
         """Test the `map_fields()` method with `flatten_keys` set."""
 
