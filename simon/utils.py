@@ -264,12 +264,15 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
 
     .. versionchanged:: 0.7.0
        ``$group`` operators are supported
+       All lowercase operators are supported
     """
 
     if with_operators:
-        operators = ('addToSet', 'all', 'avg', 'elemMatch', 'exists', 'first',
-                     'gt', 'gte', 'in', 'last', 'lt', 'lte', 'max', 'min',
-                     'ne', 'near', 'nin', 'push', 'size', 'sum')
+        operators = ('addToSet', 'addtoset', 'all', 'avg', 'elemMatch',
+                     'elemmatch', 'exists', 'first', 'gt', 'gte', 'in', 'last',
+                     'lt', 'lte', 'max', 'min', 'ne', 'near', 'nin', 'push',
+                     'size', 'sum')
+        operators_cased = {'addtoset': 'addToSet', 'elemmatch': 'elemMatch'}
 
         for k, v in fields.items():
             # To figure out if a key includes an operator, split it
@@ -290,6 +293,14 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
                         # line that adds the operator to the query.
                         v = {'${0}'.format(operator[1]): v}
                         operator = operator[0].rstrip('__not'), 'not'
+
+                    # Operators are case sensitive as camel case.
+                    # Because the operators are intended to be used as
+                    # kwargs, writing them as such will appear out of
+                    # place. This check allows the operators to be
+                    # specified using lowercase.
+                    if operator[1] in operators_cased:
+                        operator[1] = operators_cased[operator[1]]
 
                     fields[operator[0]] = {'${0}'.format(operator[1]): v}
                     del fields[k]

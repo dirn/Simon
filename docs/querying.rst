@@ -135,7 +135,7 @@ elemMatch
 
   .. code-block:: python
 
-    users = User.find(addresses__elemMatch={'state': 'NY'})
+    users = User.find(addresses__elemmatch={'state': 'NY'})
 
 size
   Matches documents where the field is a list of the specified length.

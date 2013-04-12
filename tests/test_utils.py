@@ -222,6 +222,19 @@ class TestUtils(unittest.TestCase):
         actual = map_fields(field_map, {'a__sum': 'b'}, with_operators=True)
         self.assertEqual(actual, expected)
 
+    def test_map_fields_cased_operators(self):
+        """Test the `map_fields()` with operators that are cased."""
+
+        expected = {'a': {'$addToSet': 'b'}}
+        actual = map_fields(field_map, {'a__addtoset': 'b'},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
+        expected = {'a': {'$elemMatch': {'b': 2}}}
+        actual = map_fields(field_map, {'a__elemmatch': {'b': 2}},
+                            with_operators=True)
+        self.assertEqual(actual, expected)
+
     def test_map_fields_flattened_keys(self):
         """Test the `map_fields()` method with `flatten_keys` set."""
 
