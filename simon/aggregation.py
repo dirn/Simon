@@ -143,6 +143,21 @@ class Pipeline(object):
         return self
 
     def unwind(self, *fields):
+        """Peels element off an array individually.
+
+        This method can be used to control the ``$unwind`` operator of
+        the aggregation query.
+
+        The current instance is returned so that calls to other methods
+        can be chained together.
+
+        :param \*fields: Names of fields to unwind.
+        :type \*fields: \*args.
+        :returns: :class:`~simon.aggregation.Pipeline` -- the current
+                  instance.
+        """
+
+        # map_fields() needs a dictionary.
         fields = dict((k, 1) for k in fields)
 
         if self._cls:
@@ -153,7 +168,9 @@ class Pipeline(object):
         fields = map_fields(field_map, fields, flatten_keys=True)
 
         for field in fields.iterkeys():
+            # $unwind requires the field to prefixed with a $.
             field = '${0}'.format(field)
+
             if field not in self._unwind:
                 self._unwind.append(field)
 
