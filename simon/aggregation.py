@@ -48,7 +48,7 @@ class Pipeline(object):
         the aggregation query. It's syntax is similar to that of
         :meth:`~simon.Model.find`.
 
-        The current instance is returns so that calls to other methods
+        The current instance is returned so that calls to other methods
         can be chained together.
 
         :param \*\*fields: Keyword arguments specifying the query.
