@@ -32,6 +32,12 @@ class Pipeline(object):
     def limit(self, limit):
         """Applies a limit to the number of documents in the pipeline.
 
+        This method can be used to control the ``$limit`` operator of
+        the aggregation query.
+
+        The current instance is returned so that calls to other methods
+        can be chained together.
+
         :param limit: Number of documents to return.
         :type limit: int.
         :returns: :class:`~simon.aggregation.Pipeline` -- the current
@@ -120,6 +126,12 @@ class Pipeline(object):
 
     def skip(self, skip):
         """Defines the number of documents to skip over in the pipeline
+
+        This method can be used to control the ``$skip`` operator of
+        the aggregation query.
+
+        The current instance is returned so that calls to other methods
+        can be chained together.
 
         :param skip: Number of documents to skip.
         :type skip: int.
