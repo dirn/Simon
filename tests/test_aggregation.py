@@ -42,6 +42,53 @@ class TestPipeline(unittest.TestCase):
 
         self.assertTrue(p._cls is Model)
 
+    def test_group(self):
+        """Test the `group()` method."""
+
+        p = aggregation.Pipeline()
+        p.group('a')
+        self.assertEqual(p._group, {'_id': '$a'})
+
+        p = aggregation.Pipeline()
+        p.group('a', b='c')
+        self.assertEqual(p._group, {'_id': '$a', 'b': '$c'})
+
+    def test_group_consecutive_calls(self):
+        """Test that `group()` properly handles consecutive calls."""
+
+        p = aggregation.Pipeline()
+        p.group('a')
+        p.group('b')
+
+        self.assertEqual(p._group, {'_id': '$b'})
+
+    def test_group_embedded__id(self):
+        """Test the `group()` method with an embedded `_id`."""
+
+        p = aggregation.Pipeline()
+        p.group({'a': 'b', 'c': 'd'})
+
+        self.assertEqual(p._group, {'_id': {'a': '$b', 'c': '$d'}})
+
+    def test_group_operator(self):
+        """Test the `group()` method with an operator."""
+
+        p = aggregation.Pipeline()
+        p.group('a', b__avg='c')
+        self.assertEqual(p._group, {'_id': '$a', 'b': {'$avg': '$c'}})
+
+        p = aggregation.Pipeline()
+        p.group('a', b__sum=1)
+        self.assertEqual(p._group, {'_id': '$a', 'b': {'$sum': 1}})
+
+    def test_group_return(self):
+        """Test that `group()` returns the instance."""
+
+        p1 = aggregation.Pipeline()
+        p2 = p1.group('a')
+
+        self.assertEqual(p1, p2)
+
     def test_limit(self):
         """Test the `limit()` method."""
 

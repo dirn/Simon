@@ -1,5 +1,7 @@
 """The aggregation framework"""
 
+import collections
+
 from .utils import get_nested_key, ignored, map_fields
 
 __all__ = ('Pipeline',)
@@ -28,6 +30,61 @@ class Pipeline(object):
 
         # Store a reference to the class so that fields can be mapped
         self._cls = cls
+
+    def group(self, id, **computed_fields):
+        """Groups documents together for calculating aggregates.
+
+        This method can be used to control the ``$group`` operator of
+        the aggregation query. It's syntax is similar to that of
+        :meth:`~simon.Model.find`.
+
+        The current instance is returned so that calls to other methods
+        can be chained together.
+
+        :param id: Identifier for the group being created.
+        :type id: str.
+        :param \*\*computed_fields: Keyword arguments specifying
+                                    aggregate keys.
+        :type \*\*computed_fields: \*\*kwargs.
+        :returns: :class:`~simon.aggregation.Pipeline` -- the current
+                  instance.
+        """
+
+        def add_bling(d):
+            """Adds the `$` to field names.
+
+            Recruses through a ``dict`` looking for string values. When
+            one is found, a ``$`` is prepended to the value if one isn't
+            found.
+
+            :param d: The ``$group`` document or a nested part of it.
+            :type d: dict.
+            """
+
+            for k in d:
+                value = d[k]
+
+                if isinstance(value, collections.Mapping):
+                    # Recurse through nested dictionaries.
+                    add_bling(value)
+                    continue
+
+                if isinstance(value, basestring) and value[0] != '$':
+                    d[k] = '${0}'.format(value)
+
+        self._group['_id'] = id
+
+        # Use map_fields() to flatten keys and handle the aggregation
+        # operators like $sum and $first.
+        fields = map_fields({}, computed_fields, with_operators=True,
+                            flatten_keys=True)
+
+        for k, v in fields.iteritems():
+            self._group[k] = v
+
+        add_bling(self._group)
+
+        return self
 
     def limit(self, limit):
         """Applies a limit to the number of documents in the pipeline.
