@@ -183,7 +183,7 @@ class QuerySet(object):
         :returns: :class:`QuerySet` -- the sorted documents.
 
         .. versionchanged:: 0.3.0
-           Sorting is cached until documents are loaded
+           Sorting doesn't occur until documents are loaded
         """
 
         # Build the list of sorting (key, direction) pairs. If the
