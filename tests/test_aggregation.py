@@ -5,6 +5,7 @@ try:
 except ImportError:
     import unittest
 
+from bson.son import SON
 import mock
 
 from simon import Model, aggregation
@@ -31,6 +32,7 @@ class TestPipeline(unittest.TestCase):
         self.assertIsNone(p._skip)
         self.assertEqual(p._unwind, [])
         self.assertEqual(p._group, {})
+        self.assertIsInstance(p._sort, SON)
         self.assertEqual(p._geonear, {})
 
         self.assertIsNone(p._cls)

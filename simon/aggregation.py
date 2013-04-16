@@ -2,6 +2,9 @@
 
 import collections
 
+from bson.son import SON
+import pymongo
+
 from .utils import get_nested_key, ignored, map_fields
 
 __all__ = ('Pipeline',)
@@ -26,6 +29,7 @@ class Pipeline(object):
         self._skip = None
         self._unwind = []
         self._group = {}
+        self._sort = SON()  # collections.OrderedDict is Python 2.7+
         self._geonear = {}
 
         # Store a reference to the class so that fields can be mapped
