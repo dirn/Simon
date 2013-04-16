@@ -182,7 +182,7 @@ class Pipeline(object):
         return self
 
     def skip(self, skip):
-        """Defines the number of documents to skip over in the pipeline
+        """Defines the number of documents to skip over in the pipeline.
 
         This method can be used to control the ``$skip`` operator of
         the aggregation query.
