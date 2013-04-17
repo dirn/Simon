@@ -166,7 +166,7 @@ class QuerySet(object):
         # Make sure to clone the cursor so as not to alter the original
         return QuerySet(self._cursor.clone().skip(skip), self._cls)
 
-    def sort(self, *keys):
+    def sort(self, *fields):
         """Sorts the documents in the :class:`QuerySet`.
 
         By default all sorting is done in ascending order. To switch
@@ -178,31 +178,31 @@ class QuerySet(object):
             >>> qs.sort('id')
             >>> qs.sort('grade', '-score')
 
-        :param \*keys: Names of the fields to sort by.
-        :type \*keys: \*args.
+        :param \*fields: Names of the fields to sort by.
+        :type \*fields: \*args.
         :returns: :class:`QuerySet` -- the sorted documents.
 
         .. versionchanged:: 0.3.0
            Sorting doesn't occur until documents are loaded
         """
 
-        # Build the list of sorting (key, direction) pairs. If the
-        # QuerySet has a model class, check for the key in the class's
-        # field map
+        # Build the list of sorting (field, direction) pairs. If the
+        # QuerySet has a model class, check for the field in the class's
+        # field map.
         sorting = []
-        for key in keys:
-            if key[0] == '-':
-                key = key[1:]
+        for field in fields:
+            if field[0] == '-':
+                field = field[1:]
                 direction = pymongo.DESCENDING
             else:
                 direction = pymongo.ASCENDING
 
             if self._cls:
-                query = map_fields(self._cls._meta.field_map, {key: 1},
+                query = map_fields(self._cls._meta.field_map, {field: 1},
                                    flatten_keys=True, with_operators=True)
-                key = query.keys()[0]
+                field = query.keys()[0]
 
-            sorting.append((key, direction))
+            sorting.append((field, direction))
 
         # Make sure to clone the cursor so as not to alter the original
         qs = QuerySet(self._cursor.clone(), self._cls)
