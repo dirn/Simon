@@ -7,15 +7,15 @@ Some of the names and behavior are modeled after SQLAlchemy.
 """
 
 
-class ConnectionError(BaseException):
+class ConnectionError(Exception):
     """Raised when a database connection cannot be opened."""
 
 
-class MultipleDocumentsFound(BaseException):
+class MultipleDocumentsFound(Exception):
     """Raised when multiple documents are found when only one is
     expected.
     """
 
 
-class NoDocumentFound(BaseException):
+class NoDocumentFound(Exception):
     """Raised when an object matching a query is not found."""
