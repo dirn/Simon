@@ -5,7 +5,6 @@ try:
 except ImportError:
     import unittest
 
-from contextlib import nested
 from datetime import datetime
 import warnings
 
@@ -15,7 +14,7 @@ import mock
 from simon import Model, connection
 from simon.query import Q
 
-from .utils import AN_OBJECT_ID, ModelFactory
+from .utils import AN_OBJECT_ID, ModelFactory, skip_with_py3
 
 DefaultModel = ModelFactory('DefaultModel')
 MappedModel = ModelFactory('MappedModel', field_map={'fake': 'real'})
@@ -254,22 +253,21 @@ class TestModel(unittest.TestCase):
     def test_get_or_create_create(self):
         """Test the `get_or_create()` method for creating documents."""
 
-        with nested(mock.patch.object(DefaultModel, 'get'),
-                    mock.patch.object(DefaultModel, 'create'),
-                    ) as (get, create):
-            get.side_effect = DefaultModel.NoDocumentFound
+        with mock.patch.object(DefaultModel, 'get') as get:
+            with mock.patch.object(DefaultModel, 'create') as create:
+                get.side_effect = DefaultModel.NoDocumentFound
 
-            create.return_value = mock.Mock()
+                create.return_value = mock.Mock()
 
-            m, created = DefaultModel.get_or_create(_id=AN_OBJECT_ID)
+                m, created = DefaultModel.get_or_create(_id=AN_OBJECT_ID)
 
-            get.assert_called_with(_id=AN_OBJECT_ID)
-            # Because get_or_create() is being called without explicity
-            # setting a value for safe, safe's default value will be
-            # passed along to creates()
-            create.assert_called_with(_id=AN_OBJECT_ID, safe=None, w=None)
+                get.assert_called_with(_id=AN_OBJECT_ID)
+                # Because get_or_create() is being called without
+                # explicity setting a value for safe, safe's default
+                # value will be passed along to creates()
+                create.assert_called_with(_id=AN_OBJECT_ID, safe=None, w=None)
 
-            self.assertTrue(created)
+                self.assertTrue(created)
 
     def test_get_or_create_get(self):
         """Test the `get_or_create()` method for getting documents."""
@@ -838,6 +836,7 @@ class TestModel(unittest.TestCase):
         actual = '{0!s}'.format(m2)
         self.assertEqual(actual, expected)
 
+    @skip_with_py3
     def test_unicode(self):
         """Test the `__unicode__()` method."""
 

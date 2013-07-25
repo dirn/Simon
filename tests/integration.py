@@ -10,7 +10,7 @@ from simon import Model, connection
 
 def skip_without_setting(setting):
     try:
-        import integration_settings
+        from . import integration_settings
     except ImportError:
         pass
     else:
@@ -49,7 +49,7 @@ class TestConnectionIntegrations(unittest.TestCase):
         """Test the `_get_connection()` method with a remote host."""
 
         # The import is safe if the method passed the skip check
-        from integration_settings import REMOTE_HOST
+        from .integration_settings import REMOTE_HOST
 
         username = REMOTE_HOST.get('MONGODB_USERNAME')
         password = REMOTE_HOST.get('MONGODB_PASSWORD')
@@ -70,7 +70,7 @@ class TestConnectionIntegrations(unittest.TestCase):
          "set.")
 
         # The import is safe if the method passed the skip check
-        from integration_settings import REMOTE_REPLICA_SET
+        from .integration_settings import REMOTE_REPLICA_SET
 
         username = REMOTE_REPLICA_SET.get('MONGODB_USERNAME')
         password = REMOTE_REPLICA_SET.get('MONGODB_PASSWORD')

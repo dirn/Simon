@@ -2,6 +2,7 @@
 
 import pymongo
 
+from ._compat import get_next
 from .utils import ignored, map_fields
 
 __all__ = ('Q', 'QuerySet')
@@ -138,7 +139,7 @@ class QuerySet(object):
         if self._cls:
             query = map_fields(self._cls._meta.field_map, {key: 1},
                                flatten_keys=True, with_operators=True)
-            key = query.keys()[0]
+            key = list(query.keys())[0]
 
         return self._cursor.distinct(key)
 
@@ -200,7 +201,7 @@ class QuerySet(object):
             if self._cls:
                 query = map_fields(self._cls._meta.field_map, {field: 1},
                                    flatten_keys=True, with_operators=True)
-                field = query.keys()[0]
+                field = list(query.keys())[0]
 
             sorting.append((field, direction))
 
@@ -257,7 +258,7 @@ class QuerySet(object):
             # cursor (since new documents can suddenly appear in a
             # cursor) during iteration.
             for x in range(len(self._items), index + 1):
-                item = self._cursor.next()
+                item = get_next(self._cursor)()
                 if self._cls:
                     item = self._cls(**item)
                 self._items.append(item)

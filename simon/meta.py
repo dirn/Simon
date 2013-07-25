@@ -5,6 +5,7 @@ import warnings
 
 from bson import ObjectId
 
+from ._compat import itervalues
 from .connection import get_database, pymongo_supports_mongoclient
 from .utils import map_fields
 
@@ -85,7 +86,7 @@ class Meta(object):
         # Get the list of the attributes associated with the class.
         # These will make up the list of reserved words that cannot be
         # used for keys.
-        self.core_attributes = cls.__dict__.keys() + ['_document']
+        self.core_attributes = list(cls.__dict__.keys()) + ['_document']
 
         # field_map must be a valid mapping
         if not isinstance(self.field_map, Mapping):
@@ -112,7 +113,7 @@ class Meta(object):
             self.sort = (self.sort,)
 
         # Make sure that only types (or None) as used with typed_fields.
-        for field in self.typed_fields.itervalues():
+        for field in itervalues(self.typed_fields):
             if field is None or isinstance(field, type):
                 # The field is properly typed.
                 continue

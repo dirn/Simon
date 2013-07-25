@@ -6,6 +6,7 @@ import warnings
 
 from bson import ObjectId
 
+from ._compat import itervalues, reraise, with_metaclass
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .meta import Meta
 from .query import Q, QuerySet
@@ -64,7 +65,7 @@ class ModelMetaClass(type):
             setattr(self, name, value)
 
 
-class Model(object):
+class Model(with_metaclass(ModelMetaClass)):
     """The base class for all Simon models"""
 
     __metaclass__ = ModelMetaClass
@@ -744,7 +745,7 @@ class Model(object):
         except:
             # Raise the exception that was caught
             e = sys.exc_info()
-            raise e[1], None, e[2]
+            reraise(e[0], e[1], e[2])
         else:
             # Because _update() didn't raise an exception, the created
             # and modified values can be associated with the internal
@@ -1060,7 +1061,7 @@ class Model(object):
                     for field_from, field_to in fields[k].items():
                         mapped = map_fields(cls._meta.field_map, {field_to: 1},
                                             flatten_keys=True)
-                        fields[k][field_from] = mapped.keys()[0]
+                        fields[k][field_from] = list(mapped.keys())[0]
         else:
             fields = map_field_names_and_values(fields)
         # When placing fields in kwargs, make a copy so changes to
@@ -1110,7 +1111,7 @@ class Model(object):
                         # this blocking operation, renaming to a typed
                         # field will trigger a UserWarning instead.
                         if any(v in cls._meta.typed_fields
-                               for v in v.itervalues()):
+                               for v in itervalues(v)):
                             message = ('You are renaming a typed field. Its '
                                        'value may not be of the correct type.')
                             warnings.warn(message, UserWarning)
@@ -1178,13 +1179,13 @@ class Model(object):
                         self._document = remove_nested_key(self._document, k)
                     else:
                         self._document.pop(k, None)
-                fields['$rename'] = dict((v, 1) for v in rename.itervalues())
+                fields['$rename'] = dict((v, 1) for v in itervalues(rename))
 
             # If the only operation was an $unset, we're done.
             if not fields:
                 return
 
-            fields = dict((k, 1) for v in fields.itervalues() for k in v)
+            fields = dict((k, 1) for v in itervalues(fields) for k in v)
             doc = self._meta.db.find_one({'_id': id}, fields)
 
             # There's no need to update the _id
@@ -1233,7 +1234,7 @@ class Model(object):
                 # dict.
                 mapped_name = map_fields(self.__class__._meta.field_map,
                                          {name: 1}, flatten_keys=True)
-                mapped_name = mapped_name.keys()[0]
+                mapped_name = list(mapped_name.keys())[0]
             else:
                 mapped_name = name
 
@@ -1268,7 +1269,7 @@ class Model(object):
             # dict.
             mapped_name = map_fields(self.__class__._meta.field_map, {name: 1},
                                      flatten_keys=True)
-            mapped_name = mapped_name.keys()[0]
+            mapped_name = list(mapped_name.keys())[0]
 
             # Build a dictionary that can be applied to the internal
             # document dictionary with update_nested_keys().  Do this

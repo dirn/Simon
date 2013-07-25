@@ -5,7 +5,11 @@ except ImportError:
 
 import collections
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
 from pymongo.cursor import Cursor
 
 from simon import connection, query
@@ -283,7 +287,11 @@ class TestQuerySet(unittest.TestCase):
     def test__fill_to_as_documents(self):
         """Test that `_fill_to()` stores documents."""
 
-        self.cursor.next.return_value = {'_id': AN_OBJECT_ID}
+        if hasattr(self.cursor, 'next'):
+            self.cursor.next.return_value = {'_id': AN_OBJECT_ID}
+        else:
+            self.cursor.__next__.return_value = {'_id': AN_OBJECT_ID}
+        self.cursor.count.return_value = 1
 
         self.qs._fill_to(0)
 
@@ -292,7 +300,11 @@ class TestQuerySet(unittest.TestCase):
     def test__fill_to_as_model(self):
         """Test that `_fill_to()` stores model instances."""
 
-        self.cursor.next.return_value = {'_id': AN_OBJECT_ID}
+        if hasattr(self.cursor, 'next'):
+            self.cursor.next.return_value = {'_id': AN_OBJECT_ID}
+        else:
+            self.cursor.__next__.return_value = {'_id': AN_OBJECT_ID}
+        self.cursor.count.return_value = 1
 
         self.model_qs._fill_to(0)
 

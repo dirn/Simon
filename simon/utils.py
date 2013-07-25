@@ -65,7 +65,7 @@ def current_datetime():
     """
 
     now = datetime.utcnow()
-    return now.replace(microsecond=(now.microsecond / 1000 * 1000))
+    return now.replace(microsecond=(now.microsecond // 1000 * 1000))
 
 
 def get_nested_key(values, key):

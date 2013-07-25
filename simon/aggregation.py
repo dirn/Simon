@@ -3,8 +3,8 @@
 import collections
 
 from bson.son import SON
-import pymongo
 
+from ._compat import iteritems, iterkeys, str_types
 from .utils import get_nested_key, ignored, map_fields
 
 __all__ = ('Pipeline',)
@@ -73,7 +73,7 @@ class Pipeline(object):
                     add_bling(value)
                     continue
 
-                if isinstance(value, basestring) and value[0] != '$':
+                if isinstance(value, str_types) and value[0] != '$':
                     d[k] = '${0}'.format(value)
 
         self._group['_id'] = id
@@ -83,7 +83,7 @@ class Pipeline(object):
         fields = map_fields({}, computed_fields, with_operators=True,
                             flatten_keys=True)
 
-        for k, v in fields.iteritems():
+        for k, v in iteritems(fields):
             self._group[k] = v
 
         add_bling(self._group)
@@ -158,7 +158,7 @@ class Pipeline(object):
                   instance.
         """
 
-        for k, v in fields.iteritems():
+        for k, v in iteritems(fields):
             # Field names will include '__' (Simon's convention with
             # kwargs), but get_nested_key() is looking for '.'.
             k = k.replace('__', '.')
@@ -228,7 +228,7 @@ class Pipeline(object):
 
         fields = map_fields(field_map, fields, flatten_keys=True)
 
-        for field in fields.iterkeys():
+        for field in iterkeys(fields):
             # $unwind requires the field to prefixed with a $.
             field = '${0}'.format(field)
 

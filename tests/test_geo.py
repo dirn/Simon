@@ -182,7 +182,7 @@ class TestGeo(unittest.TestCase):
          "alternate types.")
 
         with self.assertRaises(TypeError):
-            geo._validate_point(1, alternate_type=basestring)
+            geo._validate_point(1, alternate_type=str)
 
         with self.assertRaises(TypeError):
             geo._validate_point('a', alternate_type=int)

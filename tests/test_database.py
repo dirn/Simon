@@ -5,7 +5,6 @@ try:
 except ImportError:
     import unittest
 
-from contextlib import nested
 import datetime
 import warnings
 
@@ -14,6 +13,7 @@ import mock
 import pymongo
 
 from simon import connection, query
+from simon._compat import PY2
 
 from .utils import AN_OBJECT_ID, AN_OBJECT_ID_STR, ModelFactory
 
@@ -102,24 +102,24 @@ class TestDatabase(unittest.TestCase):
     def test__find(self):
         """Test the `_find()` method."""
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(DefaultModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            DefaultModel._find(_id=AN_OBJECT_ID)
+                DefaultModel._find(_id=AN_OBJECT_ID)
 
-            find.assert_called_with({'_id': AN_OBJECT_ID})
+                find.assert_called_with({'_id': AN_OBJECT_ID})
 
     def test__find_field_map(self):
         """Test the `_find()` method with a name in `field_map`."""
 
-        with nested(mock.patch.object(MappedModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(MappedModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            MappedModel._find(fake=1)
+                MappedModel._find(fake=1)
 
-            find.assert_called_with({'real': 1})
+                find.assert_called_with({'real': 1})
 
     def test__find_find_one(self):
         """Test the `_find()` method with `find_one`."""
@@ -187,76 +187,76 @@ class TestDatabase(unittest.TestCase):
     def test__find_nested_field(self):
         """Test the `_find()` method with an embedded document."""
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(DefaultModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            DefaultModel._find(a__b=1)
+                DefaultModel._find(a__b=1)
 
-            find.assert_called_with({'a.b': 1})
+                find.assert_called_with({'a.b': 1})
 
     def test__find_objectid_none(self):
         """Test the `_find()` method with an untyped Object Id."""
 
         UntypedModel = ModelFactory('UntypedModel', typed_fields={'_id': None})
 
-        with nested(mock.patch.object(UntypedModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(UntypedModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            UntypedModel._find(_id='a')
+                UntypedModel._find(_id='a')
 
-            find.assert_called_with({'_id': 'a'})
+                find.assert_called_with({'_id': 'a'})
 
-            UntypedModel._find(_id=1)
+                UntypedModel._find(_id=1)
 
-            find.assert_called_with({'_id': 1})
+                find.assert_called_with({'_id': 1})
 
     def test__find_objectid_string(self):
         """Test the `_find()` method with a string `_id`."""
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(DefaultModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            DefaultModel._find(_id=AN_OBJECT_ID_STR)
+                DefaultModel._find(_id=AN_OBJECT_ID_STR)
 
-            find.assert_called_with({'_id': AN_OBJECT_ID})
+                find.assert_called_with({'_id': AN_OBJECT_ID})
 
     def test__find_objectid_typed(self):
         """Test the `_find()` method with a typed Object Id."""
 
         IntModel = ModelFactory('IntModel', typed_fields={'_id': int})
 
-        with nested(mock.patch.object(IntModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(IntModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            IntModel._find(_id=1)
+                IntModel._find(_id=1)
 
-            find.assert_called_with({'_id': 1})
+                find.assert_called_with({'_id': 1})
 
     def test__find_q(self):
         """Test the `_find()` method with a `Q` object."""
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(DefaultModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            DefaultModel._find(query.Q(a=1), _id=AN_OBJECT_ID)
+                DefaultModel._find(query.Q(a=1), _id=AN_OBJECT_ID)
 
-            find.assert_called_with({'_id': AN_OBJECT_ID, 'a': 1})
+                find.assert_called_with({'_id': AN_OBJECT_ID, 'a': 1})
 
     def test__find_q_alone(self):
         """Test the `_find()` method with nothing but a `Q` object."""
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'find'),
-                    mock.patch('simon.base.QuerySet'),) as (find, QuerySet):
-            find.return_value = QuerySet
+        with mock.patch.object(DefaultModel._meta.db, 'find') as find:
+            with mock.patch('simon.base.QuerySet') as QuerySet:
+                find.return_value = QuerySet
 
-            DefaultModel._find(query.Q(a=1))
+                DefaultModel._find(query.Q(a=1))
 
-            find.assert_called_with({'a': 1})
+                find.assert_called_with({'a': 1})
 
     def test__find_sorted(self):
         """Test the `_find()` method with a sort."""
@@ -299,19 +299,18 @@ class TestDatabase(unittest.TestCase):
 
         m = DefaultModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+        with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+            with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
 
-            m._update({'$set': {'a': 1}})
+                m._update({'$set': {'a': 1}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$set': {'a': 1}}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$set': {'a': 1}}, **wc_on)
 
-            find_one.assert_called_with({'_id': AN_OBJECT_ID}, {'a': 1})
+                find_one.assert_called_with({'_id': AN_OBJECT_ID}, {'a': 1})
 
-            self.assertEqual(m._document['a'], 1)
+                self.assertEqual(m._document['a'], 1)
 
     def test__update_atomic_nested_field(self):
         ("Test the `_update()` method with an atomic update of an "
@@ -319,19 +318,19 @@ class TestDatabase(unittest.TestCase):
 
         m = DefaultModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
+        with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+            with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
 
-            m._update({'$set': {'a.b': 1}})
+                m._update({'$set': {'a.b': 1}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$set': {'a.b': 1}}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$set': {'a.b': 1}},
+                                          **wc_on)
 
-            find_one.assert_called_with({'_id': AN_OBJECT_ID}, {'a.b': 1})
+                find_one.assert_called_with({'_id': AN_OBJECT_ID}, {'a.b': 1})
 
-            self.assertEqual(m._document['a']['b'], 1)
+                self.assertEqual(m._document['a']['b'], 1)
 
     def test__update_atomic_unset(self):
         """Test the `_update()` method with `$unset`."""
@@ -377,19 +376,19 @@ class TestDatabase(unittest.TestCase):
 
         m = MappedModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(MappedModel._meta.db, 'update'),
-                    mock.patch.object(MappedModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
+        with mock.patch.object(MappedModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(MappedModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
 
-            m._update({'$set': {'fake': 1}})
+                m._update({'$set': {'fake': 1}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$set': {'real': 1}}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$set': {'real': 1}},
+                                          **wc_on)
 
-            find_one.assert_called_with({'_id': AN_OBJECT_ID}, {'real': 1})
+                find_one.assert_called_with({'_id': AN_OBJECT_ID}, {'real': 1})
 
-            self.assertEqual(m._document['real'], 1)
+                self.assertEqual(m._document['real'], 1)
 
     def test__update_insert(self):
         """Test the `_update()` method for an insert."""
@@ -454,103 +453,101 @@ class TestDatabase(unittest.TestCase):
 
         m = DefaultModel(_id=AN_OBJECT_ID, a=[1, 2])
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
 
-            m._update({'$pop': {'a': 1}})
+                m._update({'$pop': {'a': 1}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$pop': {'a': 1}}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$pop': {'a': 1}}, **wc_on)
 
-            self.assertEqual(len(m._document['a']), 1)
-            self.assertNotIn(2, m._document['a'])
+                self.assertEqual(len(m._document['a']), 1)
+                self.assertNotIn(2, m._document['a'])
 
     def test__update_pull(self):
         """Test the `_update()` method with a pull."""
 
         m = DefaultModel(_id=AN_OBJECT_ID, a=[1, 2])
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [2]}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [2]}
 
-            m._update({'$pull': {'a': 1}})
+                m._update({'$pull': {'a': 1}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$pull': {'a': 1}}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$pull': {'a': 1}},
+                                          **wc_on)
 
-            self.assertNotIn(1, m._document['a'])
-            self.assertIn(2, m._document['a'])
+                self.assertNotIn(1, m._document['a'])
+                self.assertIn(2, m._document['a'])
 
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': []}
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': []}
 
-            m._update({'$pullAll': {'a': [2]}})
+                m._update({'$pullAll': {'a': [2]}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$pullAll': {'a': [2]}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$pullAll': {'a': [2]}},
+                                          **wc_on)
 
-            self.assertNotIn(2, m._document['a'])
+                self.assertNotIn(2, m._document['a'])
 
     def test__update_push(self):
         """Test the `_update()` method with a push."""
 
         m = DefaultModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
 
-            m._update({'$push': {'a': 1}})
+                m._update({'$push': {'a': 1}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$push': {'a': 1}}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$push': {'a': 1}},
+                                          **wc_on)
 
-            self.assertIn(1, m._document['a'])
+                self.assertIn(1, m._document['a'])
 
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1, 2]}
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1, 2]}
 
-            m._update({'$pushAll': {'a': [2]}})
+                m._update({'$pushAll': {'a': [2]}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$pushAll': {'a': [2]}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$pushAll': {'a': [2]}},
+                                          **wc_on)
 
-            self.assertIn(2, m._document['a'])
+                self.assertIn(2, m._document['a'])
 
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1, 2, 3]}
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1, 2, 3]}
 
-            m._update({'$addToSet': {'a': 3}})
+                m._update({'$addToSet': {'a': 3}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$addToSet': {'a': 3}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$addToSet': {'a': 3}},
+                                          **wc_on)
 
-            self.assertIn(3, m._document['a'])
+                self.assertIn(3, m._document['a'])
 
     def test__update_rename(self):
         """Test the `_update()` method with a rename."""
 
         m = DefaultModel(_id=AN_OBJECT_ID, a=1)
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'b': 1}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'b': 1}
 
-            m._update({'$rename': {'a': 'b'}})
+                m._update({'$rename': {'a': 'b'}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$rename': {'a': 'b'}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$rename': {'a': 'b'}},
+                                          **wc_on)
 
-            self.assertNotIn('a', m._document)
-            self.assertIn('b', m._document)
-            self.assertEqual(m._document['b'], 1)
+                self.assertNotIn('a', m._document)
+                self.assertIn('b', m._document)
+                self.assertEqual(m._document['b'], 1)
 
     def test__update_rename_field_map(self):
         ("Test the `_update()` method with a rename with a name in "
@@ -558,20 +555,19 @@ class TestDatabase(unittest.TestCase):
 
         m = MappedModel(_id=AN_OBJECT_ID, b=1)
 
-        with nested(mock.patch.object(MappedModel._meta.db, 'update'),
-                    mock.patch.object(MappedModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'real': 1}
 
-            m._update({'$rename': {'a': 'fake'}})
+                m._update({'$rename': {'a': 'fake'}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$rename': {'a': 'real'}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$rename': {'a': 'real'}},
+                                          **wc_on)
 
-            self.assertNotIn('a', m._document)
-            self.assertIn('real', m._document)
-            self.assertEqual(m._document['real'], 1)
+                self.assertNotIn('a', m._document)
+                self.assertIn('real', m._document)
+                self.assertEqual(m._document['real'], 1)
 
     def test__update_rename_nested(self):
         ("Test the `_update()` method with a rename with an embedded "
@@ -579,20 +575,19 @@ class TestDatabase(unittest.TestCase):
 
         m = DefaultModel(_id=AN_OBJECT_ID, a={'b': 1})
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'c': 1}}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'c': 1}}
 
-            m._update({'$rename': {'a.b': 'a.c'}})
+                m._update({'$rename': {'a.b': 'a.c'}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$rename': {'a.b': 'a.c'}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$rename': {'a.b': 'a.c'}},
+                                          **wc_on)
 
-            self.assertNotIn('b', m._document['a'])
-            self.assertIn('c', m._document['a'])
-            self.assertEqual(m._document['a']['c'], 1)
+                self.assertNotIn('b', m._document['a'])
+                self.assertIn('c', m._document['a'])
+                self.assertEqual(m._document['a']['c'], 1)
 
     def test__update_required_field(self):
         """Test the `_update()` method with a required field."""
@@ -611,16 +606,15 @@ class TestDatabase(unittest.TestCase):
 
         m = RequiredModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(RequiredModel._meta.db, 'update'),
-                    mock.patch.object(RequiredModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1, 'b': 2}
 
-            m._update({'$set': {'a': 1, 'b': 2}})
+                m._update({'$set': {'a': 1, 'b': 2}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$set': {'a': 1, 'b': 2}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$set': {'a': 1, 'b': 2}},
+                                          **wc_on)
 
     def test__update_required_field_nested(self):
         ("Test the `_update()` method with a required field with an "
@@ -631,17 +625,14 @@ class TestDatabase(unittest.TestCase):
 
         m = RequiredEmbeddedModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(RequiredEmbeddedModel._meta.db,
-                                      'update'),
-                    mock.patch.object(RequiredEmbeddedModel._meta.db,
-                                      'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
+        with mock.patch.object(RequiredEmbeddedModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(RequiredEmbeddedModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
 
-            m._update({'a.b': 1})
+                m._update({'a.b': 1})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'a.b': 1}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'a.b': 1}, **wc_on)
 
     def test__update_required_field_rename(self):
         ("Test the `_update()` method with a required field with a "
@@ -649,16 +640,15 @@ class TestDatabase(unittest.TestCase):
 
         m = RequiredModel(_id=AN_OBJECT_ID, a=1, b=2, c=3)
 
-        with nested(mock.patch.object(RequiredModel._meta.db, 'update'),
-                    mock.patch.object(RequiredModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'd': 3}
+        with mock.patch.object(RequiredModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(RequiredModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'd': 3}
 
-            m._update({'$rename': {'c': 'd'}})
+                m._update({'$rename': {'c': 'd'}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$rename': {'c': 'd'}},
-                                      **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$rename': {'c': 'd'}},
+                                          **wc_on)
 
     def test__update_required_field_unset(self):
         ("Test the `_update()` method with a required field with "
@@ -689,15 +679,15 @@ class TestDatabase(unittest.TestCase):
 
         m = TypedModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(TypedModel._meta.db, 'update'),
-                    mock.patch.object(TypedModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+        with mock.patch.object(TypedModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TypedModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
 
-            m._update({'$set': {'a': 1}})
+                m._update({'$set': {'a': 1}})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'$set': {'a': 1}}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'$set': {'a': 1}},
+                                          **wc_on)
 
     def test__update_type_field_list(self):
         ("Test the `_update()` method with a typed field that is a "
@@ -705,15 +695,14 @@ class TestDatabase(unittest.TestCase):
 
         m = TypedListModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(TypedListModel._meta.db, 'update'),
-                    mock.patch.object(TypedListModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
+        with mock.patch.object(TypedListModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TypedListModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': [1]}
 
-            m._update({'a': [1]})
+                m._update({'a': [1]})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'a': [1]}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                        document={'a': [1]}, **wc_on)
 
     def test__update_typed_field_nested(self):
         ("Test the `_update()` method with a typed field with an "
@@ -724,15 +713,14 @@ class TestDatabase(unittest.TestCase):
 
         m = TypedEmbeddedModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(TypedEmbeddedModel._meta.db, 'update'),
-                    mock.patch.object(TypedEmbeddedModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
+        with mock.patch.object(TypedEmbeddedModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TypedEmbeddedModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 1}}
 
-            m._update({'a.b': 1})
+                m._update({'a.b': 1})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'a.b': 1}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'a.b': 1}, **wc_on)
 
     def test__update_type_field_none(self):
         ("Test the `_update()` method with a typed field set to None "
@@ -743,15 +731,14 @@ class TestDatabase(unittest.TestCase):
 
         m = TypedNoneModel(_id=AN_OBJECT_ID)
 
-        with nested(mock.patch.object(TypedNoneModel._meta.db, 'update'),
-                    mock.patch.object(TypedNoneModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+        with mock.patch.object(TypedNoneModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TypedNoneModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
 
-            m._update({'a': 1})
+                m._update({'a': 1})
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'a': 1}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'a': 1}, **wc_on)
 
     def test__update_typed_field_rename(self):
         ("Test the `_update()` method with a typed field with a "
@@ -761,27 +748,26 @@ class TestDatabase(unittest.TestCase):
 
         # This with needs to go before catch_warnings() or it will a
         # DeprecationWarning will be included in w for Python 2.7+.
-        with nested(mock.patch.object(TypedModel._meta.db, 'update'),
-                    mock.patch.object(TypedModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
+        with mock.patch.object(TypedModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(TypedModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': 1}
 
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter('always')
 
-                m._update({'$rename': {'b': 'a'}})
+                    m._update({'$rename': {'b': 'a'}})
 
-                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                          document={'$rename': {'b': 'a'}},
-                                          **wc_on)
+                    update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                              document={'$rename': {'b': 'a'}},
+                                              **wc_on)
 
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
+                self.assertEqual(len(w), 1)
+                self.assertTrue(issubclass(w[-1].category, UserWarning))
 
-            expected = ('You are renaming a typed field. Its value may not be '
-                        'of the correct type.')
-            actual = str(w[-1].message)
-            self.assertEqual(actual, expected)
+                expected = ('You are renaming a typed field. Its value may not be '
+                            'of the correct type.')
+                actual = str(w[-1].message)
+                self.assertEqual(actual, expected)
 
     def test__update_typed_field_types(self):
         ("Test the `_update()` method with different types of typed "
@@ -790,7 +776,7 @@ class TestDatabase(unittest.TestCase):
         MultipleTypedModel = ModelFactory('MultipleTypedModel',
                                           typed_fields={
                                               'int': int,
-                                              'string': basestring,
+                                              'string': str,
                                               'datetime': datetime.datetime,
                                               'list': list,
                                               'objectid': ObjectId,
@@ -799,20 +785,19 @@ class TestDatabase(unittest.TestCase):
         m = MultipleTypedModel(_id=AN_OBJECT_ID)
 
         # Test a successful update.
-        with nested(mock.patch.object(MultipleTypedModel._meta.db, 'update'),
-                    mock.patch.object(MultipleTypedModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID}
+        with mock.patch.object(MultipleTypedModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(MultipleTypedModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID}
 
-            m._update({
-                'int': 1,
-                'string': 'value',
-                'datetime': datetime.datetime.now(),
-                'list': [],
-                'objectid': ObjectId(),
-            })
+                m._update({
+                    'int': 1,
+                    'string': 'value',
+                    'datetime': datetime.datetime.now(),
+                    'list': [],
+                    'objectid': ObjectId(),
+                })
 
-            self.assertTrue(update.called)
+                self.assertTrue(update.called)
 
         # Test a bunch of bad updates.
         with self.assertRaises(TypeError):
@@ -877,7 +862,12 @@ class TestDatabase(unittest.TestCase):
             m4._update({'a': 'string'})
 
         expected = ("The 'TypedModel' object cannot be updated because its 'a'"
-                    " field must be <type 'int'>.")
+                    " field must be <{0} 'int'>.")
+        if PY2:
+            expected = expected.format('type')
+        else:
+            expected = expected.format('class')
+
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 
@@ -885,7 +875,12 @@ class TestDatabase(unittest.TestCase):
             m4._update({'$set': {'a': 'string'}})
 
         expected = ("The 'TypedModel' object cannot be updated because its 'a'"
-                    " field must be <type 'int'>.")
+                    " field must be <{0} 'int'>.")
+        if PY2:
+            expected = expected.format('type')
+        else:
+            expected = expected.format('class')
+
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 
@@ -895,7 +890,12 @@ class TestDatabase(unittest.TestCase):
             m5._update({'a': ['b']})
 
         expected = ("The 'TypedListModel' object cannot be updated because its"
-                    " 'a' field must be [<type 'int'>].")
+                    " 'a' field must be [<{0} 'int'>].")
+        if PY2:
+            expected = expected.format('type')
+        else:
+            expected = expected.format('class')
+
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 
@@ -903,7 +903,12 @@ class TestDatabase(unittest.TestCase):
             m5._update({'a': [1, 'b']})
 
         expected = ("The 'TypedListModel' object cannot be updated because its"
-                    " 'a' field must be [<type 'int'>].")
+                    " 'a' field must be [<{0} 'int'>].")
+        if PY2:
+            expected = expected.format('type')
+        else:
+            expected = expected.format('class')
+
         actual = str(e.exception)
         self.assertEqual(actual, expected)
 
@@ -912,15 +917,14 @@ class TestDatabase(unittest.TestCase):
 
         m = DefaultModel(_id=AN_OBJECT_ID, a=5)
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            m._update({'a': 1}, use_internal=True)
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                m._update({'a': 1}, use_internal=True)
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'a': 5}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'a': 5}, **wc_on)
 
-            find_one.assert_not_called()
+                find_one.assert_not_called()
 
     def test__update_use_internal_atomic(self):
         ("Test the `_update()` method with `use_internal` with an "
@@ -928,12 +932,11 @@ class TestDatabase(unittest.TestCase):
 
         m = DefaultModel(_id=AN_OBJECT_ID, a__b=5)
 
-        with nested(mock.patch.object(DefaultModel._meta.db, 'update'),
-                    mock.patch.object(DefaultModel._meta.db, 'find_one'),
-                    ) as (update, find_one):
-            find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 5}}
+        with mock.patch.object(DefaultModel._meta.db, 'find_one') as find_one:
+            with mock.patch.object(DefaultModel._meta.db, 'update') as update:
+                find_one.return_value = {'_id': AN_OBJECT_ID, 'a': {'b': 5}}
 
-            m._update({'a.b': 1}, use_internal=True)
+                m._update({'a.b': 1}, use_internal=True)
 
-            update.assert_called_with(spec={'_id': AN_OBJECT_ID},
-                                      document={'a.b': 5}, **wc_on)
+                update.assert_called_with(spec={'_id': AN_OBJECT_ID},
+                                          document={'a.b': 5}, **wc_on)

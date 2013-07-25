@@ -23,7 +23,7 @@ def skip_without_mongoclient(f):
     if pymongo.version_tuple[:2] >= (2, 4):
         return f
     else:
-        return unittest.skip('`MongoClient is not supported.')
+        return unittest.skip('`MongoClient` is not supported.')
 
 
 class TestClass(object):

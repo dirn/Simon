@@ -1,13 +1,26 @@
 """Helpers for running tests"""
 
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 from bson import ObjectId
 import pymongo
 from simon import base
+from simon._compat import PY2
 
 __all__ = ('AN_OBJECT_ID', 'AN_OBJECT_ID_STR', 'ModelFactory',)
 
 AN_OBJECT_ID_STR = '50d4dce70ea5fae6fb84e44b'
 AN_OBJECT_ID = ObjectId(AN_OBJECT_ID_STR)
+
+
+def skip_with_py3(f):
+    if PY2:
+        return f
+    else:
+        return unittest.skip('Test being skipped for Python 3.')
 
 
 def ModelFactory(name, spec=None, **kwargs):
