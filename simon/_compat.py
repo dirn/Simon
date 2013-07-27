@@ -1,26 +1,41 @@
+"""Python 2 and 3 compatibility module."""
+
 import sys
 
+# Development should be done with Python 3 first. Rather than checking
+# for Python 3 and creating special cases for it, check for Python 2 and
+# create special cases for it instead.
 PY2 = sys.version_info[0] == 2
 
 if PY2:
+    # Define everything that is Python 2 specific.
+
+    # dictionary iterators
     _iteritems = 'iteritems'
     _iterkeys = 'iterkeys'
     _itervalues = 'itervalues'
 
+    # other iterators
     get_next = lambda x: x.next
     range = xrange  # NOQA, Python 2 only
 
+    # types
     str_types = (str, unicode)  # NOQA, Python 2 only
 
     exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
 else:
+    # Define everything that is Python 3 specific.
+
+    # dictionary iterators
     _iteritems = 'items'
     _iterkeys = 'keys'
     _itervalues = 'values'
 
+    # other iterators
     get_next = lambda x: x.__next__
     range = range
 
+    # types
     str_types = (str,)
 
     def reraise(tp, value, tb=None):
