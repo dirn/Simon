@@ -2,7 +2,7 @@
 
 import pymongo
 
-from ._compat import get_next, range
+from ._compat import get_next, iterkeys, range
 from .utils import ignored, map_fields
 
 __all__ = ('Q', 'QuerySet')
@@ -139,7 +139,7 @@ class QuerySet(object):
         if self._cls:
             query = map_fields(self._cls._meta.field_map, {key: 1},
                                flatten_keys=True, with_operators=True)
-            key = list(query.keys())[0]
+            key = get_next(iterkeys(query))()
 
         return self._cursor.distinct(key)
 
@@ -201,7 +201,7 @@ class QuerySet(object):
             if self._cls:
                 query = map_fields(self._cls._meta.field_map, {field: 1},
                                    flatten_keys=True, with_operators=True)
-                field = list(query.keys())[0]
+                field = get_next(iterkeys(query))()
 
             sorting.append((field, direction))
 

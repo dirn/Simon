@@ -5,7 +5,7 @@ import warnings
 
 from bson import ObjectId
 
-from ._compat import itervalues
+from ._compat import iterkeys, itervalues
 from .connection import get_database, pymongo_supports_mongoclient
 from .utils import map_fields
 
@@ -86,7 +86,7 @@ class Meta(object):
         # Get the list of the attributes associated with the class.
         # These will make up the list of reserved words that cannot be
         # used for keys.
-        self.core_attributes = list(cls.__dict__.keys()) + ['_document']
+        self.core_attributes = list(iterkeys(cls.__dict__)) + ['_document']
 
         # field_map must be a valid mapping
         if not isinstance(self.field_map, Mapping):

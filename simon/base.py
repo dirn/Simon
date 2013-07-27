@@ -6,7 +6,7 @@ import warnings
 
 from bson import ObjectId
 
-from ._compat import itervalues, reraise, with_metaclass
+from ._compat import get_next, iterkeys, itervalues, reraise, with_metaclass
 from .exceptions import MultipleDocumentsFound, NoDocumentFound
 from .meta import Meta
 from .query import Q, QuerySet
@@ -1061,7 +1061,7 @@ class Model(with_metaclass(ModelMetaClass)):
                     for field_from, field_to in fields[k].items():
                         mapped = map_fields(cls._meta.field_map, {field_to: 1},
                                             flatten_keys=True)
-                        fields[k][field_from] = list(mapped.keys())[0]
+                        fields[k][field_from] = get_next(iterkeys(mapped))()
         else:
             fields = map_field_names_and_values(fields)
         # When placing fields in kwargs, make a copy so changes to
@@ -1234,7 +1234,7 @@ class Model(with_metaclass(ModelMetaClass)):
                 # dict.
                 mapped_name = map_fields(self.__class__._meta.field_map,
                                          {name: 1}, flatten_keys=True)
-                mapped_name = list(mapped_name.keys())[0]
+                mapped_name = get_next(iterkeys(mapped_name))()
             else:
                 mapped_name = name
 
@@ -1269,7 +1269,7 @@ class Model(with_metaclass(ModelMetaClass)):
             # dict.
             mapped_name = map_fields(self.__class__._meta.field_map, {name: 1},
                                      flatten_keys=True)
-            mapped_name = list(mapped_name.keys())[0]
+            mapped_name = get_next(iterkeys(mapped_name))()
 
             # Build a dictionary that can be applied to the internal
             # document dictionary with update_nested_keys().  Do this
