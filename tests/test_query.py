@@ -13,6 +13,7 @@ except ImportError:
 from pymongo.cursor import Cursor
 
 from simon import connection, query
+from simon._compat import range
 
 from .utils import AN_OBJECT_ID, ModelFactory
 
@@ -378,7 +379,7 @@ class TestQuerySet(unittest.TestCase):
         self.cursor.count.return_value = 3
 
         # qs._fill_to() would normally populate qs._items
-        self.qs._items = range(3)
+        self.qs._items = [0, 1, 2]
 
         with mock.patch.object(self.qs, '_fill_to') as _fill_to:
             self.assertEqual(self.qs[1:], self.qs._items[1:])

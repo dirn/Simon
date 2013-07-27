@@ -8,6 +8,7 @@ if PY2:
     _itervalues = 'itervalues'
 
     get_next = lambda x: x.next
+    range = xrange  # NOQA, Python 2 only
 
     str_types = (str, unicode)  # NOQA, Python 2 only
 
@@ -18,6 +19,7 @@ else:
     _itervalues = 'values'
 
     get_next = lambda x: x.__next__
+    range = range
 
     str_types = (str,)
 
@@ -37,12 +39,6 @@ def iterkeys(d, *args, **kwargs):
 
 def itervalues(d, *args, **kwargs):
     return iter(getattr(d, _itervalues)(*args, **kwargs))
-
-
-try:
-    xrange
-except NameError:
-    xrange = range
 
 
 def with_metaclass(meta, *bases):

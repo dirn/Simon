@@ -2,7 +2,7 @@
 
 import pymongo
 
-from ._compat import get_next
+from ._compat import get_next, range
 from .utils import ignored, map_fields
 
 __all__ = ('Q', 'QuerySet')
