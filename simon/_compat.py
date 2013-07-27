@@ -9,7 +9,7 @@ if PY2:
 
     get_next = lambda x: x.next
 
-    str_types = (str, unicode)
+    str_types = (str, unicode)  # NOQA, Python 2 only
 
     exec('def reraise(tp, value, tb=None):\n raise tp, value, tb')
 else:
