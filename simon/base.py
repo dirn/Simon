@@ -68,8 +68,6 @@ class ModelMetaClass(type):
 class Model(with_metaclass(ModelMetaClass)):
     """The base class for all Simon models"""
 
-    __metaclass__ = ModelMetaClass
-
     def __init__(self, **fields):
         """Assigns all keyword arguments to the object's document.
 
