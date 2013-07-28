@@ -4,15 +4,6 @@ Simon API
 The following is a look into the API inside Simon.
 
 
-.. _aggregation:
-
-Aggregation
------------
-
-.. automodule:: simon.aggregation
-   :members:
-
-
 .. _connection:
 
 Connection

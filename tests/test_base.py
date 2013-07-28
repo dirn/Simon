@@ -54,28 +54,6 @@ class TestModel(unittest.TestCase):
         connection._connections = None
         connection._databases = None
 
-    def test_aggregate(self):
-        """Test the `aggregate()` method."""
-
-        with mock.patch.object(DefaultModel._meta.db, 'aggregate') \
-                as aggregate:
-            DefaultModel.aggregate(unwind='$a',
-                                   group={'_id': '$a', 'count': {'$sum': 1}},
-                                   sort=SON([('count', -1), ('_id', -1)]))
-
-            aggregate.assert_called_with({
-                '$unwind': '$a',
-                '$group': {'_id': '$a', 'count': {'$sum': 1}},
-                '$sort': SON([('count', -1), ('_id', -1)]),
-            })
-
-            DefaultModel.aggregate(geonear={'near': [1, 2],
-                                            'distanceField': 'loc'})
-
-            aggregate.assert_called_with({
-                '$geoNear': {'near': [1, 2], 'distanceField': 'loc'},
-            })
-
     def test_all(self):
         """Test the `all()` method."""
 

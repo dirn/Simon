@@ -86,36 +86,6 @@ class Model(with_metaclass(ModelMetaClass)):
             setattr(self, k, v)
 
     @classmethod
-    def aggregate(cls, project=None, match=None, limit=None, skip=None,
-                  unwind=None, group=None, sort=None, geonear=None):
-        """Returns the result from the aggregation framework.
-
-        .. versionadded:: 0.7.0
-        """
-
-        pipeline = {}
-        values = locals()
-
-        def add_to_pipeline(key, alias=None):
-            value = values.get(key)
-            if value is None:
-                return
-
-            alias = alias or key
-            pipeline['${0}'.format(alias)] = value
-
-        add_to_pipeline('project')
-        add_to_pipeline('match')
-        add_to_pipeline('limit')
-        add_to_pipeline('skip')
-        add_to_pipeline('unwind')
-        add_to_pipeline('group')
-        add_to_pipeline('sort')
-        add_to_pipeline('geonear', 'geoNear')
-
-        return cls._meta.db.aggregate(pipeline)
-
-    @classmethod
     def all(self):
         """Returns all documents in the collection.
 
