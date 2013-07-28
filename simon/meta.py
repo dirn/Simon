@@ -1,6 +1,7 @@
 """Meta options"""
 
 from collections import Mapping
+from itertools import chain
 import warnings
 
 from bson import ObjectId
@@ -86,7 +87,8 @@ class Meta(object):
         # Get the list of the attributes associated with the class.
         # These will make up the list of reserved words that cannot be
         # used for keys.
-        self.core_attributes = list(iterkeys(cls.__dict__)) + ['_document']
+        self.core_attributes = tuple(chain(iterkeys(cls.__dict__),
+                                          ('_document',)))
 
         # field_map must be a valid mapping
         if not isinstance(self.field_map, Mapping):
