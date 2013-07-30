@@ -123,7 +123,7 @@ def _get_connection(host, port, replica_set=None, **kwargs):
 
     If the ``host`` is actually a MongoDB URI, the username, password,
     and database name will be parsed from the URI and returned as the
-    second part of the ``tuple`` returned by this method.
+    second part of the ``tuple`` returned by this function.
 
     :param host: Hostname, IP address, or MongoDB URI of the host.
     :type host: str.

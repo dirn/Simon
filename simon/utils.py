@@ -56,7 +56,7 @@ def current_datetime():
 
     Python includes microseconds in its ``datetime`` values. MongoDB,
     on the other hand, only retains them down to milliseconds. This
-    method will not only get the current time in UTC, but it will also
+    function will not only get the current time in UTC, but it will also
     remove microseconds from the value.
 
     :returns: datetime -- the current datetime formatted for MongoDB.
@@ -72,7 +72,7 @@ def current_datetime():
 def get_nested_key(values, key):
     """Get a value for a nested dictionary key.
 
-    This method can be used to retrieve the value nested within a
+    This function can be used to retrieve the value nested within a
     dictionary. The entire path should be provided as the value for
     ``key``, using a ``.`` as the delimiter
     (e.g., ``'path.to.the.key``').
@@ -110,7 +110,7 @@ def get_nested_key(values, key):
 def guarantee_object_id(value):
     """Convert a value into an Object ID.
 
-    This method will convert a value to an :class:`ObjectId`. If
+    This function will convert a value to an :class:`ObjectId`. If
     ``value`` is a ``dict`` (e.g., with a comparison operator as the key
     ), the value in the ``dict`` will be converted. Any values that are
     a ``list`` or ``tuple`` will be iterated over, and replaced with a
@@ -161,7 +161,7 @@ def guarantee_object_id(value):
 def is_atomic(document):
     """Check for atomic update operators.
 
-    This method checks for operators in ``document``. If a spec
+    This function checks for operators in ``document``. If a spec
     document is provided instead of a document to save or update, a
     false positive will be reported if a logical operator such as
     ``$and`` or ``$or`` is used.
@@ -183,7 +183,7 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
 
     Attribute names will be mapped to document keys using the mapping
     specified in ``field_map``. If any of the attribute names contain
-    ``__``, :meth:`parse_kwargs` will be called and a second pass
+    ``__``, :func:`parse_kwargs` will be called and a second pass
     through ``cls._meta.field_map`` will be performed.
 
     The two-pass approach is used to allow for keys in embedded
@@ -194,7 +194,7 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
     The ``$and`` and ``$or`` operators cannot be mapped to different
     keys. Any occurrences of these operators as keys should be
     accompanied by a ``list`` of ``dict``s. Each ``dict`` will be put
-    back into :meth:`map_fields` to ensure that keys nested within
+    back into :func:`map_fields` to ensure that keys nested within
     boolean queries are mapped properly.
 
     If ``with_operators`` is set, the following operators will be
@@ -417,9 +417,9 @@ def parse_kwargs(**kwargs):
 def remove_nested_key(original, key):
     """Remove keys within a nested dictionary.
 
-    This method can remove a key from within a nested dictionary. Nested
-    keys should be specified using a ``.`` as the delimiter. If no
-    delimiter is found, the key will be removed from the root
+    This function can remove a key from within a nested dictionary.
+    Nested keys should be specified using a ``.`` as the delimiter. If
+    no delimiter is found, the key will be removed from the root
     dictionary.
 
     If ``original`` is not a dictionary, a :class:`TypeError` will be
@@ -522,7 +522,7 @@ else:
 def update_nested_keys(original, updates):
     """Update keys within nested dictionaries.
 
-    This method simulates merging two dictionaries. It allows specific
+    This function simulates merging two dictionaries. It allows specific
     keys within a dictionary or nested dictionary without overwriting
     the the entire dictionary.
 

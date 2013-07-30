@@ -1,4 +1,4 @@
-"""Helper methods to ease geospatial queries"""
+"""Helper functions to ease geospatial queries"""
 
 import collections
 
@@ -8,7 +8,7 @@ __all__ = ('box', 'circle', 'near', 'polygon', 'within')
 def _validate_point(point, name=None, alternate_type=None):
     """Validate the type and length of a point.
 
-    This method defines a point as either a ``list`` of exactly two
+    This function defines a point as either a ``list`` of exactly two
     elements. If will also accept a ``tuple``.
 
     :param point: The point to validate.
@@ -39,7 +39,7 @@ def _validate_point(point, name=None, alternate_type=None):
 def box(lower_left_point, upper_right_point):
     """Build a ``$box`` query.
 
-    This is a convenience method for ``$within`` queries that use
+    This is a convenience function for ``$within`` queries that use
     ``$box`` as their shape.
 
     ``lower_left_point`` and ``upper_right_point`` are a pair of
@@ -64,7 +64,7 @@ def box(lower_left_point, upper_right_point):
 def circle(point, radius):
     """Build a ``$circle`` query.
 
-    This is a convenience method for ``$within`` queries that use
+    This is a convenience function for ``$within`` queries that use
     ``$circle`` as their shape.
 
     :param point: The center of the circle.
@@ -84,10 +84,10 @@ def circle(point, radius):
 def near(point, max_distance=None, unique_docs=False):
     """Build a ``$near`` query.
 
-    This is a convenience method for more complex ``$near`` queries. For
-    simple queries that simply use the point, the regular query syntax
-    of ``field__near=[x, y]`` will suffice. This method provides a way
-    to include ``$maxDistance`` and (if support is added)
+    This is a convenience function for more complex ``$near`` queries.
+    For simple queries that simply use the point, the regular query
+    syntax of ``field__near=[x, y]`` will suffice. This function
+    provides a way to include ``$maxDistance`` and (if support is added)
     ``$uniqueDocs`` without needing to structure the query as
     ``field={'$near': [x, y], '$maxDistance': z}``.
 
@@ -126,7 +126,7 @@ def near(point, max_distance=None, unique_docs=False):
 def polygon(*points):
     """Build a ``$polygon`` query.
 
-    This is a convenience method for ``$within`` queries that use
+    This is a convenience function for ``$within`` queries that use
     ``$polygon`` as their shape.
 
     ``points`` should either be expressed as a series of ``list``'s or a
@@ -176,7 +176,7 @@ def polygon(*points):
 def within(shape, *bounds, **bounds_map):
     """Build a ``$within`` query.
 
-    This is a convenience method for ``$within`` queries.
+    This is a convenience function for ``$within`` queries.
 
     :param shape: The shape of the bounding area.
     :type shape: str.
