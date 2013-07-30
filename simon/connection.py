@@ -28,7 +28,7 @@ _databases = None
 
 def connect(host='localhost', name=None, username=None, password=None,
             port=None, alias=None, **kwargs):
-    """Connects to a database.
+    """Connect to a database.
 
     :param host: Hostname, IP address, or MongoDB URI of the host.
     :type host: str.
@@ -52,6 +52,7 @@ def connect(host='localhost', name=None, username=None, password=None,
     .. versionchanged:: 0.2.0
        ``connect()`` now accepts ``replica_set`` as a kwarg, it is
        preferred over ``replicaSet``
+
     """
 
     # The default settings, based on the arguments passed in
@@ -113,7 +114,7 @@ def connect(host='localhost', name=None, username=None, password=None,
 
 
 def _get_connection(host, port, replica_set=None, **kwargs):
-    """Gets the connection to the database.
+    """Return a connection to the database.
 
     This will create a connection to a new MongoDB server and store it
     internally for later use. If a server is requested that
@@ -137,6 +138,7 @@ def _get_connection(host, port, replica_set=None, **kwargs):
     :returns: tuple -- a pair of values containing a
                        :class:`pymongo.Connection` and any settings
                        parsed when a URI is provided.
+
     """
 
     parsed_settings = {}
@@ -211,11 +213,12 @@ def _get_connection(host, port, replica_set=None, **kwargs):
 
 
 def get_database(name):
-    """Gets a reference to a database.
+    """Return a reference to a database.
 
     :param name: The name of the database.
     :type name: str.
     :returns: ``pymongo.database.Database`` -- a database object.
+
     """
 
     if not (_databases and name in _databases):

@@ -9,29 +9,36 @@ __all__ = ('Q', 'QuerySet')
 
 
 class Q(object):
-    """A wrapper around a query condition to allow for logical ANDs and
-    ORs through ``&`` and ``|``, respectively.
+
+    """Wrapper around logical ANDs and ORs.
+
+    The :class:`~simon.query.Q` class serves as a wrapper around query
+    conditions to allow for logical ANDs and ORs through ``&`` and
+    ``|``, respectively.
+
     """
 
     AND = '$and'
     OR = '$or'
 
     def __init__(self, **fields):
-        """Creates a new filter.
+        """Create a new filter.
 
         :param \*\*fields: Keyword arguments specifying the query.
         :type \*\*fields: \*\*kwargs.
+
         """
 
         self._filter = fields
 
     def _add_filter(self, filter, condition):
-        """Adds to filters together.
+        """Add to filters together.
 
         :param filter: The filter to add.
         :type filter: :class:`Q`.
         :returns: :class:`Q` -- the new filter.
         :raises: :class:`TypeError`.
+
         """
 
         if not isinstance(filter, Q):
@@ -60,37 +67,47 @@ class Q(object):
         return obj
 
     def __and__(self, filter):
-        """Adds a new filter using ``$and``.
+        """Add a new filter using ``$and``.
 
         :param filter: The filter to add.
         :type filter: :class:`Q`.
         :returns: :class:`Q` -- the new filter.
+
         """
 
         return self._add_filter(filter, self.AND)
 
     def __or__(self, filter):
-        """Adds a new filter using ``$or``.
+        """Add a new filter using ``$or``.
 
         :param filter: The filter to add.
         :type filter: :class:`Q`.
         :returns: :class:`Q` -- the new filter.
+
         """
+
         return self._add_filter(filter, self.OR)
 
 
 class QuerySet(object):
-    """A query set that wraps around MongoDB cursors and returns
-    :class:`~simon.Model` objects.
+
+    """Wrapper around MongoDB cursors.
+
+    The :class:`~simon.QuerySet` class wraps around
+    :class:`~pymongo.cursor.Cursor`. When given a :class:`~simon.Model`
+    class, it will return documents wrapped in an instances of the
+    class. Otherwise documents will be returned as ``dict``.
+
     """
 
     def __init__(self, cursor=None, cls=None):
-        """Creates a new query set.
+        """Create a new query set.
 
         :param cursor: The result set.
         :type cursor: :class:`~pymongo.cursor.Cursor`.
         :param cls: Model class to map the results to.
         :type cls: :class:`~simon.Model`.
+
         """
 
         self._cls = cls
@@ -102,13 +119,14 @@ class QuerySet(object):
         self._sorting = None
 
     def count(self):
-        """Gets the number of documents in the :class:`QuerySet`.
+        """Return the number of documents in the :class:`QuerySet`.
 
         If no cursor has been associated with the query set,
         ``TypeError`` will be raised.
 
         :returns: int -- the number of documents.
         :raises: :class:`TypeError`.
+
         """
 
         if not self._cursor:
@@ -126,12 +144,12 @@ class QuerySet(object):
         return self._count
 
     def distinct(self, key):
-        """Gets a list of distinct values for ``key`` across all
-        documents in the :class:`QuerySet`.
+        """Return distinct values for ``key`` in the :class:`QuerySet`.
 
         :param key: Name of the key.
         :type key: str.
         :returns: list -- distinct values for the key.
+
         """
 
         # If the QuerySet has a model class, check for key in the
@@ -144,31 +162,32 @@ class QuerySet(object):
         return self._cursor.distinct(key)
 
     def limit(self, limit):
-        """Applies a limit to the number of documents in the
-        :class:`QuerySet`.
+        """Apply a limit to the documents in the :class:`QuerySet`.
 
         :param limit: Number of documents to return.
         :type limit: int.
         :returns: :class:`QuerySet` -- the documents with the limit
                   applied.
+
         """
 
         # Make sure to clone the cursor so as not to alter the original
         return QuerySet(self._cursor.clone().limit(limit), self._cls)
 
     def skip(self, skip):
-        """Skips a number of documents in the :class:`QuerySet`.
+        """Skip a number of documents in the :class:`QuerySet`.
 
         :param skip: Number of documents to skip.
         :type skip: int.
         :returns: :class:`QuerySet` -- the documents remaining.
+
         """
 
         # Make sure to clone the cursor so as not to alter the original
         return QuerySet(self._cursor.clone().skip(skip), self._cls)
 
     def sort(self, *fields):
-        """Sorts the documents in the :class:`QuerySet`.
+        """Sort the documents in the :class:`QuerySet`.
 
         By default all sorting is done in ascending order. To switch
         any key to sort in descending order, place a ``-`` before the
@@ -185,6 +204,7 @@ class QuerySet(object):
 
         .. versionchanged:: 0.3.0
            Sorting doesn't occur until documents are loaded
+
         """
 
         # Build the list of sorting (field, direction) pairs. If the
@@ -214,7 +234,7 @@ class QuerySet(object):
         return qs
 
     def _fill_to(self, index):
-        """Builds the cache of documents retrieved from the cursor.
+        """Build the cache of documents retrieved from the cursor.
 
         :class:`QuerySet` objects keep documents loaded from the
         cursor in an internal cache to avoid repetitive trips to the
@@ -227,6 +247,7 @@ class QuerySet(object):
 
         .. versionchanged:: 0.3.0
            Processes the sorting when documents are first fetched
+
         """
 
         # If all of the the requested documents have been loaded, get
@@ -264,7 +285,7 @@ class QuerySet(object):
                 self._items.append(item)
 
     def __getitem__(self, k):
-        """Gets an item or slice from the :class:`QuerySet`."""
+        """Return an item or slice from the :class:`QuerySet`."""
 
         # If k is a slice, set the bound to either the slice's stop
         # attribute. If there is no value for stop, use the total
@@ -300,7 +321,7 @@ class QuerySet(object):
         return self._items[k]
 
     def __iter__(self):
-        """Iterates through the documents in the cursor."""
+        """Iterate through the documents in the cursor."""
 
         for x in range(0, self.count()):
             # Fetch the document from the cursor if it hasn't already
@@ -311,7 +332,7 @@ class QuerySet(object):
             yield self._items[x]
 
     def __len__(self):
-        """Gets the length of the :class:`QuerySet`."""
+        """Return the length of the :class:`QuerySet`."""
 
         try:
             return self.count()

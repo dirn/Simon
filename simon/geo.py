@@ -6,7 +6,7 @@ __all__ = ('box', 'circle', 'near', 'polygon', 'within')
 
 
 def _validate_point(point, name=None, alternate_type=None):
-    """Validates the type and length of a point.
+    """Validate the type and length of a point.
 
     This method defines a point as either a ``list`` of exactly two
     elements. If will also accept a ``tuple``.
@@ -19,6 +19,7 @@ def _validate_point(point, name=None, alternate_type=None):
     :param alternate_type: (optional) Alternate type(s) to check for.
     :type alternate_type: type or tuple of types.
     :raises: :class:`TypeError`, :class:`ValueError`.
+
     """
 
     exception = None
@@ -36,7 +37,7 @@ def _validate_point(point, name=None, alternate_type=None):
 
 
 def box(lower_left_point, upper_right_point):
-    """Builds a ``$box`` query.
+    """Build a ``$box`` query.
 
     This is a convenience method for ``$within`` queries that use
     ``$box`` as their shape.
@@ -51,6 +52,7 @@ def box(lower_left_point, upper_right_point):
     :type upper_right_point: list.
     :returns: dict -- the ``$box`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
+
     """
 
     _validate_point(lower_left_point, '`lower_left_point`')
@@ -60,7 +62,7 @@ def box(lower_left_point, upper_right_point):
 
 
 def circle(point, radius):
-    """Builds a ``$circle`` query.
+    """Build a ``$circle`` query.
 
     This is a convenience method for ``$within`` queries that use
     ``$circle`` as their shape.
@@ -71,6 +73,7 @@ def circle(point, radius):
     :type radius: int.
     :returns: dict -- the ``$circle`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
+
     """
 
     _validate_point(point)
@@ -79,7 +82,7 @@ def circle(point, radius):
 
 
 def near(point, max_distance=None, unique_docs=False):
-    """Builds a ``$near`` query.
+    """Build a ``$near`` query.
 
     This is a convenience method for more complex ``$near`` queries. For
     simple queries that simply use the point, the regular query syntax
@@ -103,6 +106,7 @@ def near(point, max_distance=None, unique_docs=False):
                         documents.
     :returns: dict -- the ``$near`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
+
     """
 
     _validate_point(point)
@@ -120,7 +124,7 @@ def near(point, max_distance=None, unique_docs=False):
 
 
 def polygon(*points):
-    """Builds a ``$polygon`` query.
+    """Build a ``$polygon`` query.
 
     This is a convenience method for ``$within`` queries that use
     ``$polygon`` as their shape.
@@ -133,6 +137,7 @@ def polygon(*points):
     :type \*points: \*args.
     :returns: dict -- the ``$polygon`` query.
     :raises: :class:`TypeError`, :class:`ValueError`.
+
     """
 
     if len(points) > 1:
@@ -169,7 +174,7 @@ def polygon(*points):
 
 
 def within(shape, *bounds, **bounds_map):
-    """Builds a ``$within`` query.
+    """Build a ``$within`` query.
 
     This is a convenience method for ``$within`` queries.
 
@@ -181,6 +186,7 @@ def within(shape, *bounds, **bounds_map):
     :type \*\*bounds_map: \*\*kwargs.
     :returns: dict -- the ``$within`` query.
     :raises: :class:`RuntimeError`.
+
     """
 
     if bounds and bounds_map:

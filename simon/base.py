@@ -25,7 +25,8 @@ __all__ = ('Model',)
 # update before the write is considered successful.
 
 class ModelMetaClass(type):
-    """Define :class:`Model`"""
+
+    """Define :class:`Model`."""
 
     def __new__(cls, name, bases, attrs):
         new_new = super(ModelMetaClass, cls).__new__
@@ -57,7 +58,7 @@ class ModelMetaClass(type):
         return new_class
 
     def addattr(self, name, value):
-        """Assigns attributes to the class."""
+        """Assign attributes to the class."""
 
         if hasattr(value, 'add_to_original'):
             value.add_to_original(self, name)
@@ -66,13 +67,15 @@ class ModelMetaClass(type):
 
 
 class Model(with_metaclass(ModelMetaClass)):
-    """The base class for all Simon models"""
+
+    """Base class for all Simon models."""
 
     def __init__(self, **fields):
-        """Assigns all keyword arguments to the object's document.
+        """Assign all keyword arguments to the object's document.
 
         :param \*\*fields: Keyword arguments to add to the document.
         :type \*\*fields: \*\*kwargs.
+
         """
 
         # Assign an empty dictionary to _document so that it can be
@@ -87,10 +90,11 @@ class Model(with_metaclass(ModelMetaClass)):
 
     @classmethod
     def all(self):
-        """Returns all documents in the collection.
+        """Return all documents in the collection.
 
         If ``sort`` has been defined on the ``Meta`` class it will be
         used to order the records.
+
         """
 
         # All of the functionality already exists inside find(), so
@@ -99,7 +103,7 @@ class Model(with_metaclass(ModelMetaClass)):
 
     @classmethod
     def create(cls, **fields):
-        """Creates a new document and saves it to the database.
+        """Create a new document and saves it to the database.
 
         This is a convenience method to create a new document. It will
         instantiate a new ``Model`` from the keyword arguments,
@@ -118,6 +122,7 @@ class Model(with_metaclass(ModelMetaClass)):
         :type \*\*fields: \*\*kwargs.
         :returns: :class:`~simon.Model` -- the new document.
         :raises: :class:`TypeError`
+
         """
 
         write_concern = {
@@ -131,7 +136,7 @@ class Model(with_metaclass(ModelMetaClass)):
         return new
 
     def delete(self, **kwargs):
-        """Deletes a single document from the database.
+        """Delete a single document from the database.
 
         This will delete the document associated with the instance
         object. If the document does not have an ``_id``--this will
@@ -144,6 +149,7 @@ class Model(with_metaclass(ModelMetaClass)):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`TypeError`
+
         """
 
         id = self._document.get('_id')
@@ -165,7 +171,7 @@ class Model(with_metaclass(ModelMetaClass)):
 
     @classmethod
     def find(cls, q=None, *qs, **fields):
-        """Gets multiple documents from the database.
+        """Return multiple documents from the database.
 
         This will find a return multiple documents matching the query
         specified through ``**fields``. If ``sort`` has been defined on
@@ -182,6 +188,7 @@ class Model(with_metaclass(ModelMetaClass)):
 
         .. versionchanged:: 0.3.0
            ``qs`` is being deprecated in favor of ``q``
+
         """
 
         if qs:
@@ -194,7 +201,7 @@ class Model(with_metaclass(ModelMetaClass)):
 
     @classmethod
     def get(cls, q=None, *qs, **fields):
-        """Gets a single document from the database.
+        """Return a single document from the database.
 
         This will find and return a single document matching the
         query specified through ``**fields``. An exception will be
@@ -212,6 +219,7 @@ class Model(with_metaclass(ModelMetaClass)):
 
         .. versionchanged:: 0.3.0
            ``qs`` is being deprecated in favor of ``q``
+
         """
 
         if qs:
@@ -224,7 +232,7 @@ class Model(with_metaclass(ModelMetaClass)):
 
     @classmethod
     def get_or_create(cls, **fields):
-        """Gets an existing or creates a new document.
+        """Return an existing or create a new document.
 
         This will find and return a single document matching the
         query specified through ``**fields``. If no document is found,
@@ -244,6 +252,7 @@ class Model(with_metaclass(ModelMetaClass)):
         :returns: tuple -- the :class:`~simon.Model` and whether the
                   document was created.
         :raises: :class:`~simon.Model.MultipleDocumentsFound`
+
         """
 
         write_concern = {
@@ -258,7 +267,7 @@ class Model(with_metaclass(ModelMetaClass)):
                               **fields), True
 
     def increment(self, field=None, value=1, **fields):
-        """Performs an atomic increment.
+        """Perform an atomic increment.
 
         This can be used to update a single field::
 
@@ -291,6 +300,7 @@ class Model(with_metaclass(ModelMetaClass)):
                            increment values.
         :type \*\*fields: \*\*kwargs.
         :raises: :class:`TypeError`, :class:`ValueError`
+
         """
 
         write_concern = {
@@ -315,7 +325,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update({'$inc': update}, **write_concern)
 
     def pop(self, fields, **kwargs):
-        """Performs an atomic pop.
+        """Perform an atomic pop.
 
         Values can be popped from either the end or the beginning of a
         list. To pop a value from the end of a list, specify the name of
@@ -336,6 +346,7 @@ class Model(with_metaclass(ModelMetaClass)):
         :raises: :class:`TypeError`
 
         .. versionadded:: 0.5.0
+
         """
 
         if not fields:
@@ -363,7 +374,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update({'$pop': update}, **write_concern)
 
     def pull(self, field=None, value=None, **fields):
-        """Performs an atomic pull.
+        """Perform an atomic pull.
 
         With MongoDB there are two types of pull operations: ``$pull``
         and ``$pullAll``. As the name implies, ``$pullAll`` is intended
@@ -404,6 +415,7 @@ class Model(with_metaclass(ModelMetaClass)):
         :raises: :class:`TypeError`, :class:`ValueError`
 
         .. versionadded:: 0.5.0
+
         """
 
         write_concern = {
@@ -438,7 +450,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update(update, **write_concern)
 
     def push(self, field=None, value=None, allow_duplicates=True, **fields):
-        """Performs an atomic push.
+        """Perform an atomic push.
 
         With MongoDB there are three types of push operations:
         ``$push``, ``$pushAll``, add ``$addToSet``. As the name implies,
@@ -486,6 +498,7 @@ class Model(with_metaclass(ModelMetaClass)):
         :raises: :class:`TypeError`, :class:`ValueError`
 
         .. versionadded:: 0.5.0
+
         """
 
         write_concern = {
@@ -523,7 +536,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update(update, **write_concern)
 
     def raw_update(self, fields, **kwargs):
-        """Performs an update using a raw document.
+        """Perform an update using a raw document.
 
         This method should be used carefully as it will perform the
         update exactly, potentially performing a full document
@@ -549,6 +562,7 @@ class Model(with_metaclass(ModelMetaClass)):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`TypeError`
+
         """
 
         write_concern = {
@@ -559,7 +573,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update(fields, **write_concern)
 
     def remove_fields(self, fields, **kwargs):
-        """Removes the specified fields from the document.
+        """Remove the specified fields from the document.
 
         The specified fields will be removed from the document in the
         database as well as the object. This operation cannot be
@@ -584,6 +598,7 @@ class Model(with_metaclass(ModelMetaClass)):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`TypeError`
+
         """
 
         write_concern = {
@@ -603,7 +618,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update({'$unset': fields}, **write_concern)
 
     def rename(self, field_from=None, field_to=None, **fields):
-        """Performs an atomic rename.
+        """Perform an atomic rename.
 
         This can be used to update a single field::
 
@@ -639,6 +654,7 @@ class Model(with_metaclass(ModelMetaClass)):
         :raises: :class:`TypeError`, :class:`ValueError`
 
         .. versionadded:: 0.5.0
+
         """
 
         write_concern = {
@@ -663,7 +679,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update({'$rename': update}, **write_concern)
 
     def save(self, **kwargs):
-        """Saves the object to the database.
+        """Save the document to the database.
 
         When saving a new document for a model with ``auto_timestamp``
         set to ``True``, ``created`` will be added with the current
@@ -684,6 +700,7 @@ class Model(with_metaclass(ModelMetaClass)):
         .. versionchanged:: 0.4.0
            ``created`` is always added to inserted documents when
            ``auto_timestamp`` is ``True``
+
         """
 
         write_concern = {
@@ -725,7 +742,7 @@ class Model(with_metaclass(ModelMetaClass)):
                     self._document['modified'] = fields['modified']
 
     def save_fields(self, fields, **kwargs):
-        """Saves only the specified fields.
+        """Save the specified fields.
 
         If only a select number of fields need to be updated, an atomic
         update is preferred over a document replacement.
@@ -753,6 +770,7 @@ class Model(with_metaclass(ModelMetaClass)):
                   update for it to be successful.
         :type w: int.
         :raises: :class:`AttributeError`, :class:`TypeError`
+
         """
 
         write_concern = {
@@ -774,7 +792,7 @@ class Model(with_metaclass(ModelMetaClass)):
         self._update({'$set': update}, use_internal=True, **write_concern)
 
     def update(self, **fields):
-        """Performs an atomic update.
+        """Perform an atomic update.
 
         If only a select number of fields need to be updated, an atomic
         update is preferred over a document replacement.
@@ -797,6 +815,7 @@ class Model(with_metaclass(ModelMetaClass)):
         :param \*\*fields: The fields to update.
         :type \*\*fields: \*\*kwargs.
         :raises: :class:`TypeError`
+
         """
 
         write_concern = {
@@ -810,7 +829,7 @@ class Model(with_metaclass(ModelMetaClass)):
 
     @classmethod
     def _find(cls, q=None, find_one=False, **fields):
-        """Find documents in the database.
+        """Return documents in the database.
 
         This method will find documents in the database matching the
         specified query. When ``find_one`` is set to ``False``, a
@@ -841,6 +860,7 @@ class Model(with_metaclass(ModelMetaClass)):
            ``_id`` can be a type other than :class:`~pymongo.ObjectId`
 
         .. versionadded:: 0.3.0
+
         """
 
         # If there is a Q object, add it to the spec document.
@@ -928,13 +948,14 @@ class Model(with_metaclass(ModelMetaClass)):
            ``safe`` is being deprecated in favor of ``w`` (PyMongo 2.4+)
 
         .. versionadded:: 0.3.0
+
         """
 
         # Save characters
         cls = self.__class__
 
         def check_typed_fields(fields):
-            """Checks that fields are of the correct type.
+            """Check that fields are of the correct type.
 
             This function checks the fields that are being saved and
             makes sure they are of the correct type. If a field isn't
@@ -945,6 +966,7 @@ class Model(with_metaclass(ModelMetaClass)):
             :raises: :class:`TypeError`
 
             .. versionadded:: 0.6.0
+
             """
 
             for k, v in cls._meta.typed_fields.items():
@@ -973,7 +995,7 @@ class Model(with_metaclass(ModelMetaClass)):
                 raise TypeError(message)
 
         def map_field_names_and_values(fields):
-            """Maps field names and values.
+            """Map field names and values.
 
             This function will take care of mapping the keys of
             ``fields`` to the correct syntax for the query.
@@ -989,6 +1011,7 @@ class Model(with_metaclass(ModelMetaClass)):
             :raises: :class:`AttributeError`
 
             .. versionadded:: 0.3.0
+
             """
 
             fields = map_fields(cls._meta.field_map, fields, flatten_keys=True)
@@ -1175,7 +1198,7 @@ class Model(with_metaclass(ModelMetaClass)):
     # Attribute access methods
 
     def __delattr__(self, name):
-        """Remove a key from the document"""
+        """Remove a key from the document."""
 
         # Normally name can be used here. In this instance, however,
         # name is needed to remove the attribute from the object.
@@ -1192,7 +1215,7 @@ class Model(with_metaclass(ModelMetaClass)):
         object.__delattr__(self, name)
 
     def __getattr__(self, name):
-        """Retrieve a value from the document"""
+        """Return a value from the document."""
 
         # The first thing to look for is nested keys
         if '__' in name or '.' in name:
@@ -1218,7 +1241,7 @@ class Model(with_metaclass(ModelMetaClass)):
         return self._document[name]
 
     def __setattr__(self, name, value):
-        """Set a document value"""
+        """Set a document value."""
 
         # Do not allow _meta to be overwritten
         if name == '_meta':
@@ -1253,7 +1276,7 @@ class Model(with_metaclass(ModelMetaClass)):
     # Rich comparison methods
 
     def __eq__(a, b):
-        """Check equality of two instances"""
+        """Check equality of two instances."""
 
         # If either b isn't of the right type, a and b use different
         # database connections, or a and b use different collections,
@@ -1276,14 +1299,14 @@ class Model(with_metaclass(ModelMetaClass)):
         return a_id == b_id
 
     def __ne__(a, b):
-        """Check inequality of two instances"""
+        """Check inequality of two instances."""
 
         return not a.__eq__(b)
 
     # Container methods
 
     def __contains__(self, name):
-        """Check for a key in a document"""
+        """Check for a key in a document."""
 
         key = self._meta.field_map.get(name, name)
         return key in self._document

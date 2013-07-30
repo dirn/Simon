@@ -52,7 +52,7 @@ _logicals = ('$and', '$or')
 
 
 def current_datetime():
-    """Gets the current datetime in UTC formatted for MongoDB
+    """Get the current datetime in UTC formatted for MongoDB.
 
     Python includes microseconds in its ``datetime`` values. MongoDB,
     on the other hand, only retains them down to milliseconds. This
@@ -62,6 +62,7 @@ def current_datetime():
     :returns: datetime -- the current datetime formatted for MongoDB.
 
     .. versionadded:: 0.2.0
+
     """
 
     now = datetime.utcnow()
@@ -69,7 +70,7 @@ def current_datetime():
 
 
 def get_nested_key(values, key):
-    """Gets a value for a nested dictionary key.
+    """Get a value for a nested dictionary key.
 
     This method can be used to retrieve the value nested within a
     dictionary. The entire path should be provided as the value for
@@ -86,6 +87,7 @@ def get_nested_key(values, key):
     :type key: str.
     :returns: The value associated with the nested key.
     :raises: :class:`KeyError`
+
     """
 
     # If key exists in values, return its value, otherwise recurse
@@ -106,7 +108,7 @@ def get_nested_key(values, key):
 
 
 def guarantee_object_id(value):
-    """Converts a value into an Object ID.
+    """Convert a value into an Object ID.
 
     This method will convert a value to an :class:`ObjectId`. If
     ``value`` is a ``dict`` (e.g., with a comparison operator as the key
@@ -125,6 +127,7 @@ def guarantee_object_id(value):
     :param value: the ID.
     :returns: ObjectId or dict -- the Object ID.
     :raises: :class:`TypeError`, :class:`~bson.errors.InvalidId`
+
     """
 
     # If it's already an Object ID, get out early.
@@ -156,7 +159,7 @@ def guarantee_object_id(value):
 
 
 def is_atomic(document):
-    """Checks for atomic update operators.
+    """Check for atomic update operators.
 
     This method checks for operators in ``document``. If a spec
     document is provided instead of a document to save or update, a
@@ -169,13 +172,14 @@ def is_atomic(document):
               update.
 
     .. versionadded:: 0.3.0
+
     """
 
     return any(k[0] == '$' for k in document)
 
 
 def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
-    """Maps attribute names to document keys.
+    """Map attribute names to document keys.
 
     Attribute names will be mapped to document keys using the mapping
     specified in ``field_map``. If any of the attribute names contain
@@ -265,6 +269,7 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
     .. versionchanged:: 0.7.0
        ``$group`` operators are supported
        All lowercase operators are supported
+
     """
 
     if with_operators:
@@ -369,7 +374,7 @@ def map_fields(field_map, fields, with_operators=False, flatten_keys=False):
 
 
 def parse_kwargs(**kwargs):
-    """Parses embedded documents from dictionary keys.
+    """Parse embedded documents from dictionary keys.
 
     This takes a kwargs dictionary whose keys contain ``__`` and convert
     them to a new dictionary with new keys created by splitting the
@@ -379,6 +384,7 @@ def parse_kwargs(**kwargs):
     :type \*\*kwargs: \*\*kwargs.
     :returns: dict -- dictionary with nested keys generated from the
               names of the arguments.
+
     """
 
     parsed_kwargs = {}
@@ -409,7 +415,7 @@ def parse_kwargs(**kwargs):
 
 
 def remove_nested_key(original, key):
-    """Removes keys within a nested dictionary.
+    """Remove keys within a nested dictionary.
 
     This method can remove a key from within a nested dictionary. Nested
     keys should be specified using a ``.`` as the delimiter. If no
@@ -426,6 +432,7 @@ def remove_nested_key(original, key):
     :type key: str.
     :returns: dict -- the updated dictionary
     :raises: :class:`TypeError`, :class:`KeyError`
+
     """
 
     if not isinstance(original, collections.Mapping):
@@ -446,7 +453,7 @@ def remove_nested_key(original, key):
 
 
 def set_write_concern_as_safe(options, force_write_concern):
-    """Sets the safe parameter for write concern.
+    """Set the safe parameter for write concern.
 
     If ``force_write_concern`` is ``True``, write concern will be used.
 
@@ -456,6 +463,7 @@ def set_write_concern_as_safe(options, force_write_concern):
     :type force_write_concern: bool.
 
     .. versionadded:: 0.6.0
+
     """
 
     safe = options.pop('safe', None)
@@ -472,7 +480,7 @@ def set_write_concern_as_safe(options, force_write_concern):
 
 
 def set_write_concern_as_w(options, force_write_concern):
-    """Sets the w parameter for write concern.
+    """Set the w parameter for write concern.
 
     If ``force_write_concern`` is a value greater than zero, write
     concern will be used.
@@ -483,6 +491,7 @@ def set_write_concern_as_w(options, force_write_concern):
     :type force_write_concern: int.
 
     .. versionadded:: 0.6.0
+
     """
 
     if 'safe' in options and options['safe'] is not None:
@@ -511,7 +520,7 @@ else:
 
 
 def update_nested_keys(original, updates):
-    """Updates keys within nested dictionaries.
+    """Update keys within nested dictionaries.
 
     This method simulates merging two dictionaries. It allows specific
     keys within a dictionary or nested dictionary without overwriting
@@ -526,6 +535,7 @@ def update_nested_keys(original, updates):
     :type updates: dict.
     :returns: dict -- the updated dictionary.
     :raises: :class:`TypeError`
+
     """
 
     # Based on http://stackoverflow.com/questions/3232943/
